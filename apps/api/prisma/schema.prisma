@@ -1,0 +1,417 @@
+// poozari.com database schema
+// PostgreSQL + Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  PANDIT
+  CUSTOMER
+}
+
+enum PujaLocationType {
+  HOME
+  TEERTH
+  TEMPLE
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  PAID
+  ASSIGNED
+  ACCEPTED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum AssignmentStatus {
+  PENDING
+  ASSIGNED
+  ACCEPTED
+  DECLINED
+  REASSIGNED
+}
+
+enum AssignmentMode {
+  AUTO
+  MANUAL
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum LiveSessionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+}
+
+enum LiveAccessStatus {
+  CREATED
+  PAID
+}
+
+enum ProductOrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  role         UserRole @default(CUSTOMER)
+  name         String
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  panditProfile PanditProfile?
+  bookings      Booking[]      @relation("CustomerBookings")
+  reviews       Review[]
+  liveAccesses  LiveAccess[]
+  productOrders ProductOrder[]
+}
+
+model OtpCode {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone])
+}
+
+model PanditProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName     String
+  bio             String   @default("")
+  phone           String
+  experienceYears Int      @default(0)
+  specializations String[] @default([])
+  serviceCityIds  String[] @default([])
+  servicePincodes String[] @default([])
+  // Super Admin controlled. Inactive pandits cannot log in or use portal APIs.
+  isActive        Boolean  @default(true)
+  // Pandit controlled. Available pandits may receive new assignments.
+  isAvailable     Boolean  @default(true)
+  rating          Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  assignments  Assignment[]
+  liveSessions LiveSession[]
+}
+
+model City {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  state       String   @default("")
+  description String   @default("")
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  temples Temple[]
+  pujas   Puja[]
+}
+
+model Temple {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  cityId      String
+  city        City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  state       String   @default("")
+  description String   @default("")
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  pujas Puja[]
+}
+
+model Deity {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String  @default("")
+  imageUrl    String?
+  pujas       Puja[]  @relation("PujaDeities")
+}
+
+model Festival {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String  @default("")
+  imageUrl    String?
+  pujas       Puja[]  @relation("PujaFestivals")
+}
+
+model Benefit {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String  @default("")
+  imageUrl    String?
+  pujas       Puja[]  @relation("PujaBenefits")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  category      String   @default("Puja Essentials")
+  description   String   @default("")
+  imageUrl      String?
+  priceInr      Int
+  stockQuantity Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders ProductOrder[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model ProductOrder {
+  id         String             @id @default(cuid())
+  reference  String             @unique
+  customerId String
+  customer   User               @relation(fields: [customerId], references: [id])
+  productId  String
+  product    Product            @relation(fields: [productId], references: [id])
+  status     ProductOrderStatus @default(PENDING_PAYMENT)
+
+  // Immutable checkout snapshot
+  productName     String
+  productImageUrl String?
+  unitPriceInr    Int
+  quantity        Int
+  totalAmountInr  Int
+
+  // Delivery details
+  customerName String
+  contactPhone String
+  contactEmail String?
+  addressLine  String
+  city         String
+  state        String
+  pincode      String
+
+  paymentStatus    PaymentStatus @default(CREATED)
+  razorpayOrderId  String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([productId])
+  @@index([status])
+}
+
+model Puja {
+  id           String           @id @default(cuid())
+  title        String
+  slug         String           @unique
+  summary      String           @default("")
+  description  String           @default("")
+  imageUrl     String?
+  locationType PujaLocationType
+  templeId     String?
+  temple       Temple?          @relation(fields: [templeId], references: [id])
+  cityId       String?
+  city         City?            @relation(fields: [cityId], references: [id])
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  packages     Package[]
+  deities      Deity[]       @relation("PujaDeities")
+  festivals    Festival[]    @relation("PujaFestivals")
+  benefits     Benefit[]     @relation("PujaBenefits")
+  bookings     Booking[]
+  liveSessions LiveSession[]
+
+  @@index([locationType])
+  @@index([isActive])
+}
+
+model Package {
+  id          String    @id @default(cuid())
+  pujaId      String
+  puja        Puja      @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+  name        String
+  description String    @default("")
+  priceInr    Int
+  inclusions  String[]  @default([])
+  bookings    Booking[]
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  reference  String        @unique
+  customerId String
+  customer   User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  pujaId     String
+  puja       Puja          @relation(fields: [pujaId], references: [id])
+  packageId  String
+  package    Package       @relation(fields: [packageId], references: [id])
+  status     BookingStatus @default(PENDING_PAYMENT)
+
+  // Sankalp
+  devoteeName  String
+  gotra        String  @default("")
+  contactPhone String
+  contactEmail String?
+
+  // Scheduling
+  preferredDate DateTime
+  preferredTime String   @default("")
+
+  // Service location
+  addressLine String  @default("")
+  city        String  @default("")
+  pincode     String?
+  notes       String  @default("")
+
+  amountInr    Int
+  videoUrl     String?
+  thumbnailUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignment Assignment?
+  payment    Payment?
+  review     Review?
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model Assignment {
+  id        String           @id @default(cuid())
+  bookingId String           @unique
+  booking   Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  panditId  String
+  pandit    PanditProfile    @relation(fields: [panditId], references: [id])
+  status    AssignmentStatus @default(ASSIGNED)
+  mode      AssignmentMode   @default(AUTO)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([panditId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  bookingId         String        @unique
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amountInr         Int
+  status            PaymentStatus @default(CREATED)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  bookingId    String   @unique
+  booking      Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     User     @relation(fields: [customerId], references: [id])
+  customerName String
+  rating       Int
+  comment      String   @default("")
+  createdAt    DateTime @default(now())
+}
+
+model LiveSession {
+  id           String            @id @default(cuid())
+  title        String
+  description  String            @default("")
+  thumbnailUrl String?
+  joinPriceInr Int
+  status       LiveSessionStatus @default(SCHEDULED)
+  scheduledAt  DateTime
+  startedAt    DateTime?
+  endedAt      DateTime?
+  playbackUrl  String?
+  recordingUrl String?
+
+  pujaId   String?
+  puja     Puja?          @relation(fields: [pujaId], references: [id])
+  panditId String?
+  pandit   PanditProfile? @relation(fields: [panditId], references: [id])
+
+  accesses  LiveAccess[]
+  captions  LiveCaption[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model LiveCaption {
+  id            String      @id @default(cuid())
+  liveSessionId String
+  liveSession   LiveSession @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  // Ordering within the session; the highest seq is the current caption.
+  seq           Int
+  // Caption text keyed by language code, e.g. { "sa": "…", "hi": "…", "en": "…" }.
+  translations  Json
+  createdAt     DateTime    @default(now())
+
+  @@index([liveSessionId, seq])
+}
+
+model LiveAccess {
+  id            String           @id @default(cuid())
+  liveSessionId String
+  liveSession   LiveSession      @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      User             @relation(fields: [customerId], references: [id])
+  amountInr     Int
+  status        LiveAccessStatus @default(CREATED)
+
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([liveSessionId, customerId])
+  @@index([customerId])
+}

@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+dist/
+build/
+.next/
+out/
+.turbo/
+.expo/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# testing
+coverage/
+
+# prisma
+apps/api/prisma/*.db
+
+# uploads (local dev)
+apps/api/uploads/
+
+# local isolated postgres instance
+.pgdata/
+.pgpass_tmp

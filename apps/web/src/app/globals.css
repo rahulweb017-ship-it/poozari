@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Premium design tokens ──────────────────────────────────────── */
+:root {
+  --primary: 38 97% 52%;        /* Flame Gold (diya flame) */
+  --primary-hover: 36 95% 44%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 21 90% 45%;         /* Deep Saffron (brand mark) */
+  --accent-hover: 21 92% 37%;
+  --accent-foreground: 0 0% 100%;
+  --foreground: 24 40% 13%;      /* Warm Charcoal (tagline ink) */
+  --muted-foreground: 25 12% 44%;
+  --background: 36 33% 97%;     /* Warm Ivory */
+  --card: 0 0% 100%;
+  --border: 34 22% 89%;
+  --ring: 21 90% 45%;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────── */
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────── */
+.container-page {
+  @apply mx-auto w-full max-w-6xl px-4;
+}
+.app-container {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* ─── Sections ───────────────────────────────────────────────────── */
+.section--default {
+  @apply py-16 sm:py-24;
+}
+.section--compact {
+  @apply py-12 sm:py-16;
+}
+.section-pill {
+  @apply inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider;
+  border-color: hsl(var(--accent) / 0.2);
+  color: hsl(var(--accent));
+  background: hsl(var(--accent) / 0.05);
+}
+.section-heading {
+  @apply text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl;
+  color: hsl(var(--foreground));
+}
+.section-bar {
+  @apply mt-5 h-1 w-16 rounded-full;
+  background: linear-gradient(90deg, hsl(var(--accent)), hsl(var(--primary)));
+}
+.section-subheading {
+  @apply mt-5 max-w-3xl text-base leading-relaxed;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Display title (hero) ───────────────────────────────────────── */
+.display-title {
+  @apply text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl;
+  line-height: 1.15;
+  color: hsl(var(--foreground));
+}
+
+/* ─── Floating Glass Header ──────────────────────────────────────── */
+.app-header {
+  @apply sticky top-0 z-40 border-b bg-white/80 backdrop-blur-md;
+  border-color: hsl(var(--border) / 0.5);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+/* ─── Nav Links ──────────────────────────────────────────────────── */
+.nav-link {
+  @apply relative text-xs font-bold uppercase tracking-wider transition-colors duration-300;
+  color: hsl(var(--foreground) / 0.8);
+}
+.nav-link:hover,
+.nav-link[aria-current='page'] {
+  color: hsl(var(--accent));
+}
+.nav-link::after {
+  content: '';
+  @apply absolute -bottom-1.5 left-0 h-0.5 w-0 rounded-full transition-all duration-300;
+  background: hsl(var(--accent));
+}
+.nav-link:hover::after,
+.nav-link[aria-current='page']::after {
+  @apply w-full;
+}
+
+/* ─── Premium Buttons ────────────────────────────────────────────── */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300;
+  min-height: 48px;
+}
+.btn-primary {
+  @apply btn text-white shadow-md;
+  background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--accent-hover)) 100%);
+  box-shadow: 0 4px 14px hsl(var(--accent) / 0.25);
+}
+.btn-primary:hover {
+  @apply translate-y-[-1px];
+  box-shadow: 0 6px 20px hsl(var(--accent) / 0.35);
+  background: linear-gradient(135deg, hsl(var(--accent-hover)) 0%, hsl(var(--accent)) 100%);
+}
+.btn-primary:disabled {
+  @apply opacity-50 cursor-not-allowed shadow-none translate-y-0;
+}
+.btn-outline {
+  @apply btn border-2;
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+  background: transparent;
+}
+.btn-outline:hover {
+  @apply translate-y-[-1px];
+  border-color: hsl(var(--accent) / 0.5);
+  color: hsl(var(--accent));
+  background: hsl(var(--accent) / 0.03);
+}
+.btn-lg {
+  @apply px-9 py-3.5 text-sm;
+  min-height: 52px;
+}
+.btn--icon {
+  @apply flex h-11 w-11 items-center justify-center rounded-2xl p-0;
+  min-height: auto;
+}
+
+/* ─── Premium Cards & Glows ──────────────────────────────────────── */
+.card {
+  @apply rounded-3xl border bg-white shadow-sm transition-all duration-300;
+  border-color: hsl(var(--border) / 0.6);
+}
+.card:hover {
+  @apply shadow-md;
+  border-color: hsl(var(--border));
+}
+.card-title {
+  @apply text-lg font-bold leading-snug;
+  color: hsl(var(--foreground));
+}
+
+.elevated-card {
+  @apply overflow-hidden rounded-3xl border bg-white shadow-md transition-all duration-300;
+  border-color: hsl(var(--border) / 0.4);
+}
+.elevated-card:hover {
+  @apply shadow-lg translate-y-[-2px];
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+.gold-glow:hover {
+  box-shadow: 0 10px 30px -10px hsl(var(--primary) / 0.25);
+}
+.saffron-glow:hover {
+  box-shadow: 0 10px 30px -10px hsl(var(--accent) / 0.25);
+}
+
+/* ─── Hero Stats ─────────────────────────────────────────────────── */
+.hero-stat {
+  @apply flex flex-col items-center gap-1.5 py-4 text-center border-r last:border-0;
+  border-color: hsl(var(--border) / 0.5);
+}
+.hero-stat__value {
+  @apply text-2xl font-black sm:text-3xl;
+  color: hsl(var(--accent));
+}
+.hero-stat__label {
+  @apply text-2xs font-extrabold uppercase tracking-widest;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Forms ──────────────────────────────────────────────────────── */
+.input {
+  @apply w-full rounded-2xl border px-4 py-3 text-sm transition-all duration-300;
+  border-color: hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+.input:focus {
+  @apply outline-none ring-4;
+  border-color: hsl(var(--accent) / 0.5);
+  ring-color: hsl(var(--accent) / 0.1);
+}
+.input::placeholder {
+  color: hsl(var(--muted-foreground) / 0.5);
+}
+.label {
+  @apply mb-2 block text-xs font-bold uppercase tracking-wider;
+  color: hsl(var(--foreground) / 0.8);
+}
+
+/* ─── Badges ─────────────────────────────────────────────────────── */
+.badge {
+  @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-2xs font-bold uppercase tracking-wider;
+}
+.trust-badge {
+  @apply inline-flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-3 text-2xs font-bold uppercase tracking-wider shadow-sm;
+  border-color: hsl(var(--border) / 0.8);
+  background: hsl(var(--card));
+  color: hsl(var(--foreground) / 0.8);
+}
+.trust-badge__icon {
+  @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold;
+  background: hsl(var(--primary) / 0.15);
+  color: hsl(var(--primary-hover));
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────── */
+.text-primary {
+  color: hsl(var(--primary)) !important;
+}
+.text-accent {
+  color: hsl(var(--accent)) !important;
+}
+.bg-accent-soft {
+  background: hsl(var(--accent) / 0.05);
+}
+.bg-primary-soft {
+  background: hsl(var(--primary) / 0.08);
+}
+
+/* Curved divider pattern */
+.curve-divider {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+.curve-divider svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 40px;
+}
+.curve-divider .shape-fill {
+  fill: hsl(var(--background));
+}
+
+/* Accordion open animation */
+details[open] summary ~ * {
+  animation: details-open 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes details-open {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Interactive transitions */
+.arrow-slide {
+  @apply transition-transform duration-300;
+}
+.group:hover .arrow-slide {
+  transform: translateX(6px);
+}
