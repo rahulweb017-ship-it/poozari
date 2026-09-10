@@ -4,6 +4,7 @@ node_modules/
 .pnp.js
 
 # builds
+*.tsbuildinfo
 dist/
 build/
 .next/
@@ -40,3 +41,7 @@ apps/api/uploads/
 # local isolated postgres instance
 .pgdata/
 .pgpass_tmp
+
+# Local test sheet. Lists the seeded logins in plaintext, so it stays out of
+# the (public) repository.
+TESTING.md

@@ -75,6 +75,41 @@ enum ProductOrderStatus {
   REFUNDED
 }
 
+enum Gender {
+  UNSPECIFIED
+  MALE
+  FEMALE
+  OTHER
+}
+
+/// Contact Us, the puja Enquiry form, and WhatsApp booking intents.
+/// One inbox, different intent.
+enum InquiryKind {
+  CONTACT
+  ENQUIRY
+  WHATSAPP
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+/// "Become a Pujari" application pipeline.
+enum ApplicationStatus {
+  NEW
+  REVIEWING
+  SHORTLISTED
+  APPROVED
+  REJECTED
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id           String   @id @default(cuid())
   role         UserRole @default(CUSTOMER)
@@ -82,8 +117,19 @@ model User {
   email        String?  @unique
   phone        String?  @unique
   passwordHash String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  // Devotee details, used to pre-fill the sankalp on a booking.
+  dateOfBirth DateTime?
+  gender      Gender    @default(UNSPECIFIED)
+  /// Family lineage, recited during the sankalp.
+  gotra       String    @default("")
+  addressLine String    @default("")
+  city        String    @default("")
+  state       String    @default("")
+  pincode     String    @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   panditProfile PanditProfile?
   bookings      Booking[]      @relation("CustomerBookings")
@@ -98,9 +144,12 @@ model OtpCode {
   codeHash   String
   expiresAt  DateTime
   consumedAt DateTime?
+  /// Wrong guesses so far. A 6-digit code is brute-forceable without a cap.
+  attempts   Int       @default(0)
   createdAt  DateTime  @default(now())
 
   @@index([phone])
+  @@index([phone, createdAt])
 }
 
 model PanditProfile {
@@ -180,6 +229,25 @@ model Benefit {
   pujas       Puja[]  @relation("PujaBenefits")
 }
 
+/// Display-only FX rates maintained by the Super Admin.
+/// Money is stored and charged in INR everywhere; these just decide what a
+/// reader sees. See packages/shared/src/currency.ts.
+model CurrencyRate {
+  code       String   @id
+  label      String
+  symbol     String
+  /// Units of this currency per 1 INR. INR itself is 1.
+  ratePerInr Float
+  /// BCP-47 tag used for grouping/decimals, e.g. "en-IN".
+  locale     String   @default("en-US")
+  decimals   Int      @default(2)
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 model Product {
   id            String   @id @default(cuid())
   name          String
@@ -224,8 +292,8 @@ model ProductOrder {
   state        String
   pincode      String
 
-  paymentStatus    PaymentStatus @default(CREATED)
-  razorpayOrderId  String?
+  paymentStatus     PaymentStatus @default(CREATED)
+  razorpayOrderId   String?
   razorpayPaymentId String?
   razorpaySignature String?
 
@@ -273,6 +341,83 @@ model Package {
   priceInr    Int
   inclusions  String[]  @default([])
   bookings    Booking[]
+}
+
+/// Contact Us and puja Enquiry submissions. One admin inbox.
+model Inquiry {
+  id      String        @id @default(cuid())
+  kind    InquiryKind   @default(CONTACT)
+  status  InquiryStatus @default(NEW)
+  name    String
+  email   String?
+  phone   String
+  subject String        @default("")
+  message String
+
+  // Enquiry-form extras. The puja is stored as text, not a relation, so
+  // retiring a listing never blocks on old enquiries.
+  pujaSlug      String    @default("")
+  pujaTitle     String    @default("")
+  preferredDate DateTime?
+  city          String    @default("")
+
+  adminNotes String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([kind, status])
+  @@index([createdAt])
+}
+
+/// A pandit applying to join the platform, before any login exists.
+model PanditApplication {
+  id     String            @id @default(cuid())
+  status ApplicationStatus @default(NEW)
+
+  fullName        String
+  email           String
+  phone           String
+  city            String
+  state           String   @default("")
+  pincode         String   @default("")
+  experienceYears Int      @default(0)
+  specializations String[] @default([])
+  languages       String[] @default([])
+  /// Gurukul, parampara or guru the applicant trained under.
+  lineage         String   @default("")
+  about           String   @default("")
+  /// Uploaded ID or credential, served from /uploads.
+  documentUrl     String?
+
+  adminNotes   String   @default("")
+  /// Set once an admin turns the application into a pandit account.
+  panditUserId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Blog posts, written and published from the admin panel.
+model BlogPost {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  excerpt       String     @default("")
+  /// Markdown body.
+  body          String     @default("")
+  coverImageUrl String?
+  authorName    String     @default("Poozari")
+  category      String     @default("Guides")
+  tags          String[]   @default([])
+  status        PostStatus @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([category])
 }
 
 model Booking {

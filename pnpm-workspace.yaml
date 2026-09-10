@@ -6,8 +6,12 @@ verifyDepsBeforeRun: false
 
 allowBuilds:
   '@nestjs/core': true
+  # Native postinstalls pulled in transitively. Everything builds with them
+  # skipped, so they stay off rather than running arbitrary build scripts.
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
+  '@swc/core': false
   esbuild: true
   prisma: true
   unrs-resolver: true

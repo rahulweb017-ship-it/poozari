@@ -1,5 +1,6 @@
-import { formatInr, type Puja } from '@poozari/shared';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { Price } from '@/lib/currency';
+import type { Puja } from '@poozari/shared';
 
 export function PujaCard({ puja }: { puja: Puja }) {
   return (
@@ -58,7 +59,7 @@ export function PujaCard({ puja }: { puja: Puja }) {
         <div className="mt-auto pt-6 flex items-center justify-between border-t border-gray-100">
           <div>
             <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">Starting from</div>
-            <div className="text-base font-black text-accent">{formatInr(puja.startingPriceInr)}</div>
+            <div className="text-base font-black text-accent"><Price amountInr={puja.startingPriceInr} /></div>
           </div>
           <span className="flex h-9 items-center justify-center rounded-full bg-accent px-4 py-2 text-2xs font-extrabold uppercase tracking-widest text-white shadow-sm transition-all duration-300 group-hover:bg-accent-hover group-hover:shadow-md">
             Book <span className="arrow-slide ml-1" aria-hidden="true">→</span>

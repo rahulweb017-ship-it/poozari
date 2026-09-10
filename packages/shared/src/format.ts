@@ -34,3 +34,12 @@ export function makeProductOrderReference(seed?: string): string {
     .replace(/[^A-Z0-9]/g, '');
   return `PRD-${base.slice(0, 6).padEnd(6, '0')}`;
 }
+
+/** Slugify a title into lowercase hyphenated words, e.g. "Rudra Abhishek" -> "rudra-abhishek". */
+export function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}

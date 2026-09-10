@@ -1,0 +1,269 @@
+{
+  "meta": {
+    "title": "poozari.com — Réservez une puja védique authentique avec des pandits vérifiés",
+    "description": "Réservez une puja védique authentique à domicile ou dans les teerths sacrés. Pandits vérifiés, samagri complète et vidéo enregistrée de la pooja. Vous réservez, nous nous occupons de tout."
+  },
+  "nav": {
+    "pujas": "Pujas",
+    "teerthPuja": "Puja au teerth",
+    "temples": "Temples",
+    "products": "Boutique",
+    "liveDarshan": "Darshan en direct",
+    "blog": "Blog",
+    "about": "À propos",
+    "howItWorks": "Comment ça marche",
+    "contact": "Contact",
+    "becomePujari": "Devenir pujari",
+    "faq": "FAQ",
+    "login": "Connexion",
+    "myAccount": "Mon compte",
+    "signOut": "Déconnexion",
+    "menu": "Menu",
+    "close": "Fermer",
+    "language": "Langue",
+    "currency": "Devise",
+    "more": "Plus"
+  },
+  "footer": {
+    "tagline": "Des rituels védiques authentiques, accomplis par des pandits vérifiés et qui vous parviennent sous forme de vidéo enregistrée, accompagnée du prasad.",
+    "explore": "Découvrir",
+    "company": "Entreprise",
+    "legal": "Mentions légales",
+    "support": "Assistance",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions générales",
+    "refund": "Annulation et remboursement",
+    "shipping": "Politique d'expédition",
+    "rights": "Tous droits réservés.",
+    "madeIn": "Réalisé avec dévotion en Inde."
+  },
+  "common": {
+    "from": "À partir de",
+    "submit": "Envoyer",
+    "sending": "Envoi en cours…",
+    "sent": "Envoyé",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "required": "Obligatoire",
+    "optional": "Facultatif",
+    "readMore": "Lire la suite",
+    "backHome": "Retour à l'accueil",
+    "loading": "Chargement…",
+    "notFound": "Introuvable",
+    "yourName": "Votre nom",
+    "email": "E-mail",
+    "phone": "Numéro de mobile",
+    "city": "Ville",
+    "state": "État / région",
+    "pincode": "Code postal",
+    "message": "Message",
+    "subject": "Objet",
+    "selectOne": "Choisissez une option",
+    "somethingWrong": "Une erreur s'est produite. Merci de réessayer."
+  },
+  "currencyNote": {
+    "charged": "Débité comme {amount} — la conversion est faite par votre banque.",
+    "approx": "Prix approximatif. Le paiement est effectué en roupies indiennes."
+  },
+  "about": {
+    "eyebrow": "À propos",
+    "title": "Des rituels accomplis dans les règles, où que vous soyez",
+    "lead": "poozari.com existe pour le dévot qui souhaite qu'une puja soit accomplie correctement et qui ne peut pas toujours être présent. Nous vous mettons en relation avec des pandits vérifiés, dans les temples et les teerths où le rituel doit être accompli, et nous vous renvoyons l'ensemble en vidéo, avec le prasad.",
+    "storyHeading": "Pourquoi nous avons commencé",
+    "story": "Les familles se déplacent — vers une autre ville, un autre pays — mais les occasions qui appellent une puja ne se déplacent pas avec elles. Un shraddh arrive à échéance. Une nouvelle maison demande un Griha Pravesh. Un Nag Bali est en attente depuis des années. Autrefois, il fallait téléphoner à un parent, espérer qu'il connaisse un pandit, et ne jamais vraiment savoir ce qui avait été accompli. Nous avons créé poozari.com pour que la chaîne, de votre sankalp au rituel achevé, soit visible de bout en bout.",
+    "valuesHeading": "Nos engagements",
+    "values": [
+      {
+        "title": "Le rituel, accompli correctement",
+        "body": "Chaque puja est accomplie selon la vidhi prescrite, avec une samagri complète. Aucun raccourci, aucun sankalp regroupé, aucune substitution dont vous n'auriez pas été informé."
+      },
+      {
+        "title": "Des pandits que vous pouvez vérifier",
+        "body": "Chaque pujari est vérifié avant de nous rejoindre — lignée, formation et années de pratique. Son nom et ses informations figurent sur votre réservation, ils ne sont pas dissimulés derrière une marque."
+      },
+      {
+        "title": "Votre sankalp, nommément",
+        "body": "La puja est accomplie en votre nom et votre gotra. Vous l'entendez dans l'enregistrement."
+      },
+      {
+        "title": "Des preuves, pas des promesses",
+        "body": "Vous recevez une vidéo enregistrée de votre pooja et, lorsque l'offre le prévoit, le prasad expédié à votre adresse."
+      }
+    ],
+    "statsHeading": "Où nous intervenons",
+    "stats": {
+      "cities": "Villes et teerths",
+      "pandits": "Pandits vérifiés",
+      "pujas": "Rituels proposés"
+    },
+    "ctaHeading": "Une occasion approche ?",
+    "ctaBody": "Parcourez les rituels que nous accomplissons, ou dites-nous ce dont vous avez besoin et nous vous guiderons.",
+    "ctaBrowse": "Voir les pujas",
+    "ctaContact": "Nous parler"
+  },
+  "howItWorks": {
+    "eyebrow": "Comment ça marche",
+    "title": "Quelques étapes, et nous prenons le relais",
+    "lead": "Du choix du rituel à la réception de la vidéo, voici précisément ce qui se passe et ce que nous attendons de vous.",
+    "steps": [
+      {
+        "title": "Choisissez la puja et la formule",
+        "body": "Choisissez le rituel et le lieu où il doit être accompli : chez vous, dans un temple, ou au teerth prescrit. Chaque formule indique précisément ce qui est inclus, de la samagri au nombre de pandits."
+      },
+      {
+        "title": "Indiquez les détails de votre sankalp",
+        "body": "Votre nom, votre gotra et la date souhaitée. C'est ce que le pandit récite lorsque la puja est offerte en votre nom. Enregistrez-le une fois dans votre profil et il sera pré-rempli la fois suivante."
+      },
+      {
+        "title": "Payez en toute sécurité",
+        "body": "Le paiement est prélevé en roupies indiennes via Razorpay — UPI, carte, virement ou portefeuille électronique. Vous recevez immédiatement une référence de réservation."
+      },
+      {
+        "title": "Un pandit vérifié est assigné",
+        "body": "Nous rattachons votre réservation à un pujari vérifié selon sa zone d'intervention et sa spécialisation, généralement en quelques heures. Vous voyez de qui il s'agit et vous suivez l'avancement."
+      },
+      {
+        "title": "La puja est accomplie et filmée",
+        "body": "Le rituel est accompli à la date convenue et filmé. Votre enregistrement apparaît dans votre compte, et le prasad est expédié lorsque la formule le prévoit."
+      }
+    ],
+    "faqHeading": "Questions fréquentes",
+    "faqCta": "Voir toutes les questions",
+    "ctaHeading": "Prêt à commencer ?",
+    "ctaBody": "Parcourez les rituels par divinité, par fête ou selon le bienfait recherché.",
+    "ctaBrowse": "Voir les pujas"
+  },
+  "blog": {
+    "eyebrow": "Blog",
+    "title": "Les rituels, expliqués",
+    "lead": "Des guides sur les pujas que nous accomplissons — quand elles sont prescrites, ce qu'elles impliquent et à quoi s'attendre.",
+    "empty": "Aucun article publié pour le moment. Revenez bientôt.",
+    "readingTime": "{minutes} min de lecture",
+    "publishedOn": "Publié le {date}",
+    "by": "Par {author}",
+    "allCategories": "Tous",
+    "backToBlog": "Tous les articles",
+    "related": "À lire aussi",
+    "notFoundTitle": "Cet article n'est pas ici",
+    "notFoundBody": "Il a peut-être été dépublié, ou le lien est erroné."
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Parlez à une personne",
+    "lead": "Une question sur un rituel, sur une réservation déjà passée, ou quelque chose qui s'est mal passé — écrivez-nous et nous vous répondrons.",
+    "formHeading": "Envoyez-nous un message",
+    "subjectPlaceholder": "De quoi s'agit-il ?",
+    "messagePlaceholder": "Dites-nous ce dont vous avez besoin. S'il s'agit d'une réservation existante, indiquez la référence (POZ-…).",
+    "submit": "Envoyer le message",
+    "successHeading": "Message reçu",
+    "successBody": "Nous l'avons bien reçu et répondons généralement sous un jour ouvré. Surveillez votre e-mail et votre téléphone.",
+    "sendAnother": "Envoyer un autre message",
+    "reachUs": "Autres moyens de nous joindre",
+    "hours": "Horaires de l'assistance",
+    "hoursValue": "Lun–Sam, 9h00 – 19h00 (IST)",
+    "responseTime": "Délai de réponse habituel",
+    "responseTimeValue": "Sous un jour ouvré",
+    "enquiryPrompt": "Votre question porte sur une puja précise ?",
+    "enquiryLink": "Utilisez plutôt le formulaire de demande"
+  },
+  "enquiry": {
+    "eyebrow": "Demande",
+    "title": "Poser une question sur une puja",
+    "lead": "Vous ne savez pas quel rituel correspond à votre situation, ni quand il devrait être accompli ? Décrivez-la et un pandit vous conseillera avant toute réservation.",
+    "formHeading": "Votre demande",
+    "pujaLabel": "Puja concernée",
+    "pujaAny": "Je ne sais pas / conseil général",
+    "preferredDateLabel": "Date envisagée",
+    "cityLabel": "Lieu où le rituel doit être accompli",
+    "detailsLabel": "Votre situation",
+    "detailsPlaceholder": "Par exemple : un Nag Bali est en attente dans la famille, ou nous emménageons dans un nouvel appartement le mois prochain et souhaitons un Griha Pravesh.",
+    "submit": "Envoyer la demande",
+    "successHeading": "Demande reçue",
+    "successBody": "Un pandit l'examinera et vous répondra avec ses conseils — généralement sous un jour ouvré. Aucune obligation de réserver.",
+    "sendAnother": "Envoyer une autre demande"
+  },
+  "becomePujari": {
+    "eyebrow": "Devenir pujari",
+    "title": "Accomplissez des pujas avec nous",
+    "lead": "Nous recherchons des pandits ayant une véritable formation et une pratique établie. Si c'est votre cas, déposez votre candidature ci-dessous — nous vérifions chaque candidat avant d'assigner la moindre réservation.",
+    "whyHeading": "Ce que vous y gagnez",
+    "why": [
+      {
+        "title": "Des réservations dans votre zone",
+        "body": "Les pujas sont attribuées selon vos codes postaux, vos villes et vos spécialisations. Vous acceptez ce qui vous convient et vous vous déclarez indisponible quand vous le souhaitez."
+      },
+      {
+        "title": "Rémunéré par puja, sans frais",
+        "body": "Rien à payer pour nous rejoindre. Vous êtes rémunéré pour les pujas que vous accomplissez, selon l'échéance convenue."
+      },
+      {
+        "title": "Votre propre espace",
+        "body": "Consultez vos réservations, les détails du sankalp et les dates en un seul endroit, mettez à jour le statut au fil du rituel, et téléversez l'enregistrement depuis votre téléphone."
+      },
+      {
+        "title": "Votre nom sur votre travail",
+        "body": "Le dévot voit qui accomplit sa puja — votre nom, votre expérience et vos spécialisations."
+      }
+    ],
+    "expectHeading": "Ce que nous attendons",
+    "expect": [
+      "Une vidhi correcte, une samagri complète, et le sankalp récité au nom et au gotra du dévot.",
+      "Être présent à la date convenue, ou nous avertir assez tôt pour que nous puissions réassigner.",
+      "Un enregistrement net de la pooja, téléversé le jour même.",
+      "Une formation vérifiable — un gurukul, une parampara, ou un guru que nous puissions contacter."
+    ],
+    "formHeading": "Déposer une candidature",
+    "fullName": "Nom complet",
+    "lineageLabel": "Gurukul, parampara ou guru",
+    "lineagePlaceholder": "Où et auprès de qui vous avez été formé",
+    "experienceLabel": "Années de pratique",
+    "specializationsLabel": "Pujas dans lesquelles vous êtes spécialisé",
+    "specializationsPlaceholder": "Rudra Abhishek, Narayan Nag Bali, Vivah…",
+    "specializationsHint": "Séparez par des virgules",
+    "languagesLabel": "Langues dans lesquelles vous récitez et parlez",
+    "languagesPlaceholder": "Sanskrit, hindi, marathi…",
+    "aboutLabel": "À propos de vous",
+    "aboutPlaceholder": "Votre formation, les temples ou teerths où vous officiez, et tout ce que nous devrions savoir.",
+    "submit": "Envoyer la candidature",
+    "successHeading": "Candidature reçue",
+    "successBody": "Merci. Nous examinons chaque candidature à la main et nous vous appellerons au numéro indiqué. Cela prend généralement quelques jours ouvrés.",
+    "applyAnother": "Déposer une autre candidature"
+  },
+  "legal": {
+    "lastUpdated": "Dernière mise à jour : {date}",
+    "reviewNotice": "Ces politiques sont publiées en anglais, et la version anglaise fait foi — sa traduction dépend du droit applicable dans votre pays. Écrivez-nous si vous souhaitez une clarification.",
+    "privacy": {
+      "eyebrow": "Mentions légales",
+      "title": "Politique de confidentialité",
+      "lead": "Ce que nous recueillons lorsque vous réservez une puja, pourquoi nous en avons besoin, et ce que nous en faisons."
+    },
+    "terms": {
+      "eyebrow": "Mentions légales",
+      "title": "Conditions générales",
+      "lead": "L'accord entre vous et poozari.com lorsque vous réservez un rituel par notre intermédiaire."
+    },
+    "refund": {
+      "eyebrow": "Mentions légales",
+      "title": "Annulation et remboursement",
+      "lead": "Quand vous pouvez annuler, ce qui vous est restitué, et sous quel délai."
+    },
+    "shipping": {
+      "eyebrow": "Mentions légales",
+      "title": "Politique d'expédition",
+      "lead": "Comment le prasad et les commandes de la boutique vous parviennent — et comment votre vidéo de pooja est livrée."
+    }
+  },
+  "whatsapp": {
+    "bookOnWhatsapp": "Réserver sur WhatsApp",
+    "orderOnWhatsapp": "Commander sur WhatsApp",
+    "askOnWhatsapp": "Demander sur WhatsApp",
+    "joinOnWhatsapp": "Rejoindre via WhatsApp",
+    "chatWithUs": "Écrivez-nous",
+    "openChat": "Ouvrir WhatsApp",
+    "fabAria": "Discuter avec nous sur WhatsApp",
+    "contactBlurb": "Écrivez-nous et une personne vous répond. C'est le moyen le plus rapide de fixer une date, un muhurat, ou de savoir quel rituel correspond à votre situation.",
+    "preferWhatsapp": "Vous préférez réserver sur WhatsApp ?",
+    "preferWhatsappBody": "Indiquez-nous la puja : nous confirmons le pandit, la date et le lien de paiement dans la conversation.",
+    "orPay": "ou payez en ligne ci-dessous"
+  }
+}

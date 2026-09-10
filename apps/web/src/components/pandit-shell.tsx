@@ -1,10 +1,10 @@
 'use client';
 
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
 import { UserRole } from '@poozari/shared';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+
 import { useEffect, useState } from 'react';
 
 const NAV = [

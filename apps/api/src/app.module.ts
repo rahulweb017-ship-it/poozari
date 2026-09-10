@@ -5,6 +5,9 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { ContentModule } from './content/content.module';
+import { CurrencyModule } from './currency/currency.module';
+import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './common/jwt-auth.guard';
 import { LiveModule } from './live/live.module';
 import { PanditPortalModule } from './pandit-portal/pandit-portal.module';
@@ -18,8 +21,11 @@ import { StorageModule } from './storage/storage.module';
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     StorageModule,
+    EmailModule,
     AuthModule,
     CatalogModule,
+    CurrencyModule,
+    ContentModule,
     BookingsModule,
     PaymentsModule,
     ProductOrdersModule,

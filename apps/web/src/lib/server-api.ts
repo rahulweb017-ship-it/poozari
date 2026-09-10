@@ -1,4 +1,12 @@
-import type { City, LiveSession, NamedEntity, Product, Puja, Temple } from '@poozari/shared';
+import type {
+  BlogPost,
+  City,
+  LiveSession,
+  NamedEntity,
+  Product,
+  Puja,
+  Temple,
+} from '@poozari/shared';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:4000/api';
 
@@ -65,4 +73,21 @@ export function getLiveSessions(status?: 'live' | 'upcoming' | 'ended'): Promise
 
 export function getLiveSession(id: string): Promise<LiveSession> {
   return get<LiveSession>(`/live/${id}`, 15);
+}
+
+/* ------------------------------- Blog ------------------------------- */
+
+export function getBlogPosts(category?: string): Promise<BlogPost[]> {
+  return get<BlogPost[]>(
+    `/blog${category ? `?category=${encodeURIComponent(category)}` : ''}`,
+    30,
+  );
+}
+
+export function getBlogCategories(): Promise<string[]> {
+  return get<string[]>('/blog/categories', 30);
+}
+
+export function getBlogPost(slug: string): Promise<BlogPost> {
+  return get<BlogPost>(`/blog/${slug}`, 30);
 }

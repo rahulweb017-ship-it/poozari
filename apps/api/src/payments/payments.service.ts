@@ -5,7 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { BookingStatus, PaymentStatus } from '@poozari/shared';
+import { ConfigService } from '@nestjs/config';
 import { AssignmentService } from '../admin/assignment.service';
+import { EmailService } from '../email/email.service';
+import { bookingConfirmation } from '../email/email.templates';
 import { bookingInclude, serializeBooking } from '../bookings/booking.serializer';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentGatewayService } from './payment-gateway.service';
@@ -16,6 +19,8 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly gateway: PaymentGatewayService,
     private readonly assignment: AssignmentService,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
   ) {}
 
   async createOrder(customerId: string, bookingId: string) {
@@ -87,6 +92,28 @@ export class PaymentsService {
       where: { id: bookingId },
       include: bookingInclude,
     });
+
+    // Confirmation email, not awaited: the payment has already succeeded and a
+    // mail failure must not make a paid booking look like it failed.
+    if (updated?.contactEmail) {
+      const webBase = (
+        this.config.get<string>('WEB_BASE_URL') ?? 'http://localhost:3000'
+      ).replace(/\/$/, '');
+      void this.email.send({
+        to: updated.contactEmail,
+        ...bookingConfirmation({
+          reference: updated.reference,
+          devoteeName: updated.devoteeName,
+          pujaTitle: updated.puja.title,
+          packageName: updated.package.name,
+          amountInr: updated.amountInr,
+          preferredDate: updated.preferredDate,
+          gotra: updated.gotra,
+          accountUrl: `${webBase}/account/bookings/${updated.id}`,
+        }),
+      });
+    }
+
     return serializeBooking(updated);
   }
 }

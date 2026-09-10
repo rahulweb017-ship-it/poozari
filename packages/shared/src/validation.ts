@@ -40,9 +40,39 @@ export const customerPasswordLoginSchema = z.object({
 });
 export type CustomerPasswordLoginInput = z.infer<typeof customerPasswordLoginSchema>;
 
+/** Devotee-supplied details, used to pre-fill the sankalp on a booking. */
+export const Gender = {
+  UNSPECIFIED: 'UNSPECIFIED',
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+  OTHER: 'OTHER',
+} as const;
+export type Gender = (typeof Gender)[keyof typeof Gender];
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  UNSPECIFIED: 'Prefer not to say',
+  MALE: 'Male',
+  FEMALE: 'Female',
+  OTHER: 'Other',
+};
+
 export const updateCustomerProfileSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: emailSchema.optional().or(z.literal('')),
+  /** ISO date (yyyy-mm-dd). Blank clears it. */
+  dateOfBirth: z.coerce.date().optional().nullable(),
+  gender: z.enum([Gender.UNSPECIFIED, Gender.MALE, Gender.FEMALE, Gender.OTHER]).optional(),
+  /** Family lineage recited during the sankalp. */
+  gotra: z.string().trim().max(120).optional(),
+  addressLine: z.string().trim().max(300).optional(),
+  city: z.string().trim().max(120).optional(),
+  state: z.string().trim().max(120).optional(),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Pincode must be 6 digits')
+    .optional()
+    .or(z.literal('')),
 });
 export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileSchema>;
 

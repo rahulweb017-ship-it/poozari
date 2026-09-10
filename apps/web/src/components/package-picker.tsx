@@ -1,12 +1,26 @@
 'use client';
 
-import { formatInr, type PujaPackage } from '@poozari/shared';
-import { useRouter } from 'next/navigation';
+import { WhatsappBookButton } from '@/components/whatsapp';
+import { useRouter } from '@/i18n/navigation';
+import { Price, useCurrency } from '@/lib/currency';
+import type { PujaPackage } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-export function PackagePicker({ slug, packages }: { slug: string; packages: PujaPackage[] }) {
+export function PackagePicker({
+  slug,
+  packages,
+  pujaTitle,
+}: {
+  slug: string;
+  packages: PujaPackage[];
+  pujaTitle: string;
+}) {
   const router = useRouter();
+  const wa = useTranslations('whatsapp');
+  const { formatInrExact } = useCurrency();
   const [selected, setSelected] = useState(packages[0]?.id ?? '');
+  const selectedPackage = packages.find((p) => p.id === selected);
 
   return (
     <div className="elevated-card saffron-glow p-6 bg-white">
@@ -36,7 +50,7 @@ export function PackagePicker({ slug, packages }: { slug: string; packages: Puja
                   />
                   {p.name}
                 </span>
-                <span className="text-base font-black text-accent">{formatInr(p.priceInr)}</span>
+                <span className="text-base font-black text-accent"><Price amountInr={p.priceInr} /></span>
               </div>
               {p.inclusions.length ? (
                 <ul className="ml-7 mt-3 space-y-1.5">
@@ -59,9 +73,24 @@ export function PackagePicker({ slug, packages }: { slug: string; packages: Puja
       >
         Book Now
       </button>
+
+      {/* Booking over WhatsApp, with the chosen package already in the message. */}
+      <div className="mt-3">
+        <WhatsappBookButton
+          pujaSlug={slug}
+          context={{
+            kind: 'puja',
+            title: pujaTitle,
+            packageName: selectedPackage?.name,
+            // The rupee amount, since that is what will actually be charged.
+            price: selectedPackage ? formatInrExact(selectedPackage.priceInr) : undefined,
+          }}
+        />
+      </div>
+
       <p className="mt-4 text-center text-3xs font-bold uppercase tracking-widest text-muted-foreground">
         <span className="mr-1.5 text-emerald-500">●</span>
-        Support on Call &amp; WhatsApp
+        {wa('preferWhatsapp')}
       </p>
     </div>
   );

@@ -1,5 +1,5 @@
+import { Link } from '@/i18n/navigation';
 import type { NamedEntity } from '@poozari/shared';
-import Link from 'next/link';
 
 /** Renders a grid of named catalog entities (deities / festivals / benefits). */
 export function EntityGrid({

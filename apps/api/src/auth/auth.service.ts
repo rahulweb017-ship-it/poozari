@@ -1,4 +1,11 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type {
@@ -18,6 +25,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SmsService } from '../sms/sms.service';
 
 const OTP_TTL_MS = 5 * 60 * 1000;
+/** Wait this long before a resend is allowed, so one tap cannot spam SMS. */
+const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+/** Codes a single number may request per hour. Real SMS costs real money. */
+const OTP_MAX_PER_HOUR = 5;
+/** Wrong guesses allowed before a code is burnt. */
+const OTP_MAX_ATTEMPTS = 5;
 
 @Injectable()
 export class AuthService {
@@ -63,23 +76,81 @@ export class AuthService {
   }
 
   /**
-   * Generate and store a one-time code.
-   * Dev mode: the code is returned in the API response and no SMS is sent.
-   * Otherwise: the code is sent to the phone via Fast2SMS.
+   * Dev mode returns the code in the response instead of sending an SMS.
+   *
+   * It has to be switched on deliberately (`OTP_DEV_MODE=true`): defaulting to
+   * on would mean a misconfigured production deploy hands out login codes over
+   * the API.
    */
-  async requestOtp(input: RequestOtpInput): Promise<{ ok: true; devCode?: string }> {
+  private get otpDevMode(): boolean {
+    return this.config.get('OTP_DEV_MODE') === 'true';
+  }
+
+  /**
+   * Generate, store and send a one-time code.
+   *
+   * Rate limited per number: sending real SMS costs money, and an unthrottled
+   * OTP endpoint is both an abuse vector and a way to harass a phone owner.
+   */
+  async requestOtp(
+    input: RequestOtpInput,
+  ): Promise<{ ok: true; devCode?: string; resendAfterSeconds: number }> {
     const phone = this.normalizePhone(input.phone);
+    const now = new Date();
+
+    const [latest, lastHourCount] = await Promise.all([
+      this.prisma.otpCode.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' } }),
+      this.prisma.otpCode.count({
+        where: { phone, createdAt: { gt: new Date(now.getTime() - 60 * 60 * 1000) } },
+      }),
+    ]);
+
+    if (latest) {
+      const sinceLast = now.getTime() - latest.createdAt.getTime();
+      if (sinceLast < OTP_RESEND_COOLDOWN_MS) {
+        const wait = Math.ceil((OTP_RESEND_COOLDOWN_MS - sinceLast) / 1000);
+        throw new HttpException(
+          `Please wait ${wait} second${wait === 1 ? '' : 's'} before asking for another code.`,
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+    if (lastHourCount >= OTP_MAX_PER_HOUR) {
+      throw new HttpException(
+        'Too many codes requested for this number. Try again in an hour.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const codeHash = await bcrypt.hash(code, 8);
-    await this.prisma.otpCode.create({
-      data: { phone, codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS) },
+
+    // Retire any code still outstanding, so only the newest one can be used.
+    await this.prisma.otpCode.updateMany({
+      where: { phone, consumedAt: null },
+      data: { consumedAt: now },
     });
-    const devMode = this.config.get('OTP_DEV_MODE') !== 'false';
-    if (devMode) {
-      return { ok: true, devCode: code };
+    const created = await this.prisma.otpCode.create({
+      data: { phone, codeHash, expiresAt: new Date(now.getTime() + OTP_TTL_MS) },
+    });
+
+    if (this.otpDevMode) {
+      return { ok: true, devCode: code, resendAfterSeconds: OTP_RESEND_COOLDOWN_MS / 1000 };
     }
-    await this.sms.sendOtp(phone, code);
-    return { ok: true };
+
+    try {
+      await this.sms.sendOtp(phone, code);
+    } catch (error) {
+      // Delivery failed, so this code will never be used — retire it rather
+      // than leave it counting against the hourly limit.
+      await this.prisma.otpCode.update({
+        where: { id: created.id },
+        data: { consumedAt: new Date() },
+      });
+      throw error;
+    }
+
+    return { ok: true, resendAfterSeconds: OTP_RESEND_COOLDOWN_MS / 1000 };
   }
 
   async verifyOtp(input: VerifyOtpInput): Promise<AuthResponse> {
@@ -88,7 +159,22 @@ export class AuthService {
       where: { phone, consumedAt: null, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
     });
-    if (!otp || !(await bcrypt.compare(input.code, otp.codeHash))) {
+    if (!otp) {
+      throw new UnauthorizedException('Invalid or expired OTP');
+    }
+    // Six digits is guessable, so a code is burnt after a handful of misses.
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { consumedAt: new Date() },
+      });
+      throw new UnauthorizedException('Too many incorrect attempts. Please request a new code.');
+    }
+    if (!(await bcrypt.compare(input.code, otp.codeHash))) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      });
       throw new UnauthorizedException('Invalid or expired OTP');
     }
     await this.prisma.otpCode.update({
@@ -147,6 +233,14 @@ export class AuthService {
       email: user.email,
       phone: user.phone,
       hasPassword: Boolean(user.passwordHash),
+      // Devotee details. Used to pre-fill the sankalp when booking.
+      dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString() : null,
+      gender: user.gender,
+      gotra: user.gotra,
+      addressLine: user.addressLine,
+      city: user.city,
+      state: user.state,
+      pincode: user.pincode,
     };
   }
 
@@ -160,6 +254,15 @@ export class AuthService {
         data: {
           name: input.name,
           email: input.email || null,
+          // Only fields the form actually sent are written, so a partial save
+          // never wipes details the devotee entered earlier.
+          ...(input.dateOfBirth !== undefined ? { dateOfBirth: input.dateOfBirth } : {}),
+          ...(input.gender !== undefined ? { gender: input.gender } : {}),
+          ...(input.gotra !== undefined ? { gotra: input.gotra } : {}),
+          ...(input.addressLine !== undefined ? { addressLine: input.addressLine } : {}),
+          ...(input.city !== undefined ? { city: input.city } : {}),
+          ...(input.state !== undefined ? { state: input.state } : {}),
+          ...(input.pincode !== undefined ? { pincode: input.pincode } : {}),
         },
       });
       return this.toAuthResponse(user);

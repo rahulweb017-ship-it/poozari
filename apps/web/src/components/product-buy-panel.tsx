@@ -1,11 +1,17 @@
 'use client';
 
-import { formatInr, type Product } from '@poozari/shared';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { WhatsappBookButton } from '@/components/whatsapp';
+import { Price, PriceNote, useCurrency } from '@/lib/currency';
+import type { Product } from '@poozari/shared';
+
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 export function ProductBuyPanel({ product }: { product: Product }) {
   const router = useRouter();
+  const wa = useTranslations('whatsapp');
+  const { formatInrExact } = useCurrency();
   const maxQuantity = Math.min(product.stockQuantity, 10);
   const [quantity, setQuantity] = useState(1);
 
@@ -21,7 +27,7 @@ export function ProductBuyPanel({ product }: { product: Product }) {
             Price
           </div>
           <div className="mt-1 font-display text-3xl font-black text-accent">
-            {formatInr(product.priceInr)}
+            <Price amountInr={product.priceInr} />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">Inclusive of all taxes</p>
         </div>
@@ -73,9 +79,14 @@ export function ProductBuyPanel({ product }: { product: Product }) {
           <div className="mt-6 flex items-center justify-between border-t pt-5 text-sm">
             <span className="font-bold text-muted-foreground">Order total</span>
             <span className="font-display text-xl font-black text-foreground">
-              {formatInr(product.priceInr * quantity)}
+              <Price amountInr={product.priceInr * quantity} />
             </span>
           </div>
+          {/* Non-INR readers must see the exact rupee amount before paying. */}
+          <PriceNote
+            amountInr={product.priceInr * quantity}
+            className="mt-1.5 block text-3xs font-semibold text-muted-foreground"
+          />
           <button
             type="button"
             className="btn-primary mt-5 w-full text-2xs uppercase tracking-widest"
@@ -85,6 +96,17 @@ export function ProductBuyPanel({ product }: { product: Product }) {
           >
             Buy Now
           </button>
+          {/* Ordering over WhatsApp, with the item and quantity pre-filled. */}
+          <div className="mt-3">
+            <WhatsappBookButton
+              label={wa('orderOnWhatsapp')}
+              context={{
+                kind: 'product',
+                title: quantity > 1 ? `${product.name} x ${quantity}` : product.name,
+                price: formatInrExact(product.priceInr * quantity),
+              }}
+            />
+          </div>
         </>
       ) : (
         <button type="button" className="btn-primary mt-6 w-full" disabled>

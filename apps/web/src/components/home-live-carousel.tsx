@@ -1,11 +1,11 @@
 'use client';
 
+import { Link } from '@/i18n/navigation';
+import { Price } from '@/lib/currency';
 import {
-  formatInr,
   LiveSessionStatus,
   type LiveSession,
 } from '@poozari/shared';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
@@ -127,7 +127,7 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
                             Join fee
                           </div>
                           <div className="text-base font-black text-accent">
-                            {formatInr(session.joinPriceInr)}
+                            <Price amountInr={session.joinPriceInr} />
                           </div>
                         </div>
                         <Link

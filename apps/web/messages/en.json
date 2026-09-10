@@ -1,0 +1,441 @@
+{
+  "meta": {
+    "title": "poozari.com — Book Authentic Vedic Puja with Verified Pandits",
+    "description": "Book authentic Vedic puja at home or at sacred teerths. Verified pandits, complete samagri, and recorded pooja video. You book, we handle everything."
+  },
+  "nav": {
+    "pujas": "Pujas",
+    "teerthPuja": "Teerth Puja",
+    "temples": "Temples",
+    "products": "Store",
+    "liveDarshan": "Live Darshan",
+    "blog": "Blog",
+    "about": "About Us",
+    "howItWorks": "How It Works",
+    "contact": "Contact",
+    "becomePujari": "Become a Pujari",
+    "faq": "FAQ",
+    "login": "Login",
+    "myAccount": "My Account",
+    "signOut": "Sign out",
+    "menu": "Menu",
+    "close": "Close",
+    "language": "Language",
+    "currency": "Currency",
+    "more": "More"
+  },
+  "footer": {
+    "tagline": "Authentic Vedic rituals, performed by verified pandits and delivered to you as a recorded pooja video with prasad.",
+    "explore": "Explore",
+    "company": "Company",
+    "legal": "Legal",
+    "support": "Support",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "refund": "Cancellation & Refund",
+    "shipping": "Shipping Policy",
+    "rights": "All rights reserved.",
+    "madeIn": "Made with devotion in India."
+  },
+  "common": {
+    "from": "From",
+    "submit": "Submit",
+    "sending": "Sending…",
+    "sent": "Sent",
+    "save": "Save",
+    "cancel": "Cancel",
+    "required": "Required",
+    "optional": "Optional",
+    "readMore": "Read more",
+    "backHome": "Back to home",
+    "loading": "Loading…",
+    "notFound": "Not found",
+    "yourName": "Your name",
+    "email": "Email",
+    "phone": "Mobile number",
+    "city": "City",
+    "state": "State",
+    "pincode": "Pincode",
+    "message": "Message",
+    "subject": "Subject",
+    "selectOne": "Select one",
+    "somethingWrong": "Something went wrong. Please try again."
+  },
+  "currencyNote": {
+    "charged": "Charged as {amount} — your bank converts it.",
+    "approx": "Approximate price. You pay in Indian Rupees."
+  },
+  "about": {
+    "eyebrow": "About Us",
+    "title": "Rituals kept whole, wherever you are",
+    "lead": "poozari.com exists for the devotee who wants a puja performed properly and cannot always be there in person. We connect you to verified pandits at the temples and teerths where a ritual is meant to be done, and we send the whole thing back to you on video, with prasad.",
+    "storyHeading": "Why we started",
+    "story": "Families move — to another city, another country — but the occasions that call for a puja do not move with them. A shraddh falls due. A new house needs a Griha Pravesh. A Nag Bali has been pending for years. The old way was to phone a relative, hope they knew a pandit, and never really know what was performed. We built poozari.com so that the chain from your sankalp to the completed ritual is visible end to end.",
+    "valuesHeading": "What we hold to",
+    "values": [
+      {
+        "title": "The ritual, done properly",
+        "body": "Every puja is performed to its prescribed vidhi with complete samagri. No shortcuts, no combined sankalps, no substitutions you were not told about."
+      },
+      {
+        "title": "Pandits you can check",
+        "body": "Each pujari is verified before joining — lineage, training and years of practice. Their name and details are on your booking, not hidden behind a brand."
+      },
+      {
+        "title": "Your sankalp, named",
+        "body": "The puja is performed in your name and gotra. You hear it in the recording."
+      },
+      {
+        "title": "Proof, not promises",
+        "body": "You receive a recorded video of your pooja and, where offered, prasad couriered to your address."
+      }
+    ],
+    "statsHeading": "Where we work",
+    "stats": {
+      "cities": "Cities and teerths",
+      "pandits": "Verified pandits",
+      "pujas": "Rituals offered"
+    },
+    "ctaHeading": "Have an occasion coming up?",
+    "ctaBody": "Browse the rituals we perform, or tell us what you need and we will guide you.",
+    "ctaBrowse": "Browse pujas",
+    "ctaContact": "Talk to us"
+  },
+  "howItWorks": {
+    "eyebrow": "How It Works",
+    "title": "Four steps, and we take it from there",
+    "lead": "From choosing a ritual to receiving the video, here is exactly what happens and what we need from you.",
+    "steps": [
+      {
+        "title": "Choose the puja and package",
+        "body": "Pick the ritual, and where it should be performed — at your home, at a temple, or at the teerth prescribed for it. Each package lists precisely what is included, from samagri to the number of pandits."
+      },
+      {
+        "title": "Give your sankalp details",
+        "body": "Your name, gotra and the date you would like. This is what the pandit recites when the puja is offered in your name. Save it to your profile once and it pre-fills next time."
+      },
+      {
+        "title": "Pay securely",
+        "body": "Payment is taken in Indian Rupees through Razorpay — UPI, cards, netbanking or wallets. You get a booking reference immediately."
+      },
+      {
+        "title": "A verified pandit is assigned",
+        "body": "We match your booking to a verified pujari by service area and specialisation, usually within hours. You see who they are and can follow the status as it moves."
+      },
+      {
+        "title": "The puja is performed and recorded",
+        "body": "The ritual is carried out on the agreed date and filmed. Your recording appears in your account, and prasad is couriered where the package includes it."
+      }
+    ],
+    "faqHeading": "Common questions",
+    "faqCta": "See all FAQs",
+    "ctaHeading": "Ready to begin?",
+    "ctaBody": "Browse rituals by deity, festival or the benefit you are seeking.",
+    "ctaBrowse": "Browse pujas"
+  },
+  "blog": {
+    "eyebrow": "Blog",
+    "title": "Rituals, explained",
+    "lead": "Guides to the pujas we perform — when they are prescribed, what they involve, and what to expect.",
+    "empty": "No posts published yet. Check back soon.",
+    "readingTime": "{minutes} min read",
+    "publishedOn": "Published {date}",
+    "by": "By {author}",
+    "allCategories": "All",
+    "backToBlog": "All posts",
+    "related": "More reading",
+    "notFoundTitle": "That post is not here",
+    "notFoundBody": "It may have been unpublished or the link may be wrong."
+  },
+  "contact": {
+    "eyebrow": "Contact Us",
+    "title": "Talk to a person",
+    "lead": "Questions about a ritual, a booking already placed, or something that went wrong — write to us and we will come back to you.",
+    "formHeading": "Send us a message",
+    "subjectPlaceholder": "What is this about?",
+    "messagePlaceholder": "Tell us what you need. If it is about an existing booking, include the reference (POZ-…).",
+    "submit": "Send message",
+    "successHeading": "Message received",
+    "successBody": "We have it, and we usually reply within one working day. Keep an eye on your email and phone.",
+    "sendAnother": "Send another message",
+    "reachUs": "Other ways to reach us",
+    "hours": "Support hours",
+    "hoursValue": "Mon–Sat, 9:00 – 19:00 IST",
+    "responseTime": "Typical reply",
+    "responseTimeValue": "Within one working day",
+    "enquiryPrompt": "Asking about a specific puja?",
+    "enquiryLink": "Use the enquiry form instead"
+  },
+  "enquiry": {
+    "eyebrow": "Enquiry",
+    "title": "Ask about a puja",
+    "lead": "Not sure which ritual applies to your situation, or when it should be performed? Describe it and a pandit will advise you before you book anything.",
+    "formHeading": "Your enquiry",
+    "pujaLabel": "Puja you are asking about",
+    "pujaAny": "Not sure / general guidance",
+    "preferredDateLabel": "Date you have in mind",
+    "cityLabel": "Where should it be performed",
+    "detailsLabel": "Your situation",
+    "detailsPlaceholder": "For example: a Nag Bali has been pending in the family, or we are moving into a new flat next month and want a Griha Pravesh.",
+    "submit": "Send enquiry",
+    "successHeading": "Enquiry received",
+    "successBody": "A pandit will look at this and reply with guidance — usually within one working day. There is no obligation to book.",
+    "sendAnother": "Send another enquiry"
+  },
+  "becomePujari": {
+    "eyebrow": "Become a Pujari",
+    "title": "Perform pujas with us",
+    "lead": "We are looking for pandits with real training and a record of practice. If that is you, apply below — we verify every applicant before any booking is assigned.",
+    "whyHeading": "What you get",
+    "why": [
+      {
+        "title": "Bookings in your area",
+        "body": "Pujas are matched to your service pincodes, cities and specialisations. You accept what suits you and mark yourself unavailable whenever you need."
+      },
+      {
+        "title": "Paid per puja, no fees",
+        "body": "Nothing to pay to join. You are paid for the pujas you perform, on the agreed schedule."
+      },
+      {
+        "title": "Your own portal",
+        "body": "See assigned bookings, sankalp details and dates in one place, update status as the ritual proceeds, and upload the recording from your phone."
+      },
+      {
+        "title": "Your name on the work",
+        "body": "The devotee sees who is performing their puja — your name, experience and specialisations."
+      }
+    ],
+    "expectHeading": "What we expect",
+    "expect": [
+      "Correct vidhi, complete samagri, and the sankalp recited in the devotee's name and gotra.",
+      "Turning up on the agreed date, or telling us early enough that we can reassign.",
+      "A clear recording of the pooja, uploaded the same day.",
+      "Verifiable training — a gurukul, a parampara, or a guru we can speak to."
+    ],
+    "formHeading": "Apply to join",
+    "fullName": "Full name",
+    "lineageLabel": "Gurukul, parampara or guru",
+    "lineagePlaceholder": "Where and under whom you trained",
+    "experienceLabel": "Years of practice",
+    "specializationsLabel": "Pujas you specialise in",
+    "specializationsPlaceholder": "Rudra Abhishek, Narayan Nag Bali, Vivah…",
+    "specializationsHint": "Separate with commas",
+    "languagesLabel": "Languages you recite and speak in",
+    "languagesPlaceholder": "Sanskrit, Hindi, Marathi…",
+    "aboutLabel": "About you",
+    "aboutPlaceholder": "Your training, the temples or teerths you serve at, and anything else we should know.",
+    "submit": "Submit application",
+    "successHeading": "Application received",
+    "successBody": "Thank you. We review every application by hand and will call you on the number you gave. That usually takes a few working days.",
+    "applyAnother": "Submit another application"
+  },
+  "legal": {
+    "lastUpdated": "Last updated {date}",
+    "reviewNotice": "This is our current published policy. If anything here conflicts with what you were told, write to us and we will resolve it.",
+    "privacy": {
+      "eyebrow": "Legal",
+      "title": "Privacy Policy",
+      "lead": "What we collect when you book a puja, why we need it, and what we do with it.",
+      "sections": [
+        {
+          "heading": "What we collect",
+          "body": "To perform a puja in your name we need your name, gotra, mobile number and, where the ritual is at your home or prasad is being couriered, your address. Where you provide them, we also hold your email address, date of birth and gender. Payments are taken by Razorpay; card and UPI details go to them directly and are never stored on our servers."
+        },
+        {
+          "heading": "Why we need it",
+          "body": "Your name and gotra are recited during the sankalp — the ritual cannot be performed in your name without them. Your mobile number is how we send the login OTP and booking updates. Your address is used to assign a pandit in your area and to deliver prasad. We do not collect anything we do not need for the booking."
+        },
+        {
+          "heading": "Who else sees it",
+          "body": "The pandit assigned to your booking sees the sankalp details and, for a home puja, the address and phone number needed to reach you. Razorpay receives what is required to take the payment. Our SMS provider receives your mobile number to deliver the OTP. Courier partners receive the delivery address for prasad and store orders. We do not sell your data, and we do not share it for anyone else's advertising."
+        },
+        {
+          "heading": "Your pooja video",
+          "body": "The recording of your puja is stored so that you can watch it from your account. It is linked to your booking and is not published publicly by us. If you want it deleted, ask us and we will remove it."
+        },
+        {
+          "heading": "How long we keep it",
+          "body": "Booking, payment and invoice records are kept as long as Indian tax and accounting rules require. Your account details are kept while your account is open. Login OTPs expire within minutes and are stored only as a hash."
+        },
+        {
+          "heading": "Your choices",
+          "body": "You can see and correct your details from your profile at any time. Write to us to request a copy of your data, correct something we hold, or close your account and delete what is not required by law. You can opt out of promotional messages without affecting booking updates."
+        },
+        {
+          "heading": "Cookies",
+          "body": "We use cookies for the things the site cannot work without: keeping you logged in, remembering your language and your display currency. We do not use them to track you across other websites."
+        },
+        {
+          "heading": "Security",
+          "body": "Passwords are stored hashed, never in plain text. Access to booking data is limited to the pandit assigned and our own staff who need it. No system is perfect; if a breach ever affects you, we will tell you."
+        },
+        {
+          "heading": "Contact",
+          "body": "Questions about your data, or a request to delete it, go through our Contact page and are handled by a person, not a form reply."
+        }
+      ]
+    },
+    "terms": {
+      "eyebrow": "Legal",
+      "title": "Terms & Conditions",
+      "lead": "The agreement between you and poozari.com when you book a ritual through us.",
+      "sections": [
+        {
+          "heading": "What we do",
+          "body": "poozari.com arranges for Vedic rituals to be performed by verified pandits, at your home, at a temple, or at a teerth, and delivers a recording of the ritual to you. When you book, you are engaging us to arrange and deliver that ritual."
+        },
+        {
+          "heading": "Your account",
+          "body": "Accounts are verified by an OTP sent to your mobile number. Keep access to that number secure — anything done from your account is treated as done by you. Give accurate sankalp details: a puja performed with the wrong name or gotra cannot be undone."
+        },
+        {
+          "heading": "Bookings and confirmation",
+          "body": "A booking is confirmed once payment succeeds and you receive a reference. Your preferred date is a request, not a guarantee: some rituals must fall on a prescribed tithi or muhurat, and temple and teerth availability varies. We will tell you the confirmed date, and if we cannot meet a date you need, you may cancel for a full refund."
+        },
+        {
+          "heading": "Pandit assignment",
+          "body": "We assign a verified pandit by service area and specialisation. If your assigned pandit becomes unavailable we will reassign to another verified pandit of comparable standing rather than delay your ritual, and we will tell you."
+        },
+        {
+          "heading": "Prices and payment",
+          "body": "All prices are in Indian Rupees and every payment is charged in Indian Rupees. Prices shown in other currencies are indicative conversions for your convenience; the amount that reaches your card or bank statement is the rupee amount, converted by your own bank at its rate. Package prices include what the package lists and nothing more."
+        },
+        {
+          "heading": "What we deliver",
+          "body": "We deliver the ritual described in the package you chose, performed to its prescribed vidhi, together with a recording. Where the package includes prasad, we courier it to the address you gave. A ritual is a religious observance: we do not promise any particular worldly outcome from it, and no such promise should be inferred from anything on this site."
+        },
+        {
+          "heading": "Live Darshan",
+          "body": "Where a session has a join fee, that fee buys access to that streamed session. Streams depend on connectivity at the temple or teerth; if a session you paid to join does not take place, we refund the join fee."
+        },
+        {
+          "heading": "Store orders",
+          "body": "Puja essentials bought from our store are governed by these terms together with our Shipping Policy and Cancellation & Refund Policy."
+        },
+        {
+          "heading": "Conduct",
+          "body": "Do not use the site to abuse or harass pandits or staff, to misrepresent who you are, or to interfere with the service. We may suspend an account for this."
+        },
+        {
+          "heading": "Content",
+          "body": "The text, photographs and video on this site belong to us or our contributors. Your own pooja recording is yours to keep and share; everything else is not to be republished without permission."
+        },
+        {
+          "heading": "Limits of our liability",
+          "body": "We are responsible for arranging and delivering the ritual you booked. Where we fail to do so, our responsibility is limited to re-performing the ritual or refunding what you paid for it, as set out in our Cancellation & Refund Policy. We are not responsible for delays caused by events outside our control, such as temple closures, restrictions on gatherings, natural events, or a courier's failure."
+        },
+        {
+          "heading": "Changes",
+          "body": "We may change these terms; the version published here at the time of your booking is the one that governs it."
+        },
+        {
+          "heading": "Governing law",
+          "body": "These terms are governed by the laws of India, and the courts of India have jurisdiction over any dispute arising from them."
+        }
+      ]
+    },
+    "refund": {
+      "eyebrow": "Legal",
+      "title": "Cancellation & Refund Policy",
+      "lead": "When you can cancel, what comes back to you, and how long it takes.",
+      "sections": [
+        {
+          "heading": "Cancelling a puja booking",
+          "body": "You may cancel a booking free of charge until a pandit has been assigned and samagri has been arranged. Once the pandit is assigned and preparation has begun, part of the cost has already been committed on your behalf — see the timelines below."
+        },
+        {
+          "heading": "Refund timelines",
+          "body": "More than 72 hours before the scheduled date: full refund. Between 24 and 72 hours: 75% refunded, the balance covering samagri already purchased and the pandit's committed time. Under 24 hours: 50% refunded. After the ritual has been performed: no refund, because the puja cannot be un-performed."
+        },
+        {
+          "heading": "When we cancel",
+          "body": "If we cannot perform your ritual — no pandit available, a temple or teerth closure, or any failure on our side — you get a full refund, including any delivery charge, or you may move the booking to another date at no cost. The choice is yours, not ours."
+        },
+        {
+          "heading": "If something was wrong with the puja",
+          "body": "If the ritual was not performed as the package described, tell us within 7 days of receiving your recording. We will look at the recording and the pandit's report, and either arrange for the ritual to be performed again at our cost or refund you. We would rather re-perform it properly than simply refund you."
+        },
+        {
+          "heading": "Missing or unusable video",
+          "body": "The recording is part of what you paid for. If it never arrives or is unusable, and the ritual itself was performed correctly, we refund the part of the price attributable to the recording, or re-perform the ritual if you prefer."
+        },
+        {
+          "heading": "Live Darshan join fees",
+          "body": "A join fee is refunded in full if the session does not take place or the stream fails for reasons on our side. Once you have watched a session, the fee is not refundable."
+        },
+        {
+          "heading": "Store orders",
+          "body": "Unopened puja essentials may be returned within 7 days of delivery for a full refund of the item price. Consumables that have been opened cannot be returned for hygiene and ritual-purity reasons. Damaged or wrong items are replaced or refunded in full — send us a photograph within 48 hours of delivery."
+        },
+        {
+          "heading": "How refunds reach you",
+          "body": "Refunds go back through Razorpay to the same method you paid with. We initiate them within 3 working days of approving the request; your bank typically takes a further 5 to 7 working days. Payments made in rupees are refunded in rupees — if your bank converted the charge, the amount that lands may differ slightly from what left, because the exchange rate has moved. That difference is your bank's, not ours."
+        },
+        {
+          "heading": "How to ask",
+          "body": "Use our Contact page with your booking reference (POZ-…). A person reads it. We do not require you to explain yourself at length."
+        }
+      ]
+    },
+    "shipping": {
+      "eyebrow": "Legal",
+      "title": "Shipping Policy",
+      "lead": "How prasad and store orders reach you — and how your pooja video is delivered.",
+      "sections": [
+        {
+          "heading": "What gets shipped",
+          "body": "Two things travel physically: prasad from a puja whose package includes it, and puja essentials bought from our store. The pooja recording is not shipped — it appears in your account."
+        },
+        {
+          "heading": "Your pooja video",
+          "body": "The recording is uploaded by the pandit after the ritual and normally appears in your account within 48 hours of the puja. You will be notified. Nothing needs to be delivered for you to watch it."
+        },
+        {
+          "heading": "Prasad dispatch",
+          "body": "Prasad is dispatched within 3 working days of the ritual being completed, by courier, to the address on your booking. Please keep that address current — prasad is dispatched to what we hold at the time of the puja."
+        },
+        {
+          "heading": "Store dispatch",
+          "body": "Store orders are dispatched within 2 working days of payment, subject to stock. If something is out of stock we will tell you and offer a substitute or a refund rather than hold your order silently."
+        },
+        {
+          "heading": "Delivery times within India",
+          "body": "Metro cities: typically 2 to 4 working days after dispatch. Other cities and towns: 4 to 7 working days. Remote pincodes: up to 10 working days. These are courier estimates, not guarantees."
+        },
+        {
+          "heading": "Delivery charges",
+          "body": "Any delivery charge is shown at checkout before you pay. Where a puja package states that prasad is included, its delivery is included too."
+        },
+        {
+          "heading": "International delivery",
+          "body": "We serve devotees outside India, and the pooja video reaches you wherever you are. Physical prasad and store items ship within India only. If you are booking from abroad, give an Indian delivery address for anything physical — or choose a package without prasad."
+        },
+        {
+          "heading": "Tracking",
+          "body": "You receive a tracking reference by SMS or email once your parcel is dispatched, and order status is visible in your account."
+        },
+        {
+          "heading": "If a parcel is lost or damaged",
+          "body": "Tell us within 48 hours of the delivery date. Damaged or lost prasad and store items are replaced at our cost where we can, or refunded. Send a photograph of any damage — it settles the matter with the courier faster."
+        },
+        {
+          "heading": "Undelivered parcels",
+          "body": "If a courier cannot reach you after reasonable attempts, the parcel comes back to us and we will contact you to arrange redelivery. A second delivery charge may apply where the address given was wrong."
+        }
+      ]
+    }
+  },
+  "whatsapp": {
+    "bookOnWhatsapp": "Book on WhatsApp",
+    "orderOnWhatsapp": "Order on WhatsApp",
+    "askOnWhatsapp": "Ask on WhatsApp",
+    "joinOnWhatsapp": "Join via WhatsApp",
+    "chatWithUs": "Chat with us",
+    "openChat": "Open WhatsApp",
+    "fabAria": "Chat with us on WhatsApp",
+    "contactBlurb": "Message us and a person replies. Quickest way to sort out a date, a muhurat, or which ritual applies to your situation.",
+    "preferWhatsapp": "Prefer to book over WhatsApp?",
+    "preferWhatsappBody": "Send us the puja and we will confirm the pandit, the date and the payment link in chat.",
+    "orPay": "or pay online below"
+  }
+}

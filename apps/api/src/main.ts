@@ -16,6 +16,10 @@ async function bootstrap() {
   });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
+  // Bulk CSV imports post the whole sheet as a JSON string, which blows past
+  // the 100kb express default at a few hundred rows.
+  app.useBodyParser('json', { limit: '8mb' });
+
   // Serve locally stored uploads (videos, thumbnails) at /uploads/*.
   // Not under the /api prefix so the web app can reference stable URLs.
   const uploadDir = config.get<string>('UPLOAD_DIR')

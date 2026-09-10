@@ -1,3 +1,11 @@
+import type { BulkImportInput, BulkImportResult } from './csv';
+import type {
+  BlogPost,
+  CreateBlogPostInput,
+  Inquiry,
+  PanditApplication,
+} from './content';
+import type { Currency } from './currency';
 import type {
   AuthResponse,
   AccountProfile,
@@ -107,7 +115,10 @@ export class PoozariClient {
 
   /* Auth */
   requestOtp(data: { phone: string }) {
-    return this.post<{ ok: true; devCode?: string }>('/auth/otp/request', data);
+    return this.post<{ ok: true; devCode?: string; resendAfterSeconds: number }>(
+      '/auth/otp/request',
+      data,
+    );
   }
   verifyOtp(data: { phone: string; code: string; name?: string }) {
     return this.post<AuthResponse>('/auth/otp/verify', data);
@@ -121,7 +132,17 @@ export class PoozariClient {
   myProfile() {
     return this.get<AccountProfile>('/auth/me');
   }
-  updateCustomerProfile(data: { name: string; email?: string }) {
+  updateCustomerProfile(data: {
+    name: string;
+    email?: string;
+    dateOfBirth?: string | null;
+    gender?: string;
+    gotra?: string;
+    addressLine?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  }) {
     return this.patch<AuthResponse>('/auth/me', data);
   }
   changePassword(data: {
@@ -154,6 +175,39 @@ export class PoozariClient {
   }
   listBenefits() {
     return this.get<NamedEntity[]>('/benefits');
+  }
+  /** Published blog posts, newest first. */
+  listBlogPosts(category?: string) {
+    return this.get<BlogPost[]>(`/blog${category ? `?category=${encodeURIComponent(category)}` : ''}`);
+  }
+  listBlogCategories() {
+    return this.get<string[]>('/blog/categories');
+  }
+  getBlogPost(slug: string) {
+    return this.get<BlogPost>(`/blog/${slug}`);
+  }
+
+  /* Site forms */
+  submitContact(data: unknown) {
+    return this.post<{ ok: true; id: string }>('/contact', data);
+  }
+  submitEnquiry(data: unknown) {
+    return this.post<{ ok: true; id: string }>('/enquiries', data);
+  }
+  submitPanditApplication(data: unknown) {
+    return this.post<{ ok: true; id: string }>('/pandit-applications', data);
+  }
+  /**
+   * Log a WhatsApp booking intent. Requires a signed-in devotee — anonymous
+   * calls are rejected, and callers treat this as fire-and-forget.
+   */
+  logWhatsappLead(data: unknown) {
+    return this.post<{ ok: true; id: string }>('/whatsapp-leads', data);
+  }
+
+  /** Display currencies the admin has switched on. */
+  listCurrencies() {
+    return this.get<Currency[]>('/currencies');
   }
   listProducts(params?: { category?: string; q?: string }) {
     const qs = params
@@ -246,6 +300,90 @@ export class PoozariClient {
   }
   adminDeletePandit(id: string) {
     return this.delete<{ ok: true }>(`/admin/pandits/${id}`);
+  }
+
+  /* Admin email diagnostics */
+  adminEmailStatus() {
+    return this.get<{
+      configured: boolean;
+      host: string | null;
+      from: string;
+      notifyAddress: string | null;
+      ok: boolean;
+      detail: string;
+    }>('/admin/email/status');
+  }
+  adminSendTestEmail() {
+    return this.post<{ ok: true; to: string }>('/admin/email/test');
+  }
+
+  /* Admin blog */
+  adminListBlogPosts() {
+    return this.get<BlogPost[]>('/admin/blog');
+  }
+  adminCreateBlogPost(data: CreateBlogPostInput | unknown) {
+    return this.post<BlogPost>('/admin/blog', data);
+  }
+  adminUpdateBlogPost(id: string, data: unknown) {
+    return this.patch<BlogPost>(`/admin/blog/${id}`, data);
+  }
+  adminDeleteBlogPost(id: string) {
+    return this.delete<{ ok: true }>(`/admin/blog/${id}`);
+  }
+
+  /* Admin inbox: Contact Us + puja enquiries */
+  adminListInquiries(params?: { kind?: string; status?: string }) {
+    const qs = params
+      ? `?${new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][]).toString()}`
+      : '';
+    return this.get<Inquiry[]>(`/admin/inquiries${qs}`);
+  }
+  adminUpdateInquiry(id: string, data: unknown) {
+    return this.patch<Inquiry>(`/admin/inquiries/${id}`, data);
+  }
+
+  /* Admin: "Become a Pujari" applications */
+  adminListPanditApplications(status?: string) {
+    return this.get<PanditApplication[]>(
+      `/admin/pandit-applications${status ? `?status=${status}` : ''}`,
+    );
+  }
+  adminUpdatePanditApplication(id: string, data: unknown) {
+    return this.patch<PanditApplication>(`/admin/pandit-applications/${id}`, data);
+  }
+
+  /**
+   * Upload an image for an admin form (puja/product cover, etc).
+   * Resolves to the absolute URL to store in the record's `imageUrl`.
+   */
+  adminUploadImage(file: Blob, filename = 'image.jpg') {
+    const form = new FormData();
+    form.append('file', file, filename);
+    return this.upload<{ url: string }>('/admin/uploads/image', form);
+  }
+
+  /* Admin currencies */
+  adminListCurrencies() {
+    return this.get<Currency[]>('/admin/currencies');
+  }
+  adminUpsertCurrency(data: unknown) {
+    return this.post<Currency>('/admin/currencies', data);
+  }
+  adminUpdateCurrency(code: string, data: unknown) {
+    return this.patch<Currency>(`/admin/currencies/${code}`, data);
+  }
+  adminDeleteCurrency(code: string) {
+    return this.delete<{ ok: true }>(`/admin/currencies/${code}`);
+  }
+
+  /* Admin bulk CSV import */
+  /** Validate (dryRun) or apply a puja CSV. Nothing is written while issues remain. */
+  adminImportPujas(data: BulkImportInput) {
+    return this.post<BulkImportResult>('/admin/import/pujas', data);
+  }
+  /** Validate (dryRun) or apply a pandit CSV. Nothing is written while issues remain. */
+  adminImportPandits(data: BulkImportInput) {
+    return this.post<BulkImportResult>('/admin/import/pandits', data);
   }
 
   /* Admin products */

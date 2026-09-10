@@ -1,3 +1,4 @@
+import { DEFAULT_CURRENCIES } from '@poozari/shared';
 import { PrismaClient, PujaLocationType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
@@ -19,6 +20,26 @@ const prisma = new PrismaClient();
 async function main() {
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@poozari.com';
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'admin12345';
+
+  /*
+   * The development defaults are published in this repository, so seeding a
+   * production database with them would hand the admin panel to anyone who
+   * reads the README. Refuse rather than do it quietly.
+   */
+  if (process.env.NODE_ENV === 'production') {
+    const weak: string[] = [];
+    if (!process.env.SEED_ADMIN_PASSWORD) weak.push('SEED_ADMIN_PASSWORD');
+    if (!process.env.SEED_PANDIT_PASSWORD) weak.push('SEED_PANDIT_PASSWORD');
+    if (weak.length) {
+      throw new Error(
+        `Refusing to seed production with default passwords. Set ${weak.join(' and ')} ` +
+          'to strong values first. To skip the seeded test customer entirely, ' +
+          'set SEED_TEST_CUSTOMER=false.',
+      );
+    }
+  }
+
+  const panditPassword = process.env.SEED_PANDIT_PASSWORD ?? 'pandit12345';
 
   // Super Admin
   await prisma.user.upsert({
@@ -324,7 +345,7 @@ async function main() {
         email: pd.email,
         name: pd.displayName,
         role: UserRole.PANDIT,
-        passwordHash: await bcrypt.hash('pandit12345', 10),
+        passwordHash: await bcrypt.hash(panditPassword, 10),
         panditProfile: {
           create: {
             displayName: pd.displayName,
@@ -336,6 +357,86 @@ async function main() {
           },
         },
       },
+    });
+  }
+
+  // Test customer, for signing in with a password instead of an OTP.
+  //
+  // Customers normally arrive via OTP and never have a password, which makes
+  // repeated manual testing tedious. This one is seeded with a password so
+  // `/login` -> "Sign in with password" works straight away. It also carries
+  // the sankalp details that pre-fill a booking form.
+  // A known-password account has no place in production; opt out with
+  // SEED_TEST_CUSTOMER=false.
+  const wantTestCustomer = process.env.SEED_TEST_CUSTOMER !== 'false';
+  const testCustomerPhone = process.env.SEED_CUSTOMER_PHONE ?? '9000000009';
+  const testCustomerPassword = process.env.SEED_CUSTOMER_PASSWORD ?? 'customer12345';
+  const testCustomer = wantTestCustomer ? await prisma.user.upsert({
+    where: { phone: testCustomerPhone },
+    create: {
+      phone: testCustomerPhone,
+      name: 'Test Devotee',
+      email: 'test.devotee@example.com',
+      role: UserRole.CUSTOMER,
+      passwordHash: await bcrypt.hash(testCustomerPassword, 10),
+      gotra: 'Bharadwaj',
+      dateOfBirth: new Date('1990-05-14'),
+      gender: 'MALE',
+      addressLine: '14 Assi Ghat Road',
+      city: 'Varanasi',
+      state: 'Uttar Pradesh',
+      pincode: '221005',
+    },
+    // Reseeding resets the password so the documented one always works, but
+    // leaves anything else the account has accumulated alone.
+    update: { passwordHash: await bcrypt.hash(testCustomerPassword, 10) },
+  }) : null;
+
+  // One completed booking, so the customer's account pages are not empty.
+  // Keyed on a fixed reference, so reseeding does not pile up duplicates.
+  const demoReference = 'POZ-DEMO01';
+  const demoPuja = await prisma.puja.findUnique({
+    where: { slug: 'rudrabhishek' },
+    include: { packages: { orderBy: { priceInr: 'asc' }, take: 1 } },
+  });
+  if (
+    testCustomer &&
+    demoPuja?.packages[0] &&
+    !(await prisma.booking.findUnique({ where: { reference: demoReference } }))
+  ) {
+    const demoPackage = demoPuja.packages[0];
+    await prisma.booking.create({
+      data: {
+        reference: demoReference,
+        customerId: testCustomer.id,
+        pujaId: demoPuja.id,
+        packageId: demoPackage.id,
+        status: 'COMPLETED',
+        devoteeName: 'Test Devotee',
+        gotra: 'Bharadwaj',
+        contactPhone: testCustomerPhone,
+        contactEmail: 'test.devotee@example.com',
+        preferredDate: new Date('2026-08-12'),
+        preferredTime: 'Morning',
+        addressLine: '14 Assi Ghat Road',
+        city: 'Varanasi',
+        pincode: '221005',
+        amountInr: demoPackage.priceInr,
+        payment: {
+          create: { amountInr: demoPackage.priceInr, status: 'PAID' },
+        },
+      },
+    });
+  }
+
+  // Display currencies. Rates are indicative starting points that the Super
+  // Admin maintains under Admin -> Currencies; money is always charged in INR.
+  for (const currency of DEFAULT_CURRENCIES) {
+    await prisma.currencyRate.upsert({
+      where: { code: currency.code },
+      create: currency,
+      // Never clobber a rate an admin has already corrected.
+      update: {},
     });
   }
 

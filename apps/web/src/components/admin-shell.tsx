@@ -1,9 +1,9 @@
 'use client';
 
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth';
 import { UserRole } from '@poozari/shared';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+
 import { useEffect } from 'react';
 
 const NAV = [
@@ -13,6 +13,11 @@ const NAV = [
   { href: '/admin/pujas', label: 'Pujas', icon: '🪔' },
   { href: '/admin/products', label: 'Products', icon: '📦' },
   { href: '/admin/catalog', label: 'Catalog', icon: '🗂️' },
+  { href: '/admin/import', label: 'Bulk Import', icon: '📥' },
+  { href: '/admin/blog', label: 'Blog', icon: '📝' },
+  { href: '/admin/inbox', label: 'Inbox', icon: '📨' },
+  { href: '/admin/applications', label: 'Applications', icon: '📜' },
+  { href: '/admin/currencies', label: 'Currencies', icon: '💱' },
   { href: '/admin/live', label: 'Live Darshan', icon: '📡' },
 ];
 

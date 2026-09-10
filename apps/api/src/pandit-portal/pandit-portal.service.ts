@@ -2,6 +2,9 @@ import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundEx
 import type { UpdatePanditProfileInput, UploadVideoInput } from '@poozari/shared';
 import { AssignmentStatus, BookingStatus } from '@poozari/shared';
 import { bookingInclude, serializeBooking } from '../bookings/booking.serializer';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
+import { videoReady } from '../email/email.templates';
 import { PrismaService } from '../prisma/prisma.service';
 import { STORAGE } from '../storage/storage.module';
 import type { ObjectStorage } from '../storage/storage.service';
@@ -19,7 +22,34 @@ export class PanditPortalService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(STORAGE) private readonly storage: ObjectStorage,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
   ) {}
+
+  /**
+   * Tell the devotee the recording is ready. Not awaited: the video is already
+   * saved, and a mail failure must not fail the pandit's upload.
+   */
+  private async notifyVideoReady(bookingId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { puja: { select: { title: true } } },
+    });
+    if (!booking?.contactEmail) return;
+    const webBase = (this.config.get<string>('WEB_BASE_URL') ?? 'http://localhost:3000').replace(
+      /\/$/,
+      '',
+    );
+    void this.email.send({
+      to: booking.contactEmail,
+      ...videoReady({
+        reference: booking.reference,
+        devoteeName: booking.devoteeName,
+        pujaTitle: booking.puja.title,
+        accountUrl: `${webBase}/account/bookings/${booking.id}`,
+      }),
+    });
+  }
 
   private async panditProfileId(userId: string): Promise<string> {
     const profile = await this.prisma.panditProfile.findUnique({ where: { userId } });
@@ -118,6 +148,7 @@ export class PanditPortalService {
         status: BookingStatus.COMPLETED,
       },
     });
+    await this.notifyVideoReady(bookingId);
     return this.serialized(bookingId);
   }
 
@@ -129,6 +160,7 @@ export class PanditPortalService {
       where: { id: bookingId },
       data: { videoUrl, status: BookingStatus.COMPLETED },
     });
+    await this.notifyVideoReady(bookingId);
     return this.serialized(bookingId);
   }
 

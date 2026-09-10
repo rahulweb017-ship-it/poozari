@@ -39,6 +39,14 @@ export interface AuthResponse {
 
 export interface AccountProfile extends AuthUser {
   hasPassword: boolean;
+  /** ISO date string, or null when the devotee has not given one. */
+  dateOfBirth?: string | null;
+  gender?: string;
+  gotra?: string;
+  addressLine?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
 }
 
 export interface PujaPackage {
