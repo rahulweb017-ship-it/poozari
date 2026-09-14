@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -19,8 +21,11 @@ import type {
   VerifyOtpInput,
 } from '@poozari/shared';
 import { UserRole } from '@poozari/shared';
+import { OtpChannel } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { JwtPayload } from '../common/decorators';
+import { EmailService } from '../email/email.service';
+import { loginCode } from '../email/email.templates';
 import { PrismaService } from '../prisma/prisma.service';
 import { SmsService } from '../sms/sms.service';
 
@@ -39,10 +44,35 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly sms: SmsService,
+    private readonly email: EmailService,
   ) {}
 
   private normalizePhone(phone: string): string {
     return phone.replace(/^\+?91/, '').replace(/\D/g, '').slice(-10);
+  }
+
+  /**
+   * Resolve a login request to the one identifier it carries.
+   *
+   * The schemas guarantee exactly one of phone/email is present, so the throw
+   * is only there to keep the return type honest.
+   */
+  private resolveTarget(input: { phone?: string; email?: string }): {
+    identifier: string;
+    channel: OtpChannel;
+  } {
+    if (input.phone) {
+      return { identifier: this.normalizePhone(input.phone), channel: OtpChannel.SMS };
+    }
+    if (input.email) {
+      // Already trimmed and lowercased by `emailSchema`, so it matches the
+      // stored `User.email` and its own earlier codes.
+      return { identifier: input.email, channel: OtpChannel.EMAIL };
+    }
+    throw new HttpException(
+      'Enter either a mobile number or an email address',
+      HttpStatus.BAD_REQUEST,
+    );
   }
 
   private sign(payload: JwtPayload): string {
@@ -87,21 +117,25 @@ export class AuthService {
   }
 
   /**
-   * Generate, store and send a one-time code.
+   * Generate, store and send a one-time code to a mobile number or an email.
    *
-   * Rate limited per number: sending real SMS costs money, and an unthrottled
-   * OTP endpoint is both an abuse vector and a way to harass a phone owner.
+   * Rate limited per identifier: sending real SMS costs money, and an
+   * unthrottled OTP endpoint is both an abuse vector and a way to harass
+   * whoever owns that number or inbox.
    */
   async requestOtp(
     input: RequestOtpInput,
   ): Promise<{ ok: true; devCode?: string; resendAfterSeconds: number }> {
-    const phone = this.normalizePhone(input.phone);
+    const { identifier, channel } = this.resolveTarget(input);
     const now = new Date();
 
     const [latest, lastHourCount] = await Promise.all([
-      this.prisma.otpCode.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' } }),
+      this.prisma.otpCode.findFirst({
+        where: { identifier, channel },
+        orderBy: { createdAt: 'desc' },
+      }),
       this.prisma.otpCode.count({
-        where: { phone, createdAt: { gt: new Date(now.getTime() - 60 * 60 * 1000) } },
+        where: { identifier, channel, createdAt: { gt: new Date(now.getTime() - 60 * 60 * 1000) } },
       }),
     ]);
 
@@ -117,7 +151,9 @@ export class AuthService {
     }
     if (lastHourCount >= OTP_MAX_PER_HOUR) {
       throw new HttpException(
-        'Too many codes requested for this number. Try again in an hour.',
+        channel === OtpChannel.EMAIL
+          ? 'Too many codes requested for this email address. Try again in an hour.'
+          : 'Too many codes requested for this number. Try again in an hour.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
@@ -127,11 +163,11 @@ export class AuthService {
 
     // Retire any code still outstanding, so only the newest one can be used.
     await this.prisma.otpCode.updateMany({
-      where: { phone, consumedAt: null },
+      where: { identifier, channel, consumedAt: null },
       data: { consumedAt: now },
     });
     const created = await this.prisma.otpCode.create({
-      data: { phone, codeHash, expiresAt: new Date(now.getTime() + OTP_TTL_MS) },
+      data: { identifier, channel, codeHash, expiresAt: new Date(now.getTime() + OTP_TTL_MS) },
     });
 
     if (this.otpDevMode) {
@@ -139,7 +175,21 @@ export class AuthService {
     }
 
     try {
-      await this.sms.sendOtp(phone, code);
+      if (channel === OtpChannel.EMAIL) {
+        // `EmailService.send` is fire-and-forget by design: it resolves false
+        // rather than throwing, including when SMTP is not configured at all.
+        // A login code is the one message where that is not acceptable —
+        // swallowing it would park the devotee on the code screen waiting for
+        // an email that was never sent.
+        const sent = await this.email.send({ to: identifier, ...loginCode({ code, minutes: 5 }) });
+        if (!sent) {
+          throw new ServiceUnavailableException(
+            'Could not send the code to that email address. Please try again shortly.',
+          );
+        }
+      } else {
+        await this.sms.sendOtp(identifier, code);
+      }
     } catch (error) {
       // Delivery failed, so this code will never be used — retire it rather
       // than leave it counting against the hourly limit.
@@ -154,9 +204,9 @@ export class AuthService {
   }
 
   async verifyOtp(input: VerifyOtpInput): Promise<AuthResponse> {
-    const phone = this.normalizePhone(input.phone);
+    const { identifier, channel } = this.resolveTarget(input);
     const otp = await this.prisma.otpCode.findFirst({
-      where: { phone, consumedAt: null, expiresAt: { gt: new Date() } },
+      where: { identifier, channel, consumedAt: null, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
     });
     if (!otp) {
@@ -182,10 +232,22 @@ export class AuthService {
       data: { consumedAt: new Date() },
     });
 
+    // A verified code is also the sign-up: an identifier nobody has used before
+    // creates the account here, which is why there is no registration form.
+    const where = channel === OtpChannel.EMAIL ? { email: identifier } : { phone: identifier };
+
+    // Staff accounts carry an email, so an emailed code would otherwise mint a
+    // SUPER_ADMIN or PANDIT token and walk straight past their password login.
+    // Mirrors the reciprocal check in `staffLogin`.
+    const existing = await this.prisma.user.findUnique({ where });
+    if (existing && existing.role !== UserRole.CUSTOMER) {
+      throw new UnauthorizedException('Use the staff login for this account');
+    }
+
     const user = await this.prisma.user.upsert({
-      where: { phone },
+      where,
       update: input.name ? { name: input.name } : {},
-      create: { phone, name: input.name ?? 'Devotee', role: UserRole.CUSTOMER },
+      create: { ...where, name: input.name ?? 'Devotee', role: UserRole.CUSTOMER },
     });
     return this.toAuthResponse(user);
   }
@@ -210,15 +272,19 @@ export class AuthService {
   }
 
   async customerPasswordLogin(input: CustomerPasswordLoginInput): Promise<AuthResponse> {
-    const phone = this.normalizePhone(input.phone);
-    const user = await this.prisma.user.findUnique({ where: { phone } });
+    const { identifier, channel } = this.resolveTarget(input);
+    const user = await this.prisma.user.findUnique({
+      where: channel === OtpChannel.EMAIL ? { email: identifier } : { phone: identifier },
+    });
     if (
       !user ||
       user.role !== UserRole.CUSTOMER ||
       !user.passwordHash ||
       !(await bcrypt.compare(input.password, user.passwordHash))
     ) {
-      throw new UnauthorizedException('Invalid phone number or password');
+      // One message for every failure, so this cannot be used to find out
+      // which numbers or addresses have an account.
+      throw new UnauthorizedException('Invalid credentials');
     }
     return this.toAuthResponse(user);
   }
@@ -248,6 +314,21 @@ export class AuthService {
     userId: string,
     input: UpdateCustomerProfileInput,
   ): Promise<AuthResponse> {
+    if (!input.email) {
+      // An account created by an emailed code has no mobile number, so the
+      // address is its only way back in. Blanking the field would lock the
+      // devotee out of their own bookings for good.
+      const current = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { phone: true },
+      });
+      if (!current?.phone) {
+        throw new BadRequestException(
+          'Add a mobile number before removing your email address — it is the only way you can sign in.',
+        );
+      }
+    }
+
     try {
       const user = await this.prisma.user.update({
         where: { id: userId },

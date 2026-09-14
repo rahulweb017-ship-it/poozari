@@ -110,6 +110,13 @@ enum PostStatus {
   PUBLISHED
 }
 
+/// How a one-time login code was delivered. The same code table serves both,
+/// so the cooldown and hourly cap are enforced per channel.
+enum OtpChannel {
+  SMS
+  EMAIL
+}
+
 model User {
   id           String   @id @default(cuid())
   role         UserRole @default(CUSTOMER)
@@ -139,17 +146,20 @@ model User {
 }
 
 model OtpCode {
-  id         String    @id @default(cuid())
-  phone      String
+  id String @id @default(cuid())
+  /// Who the code was sent to: a 10-digit mobile number, or a lowercased email
+  /// address. Deliberately not a relation — codes exist before the account does.
+  identifier String
+  channel    OtpChannel @default(SMS)
   codeHash   String
   expiresAt  DateTime
   consumedAt DateTime?
   /// Wrong guesses so far. A 6-digit code is brute-forceable without a cap.
-  attempts   Int       @default(0)
-  createdAt  DateTime  @default(now())
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
 
-  @@index([phone])
-  @@index([phone, createdAt])
+  @@index([identifier, channel])
+  @@index([identifier, channel, createdAt])
 }
 
 model PanditProfile {

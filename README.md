@@ -52,10 +52,12 @@ pnpm dev
 ### Default logins after seeding
 - Super Admin: `admin@poozari.com` / `admin12345` → `/admin/login`
 - Pandit: `pandit.varanasi@poozari.com` / `pandit12345` → `/pandit/login`
-- Customer: any mobile number via OTP (dev mode shows the code on screen) → `/login`
+- Customer: any mobile number **or email address** via OTP (dev mode shows the
+  code on screen) → `/login`. First code verified creates the account.
 - Test customer with a password: `9000000009` / `customer12345` → `/login`, then
   "Sign in with password". Seeded with a completed booking and saved sankalp
   details so the account pages are not empty; re-seeding resets its password.
+  The password login accepts an email too, once the account has one saved.
   Override with `SEED_CUSTOMER_PHONE` / `SEED_CUSTOMER_PASSWORD`, and remove the
   account before going live.
 
@@ -394,20 +396,45 @@ Links inside emails are built from **`WEB_BASE_URL`** (defaults to
 
 ## OTP login
 
-Customers sign in with an OTP sent to their mobile.
+Customers sign in at `/login` with a one-time code sent to **either a mobile
+number or an email address** — the `Mobile` / `Email` toggle on the card picks
+the channel, and the API takes exactly one of `phone` or `email` (sending both
+is a 400).
+
+**There is no signup page: the first verified code creates the account.** An
+identifier nobody has used before is upserted into a new `CUSTOMER` on verify,
+named from the optional Name field or `Devotee`. This is why `/login` is headed
+"Create account or sign in".
 
 - `SMS_PROVIDER` selects the gateway: `fast2sms` (the default when a Fast2SMS
   key is present), `msg91`, `twilio`, or `log` for local work. Each provider is
   one adapter in `apps/api/src/sms/sms.service.ts`.
+- Email codes go out over the same SMTP transport as every other message
+  (`SMTP_*`, see the Email section). Unlike the notification emails, a login
+  code is **not** fire-and-forget: if `EmailService.send` reports failure — and
+  it reports failure when SMTP is simply unconfigured — the request answers 503
+  and the code is retired, rather than parking the devotee on the code screen
+  waiting for mail that was never sent.
 - `OTP_DEV_MODE=true` returns the code in the API response instead of sending an
-  SMS. **It must be set explicitly** — a deploy that forgets the variable sends
-  real SMS rather than handing out login codes over the API.
-- Requesting a code is rate limited per number: one every 60 seconds, at most 5
-  an hour. The login screen counts the resend button down to match.
+  SMS or an email. **It must be set explicitly** — a deploy that forgets the
+  variable sends for real rather than handing out login codes over the API.
+- Requesting a code is rate limited per identifier *per channel*: one every 60
+  seconds, at most 5 an hour. A number and an address are counted separately.
+  The login screen counts the resend button down to match.
 - Issuing a new code retires any outstanding one, so only the newest works.
 - A code is burnt after 5 wrong guesses — six digits is otherwise guessable.
-- If the SMS gateway fails, the stored code is retired immediately rather than
-  left to count against the hourly limit.
+- If delivery fails, the stored code is retired immediately rather than left to
+  count against the hourly limit.
+- An emailed code is refused for a **staff** address: `admin@poozari.com` and
+  the pandits carry an email, and without that check a code would mint a
+  SUPER_ADMIN or PANDIT token and walk past their password login. They keep
+  using `/admin/login` and `/pandit/login`.
+- Codes live in `OtpCode`, keyed on `(identifier, channel)` — `identifier` is a
+  bare 10-digit number or a lowercased address, with no FK, because a code has
+  to exist before the account does.
+
+Mobile stays India-only (`+91`, `[6-9]` then 9 digits); the email channel is the
+way in for everyone else until multi-country SMS is worked out.
 
 ## Customer details
 

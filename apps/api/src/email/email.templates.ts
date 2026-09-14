@@ -12,6 +12,34 @@ import type { SendEmailOptions } from './email.service';
 
 const SIGNOFF = '\n\n— poozari.com';
 
+/**
+ * A one-time code for signing in with an email address.
+ *
+ * Unlike every other template here this one goes to the devotee rather than to
+ * the team, so it carries no admin links and says what to do if the request was
+ * not theirs.
+ */
+export function loginCode(input: { code: string; minutes: number }): Omit<SendEmailOptions, 'to'> {
+  const lines = [
+    'Here is your poozari.com sign-in code:',
+    '',
+    `    ${input.code}`,
+    '',
+    `It is valid for ${input.minutes} minutes and can only be used once.`,
+    '',
+    'If you did not try to sign in, you can ignore this email — nobody can get',
+    'into your account without this code.',
+  ];
+
+  return {
+    // The code deliberately stays out of the subject: `EmailService.send` logs
+    // every subject line, and a live login code does not belong in the server
+    // log where anyone with log access could read it inside its 5-minute life.
+    subject: 'Your poozari.com sign-in code',
+    text: lines.join('\n') + SIGNOFF,
+  };
+}
+
 /** Notify the team that someone used a site form. */
 export function inquiryNotification(input: {
   kind: 'Contact Us' | 'Puja enquiry' | 'WhatsApp booking';

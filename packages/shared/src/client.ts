@@ -7,6 +7,11 @@ import type {
 } from './content';
 import type { Currency } from './currency';
 import type {
+  CustomerPasswordLoginInput,
+  RequestOtpInput,
+  VerifyOtpInput,
+} from './validation';
+import type {
   AuthResponse,
   AccountProfile,
   Booking,
@@ -114,19 +119,21 @@ export class PoozariClient {
   }
 
   /* Auth */
-  requestOtp(data: { phone: string }) {
+  /** Send a one-time code. Pass exactly one of `phone` or `email`. */
+  requestOtp(data: RequestOtpInput) {
     return this.post<{ ok: true; devCode?: string; resendAfterSeconds: number }>(
       '/auth/otp/request',
       data,
     );
   }
-  verifyOtp(data: { phone: string; code: string; name?: string }) {
+  /** Verifying a code for an unknown identifier creates the account. */
+  verifyOtp(data: VerifyOtpInput) {
     return this.post<AuthResponse>('/auth/otp/verify', data);
   }
   staffLogin(data: { email: string; password: string }) {
     return this.post<AuthResponse>('/auth/login', data);
   }
-  customerPasswordLogin(data: { phone: string; password: string }) {
+  customerPasswordLogin(data: CustomerPasswordLoginInput) {
     return this.post<AuthResponse>('/auth/customer/login', data);
   }
   myProfile() {

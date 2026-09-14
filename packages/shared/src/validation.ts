@@ -16,16 +16,35 @@ export const passwordSchema = z
 
 /* ----------------------------- Auth ----------------------------- */
 
-export const requestOtpSchema = z.object({
-  phone: phoneSchema,
-});
+/**
+ * A devotee identifies themselves with a mobile number *or* an email address,
+ * never both at once — the one they send decides which channel a login code
+ * goes out on. Shared by the OTP and password logins.
+ *
+ * Built as a plain shape rather than a schema because `.refine()` returns a
+ * `ZodEffects`, which has no `.extend()`: each schema below has to spread the
+ * shape first and refine last.
+ */
+const otpTargetShape = {
+  phone: phoneSchema.optional(),
+  email: emailSchema.optional(),
+};
+const hasExactlyOneTarget = (value: { phone?: string; email?: string }) =>
+  Boolean(value.phone) !== Boolean(value.email);
+const oneTargetMessage = { message: 'Enter either a mobile number or an email address' };
+
+export const requestOtpSchema = z
+  .object(otpTargetShape)
+  .refine(hasExactlyOneTarget, oneTargetMessage);
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 
-export const verifyOtpSchema = z.object({
-  phone: phoneSchema,
-  code: z.string().length(6, 'OTP must be 6 digits'),
-  name: z.string().trim().min(2).max(80).optional(),
-});
+export const verifyOtpSchema = z
+  .object({
+    ...otpTargetShape,
+    code: z.string().length(6, 'OTP must be 6 digits'),
+    name: z.string().trim().min(2).max(80).optional(),
+  })
+  .refine(hasExactlyOneTarget, oneTargetMessage);
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 
 export const staffLoginSchema = z.object({
@@ -34,10 +53,9 @@ export const staffLoginSchema = z.object({
 });
 export type StaffLoginInput = z.infer<typeof staffLoginSchema>;
 
-export const customerPasswordLoginSchema = z.object({
-  phone: phoneSchema,
-  password: passwordSchema,
-});
+export const customerPasswordLoginSchema = z
+  .object({ ...otpTargetShape, password: passwordSchema })
+  .refine(hasExactlyOneTarget, oneTargetMessage);
 export type CustomerPasswordLoginInput = z.infer<typeof customerPasswordLoginSchema>;
 
 /** Devotee-supplied details, used to pre-fill the sankalp on a booking. */

@@ -94,7 +94,7 @@ export default function CustomerProfilePage() {
       setNewPassword('');
       setConfirmPassword('');
       setProfile((current) => current ? { ...current, hasPassword: true } : current);
-      setMessage('Password saved. You can now sign in using phone and password.');
+      setMessage('Password saved. You can now sign in with your mobile number or email and this password.');
     } catch (e: any) {
       setError(e.message ?? 'Could not save password');
     } finally {
