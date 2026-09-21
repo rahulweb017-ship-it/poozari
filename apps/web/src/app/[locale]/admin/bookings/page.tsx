@@ -74,6 +74,9 @@ export default function AdminBookingsPage() {
                       <span>📍 {b.city || 'N/A'} {b.pincode ? `(${b.pincode})` : ''}</span>
                       <span>📅 {new Date(b.preferredDate).toLocaleDateString('en-IN')}</span>
                       <span className="font-black text-accent">{formatInr(b.amountInr)}</span>
+                      {b.addons.length ? (
+                        <span>🌼 {b.addons.map((a) => a.name).join(', ')}</span>
+                      ) : null}
                     </div>
                     {b.assignment?.pandit ? (
                       <div className="mt-3">

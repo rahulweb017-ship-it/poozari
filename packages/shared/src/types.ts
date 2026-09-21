@@ -53,8 +53,34 @@ export interface PujaPackage {
   id: string;
   name: string;
   description: string;
+  /** Hindi copy. Empty means untranslated — render the English. See `localized`. */
+  nameHi: string;
+  descriptionHi: string;
   priceInr: number;
   inclusions: string[];
+}
+
+/** A paid extra offered on every puja, managed under Admin -> Add-ons. */
+export interface Addon {
+  id: string;
+  name: string;
+  nameHi: string;
+  slug: string;
+  description: string;
+  descriptionHi: string;
+  priceInr: number;
+  imageUrl?: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+/** An add-on as bought: a price snapshot that later edits never rewrite. */
+export interface BookingAddonLine {
+  id: string;
+  addonId?: string | null;
+  name: string;
+  nameHi: string;
+  priceInr: number;
 }
 
 export interface NamedEntity {
@@ -82,6 +108,10 @@ export interface Puja {
   slug: string;
   summary: string;
   description: string;
+  /** Hindi copy. Empty means untranslated — render the English. See `localized`. */
+  titleHi: string;
+  summaryHi: string;
+  descriptionHi: string;
   imageUrl?: string | null;
   locationType: PujaLocationType;
   isActive: boolean;
@@ -188,7 +218,11 @@ export interface Booking {
   city: string;
   pincode?: string | null;
   notes: string;
+  /** Grand total: package + add-ons. This is what Razorpay charges. */
   amountInr: number;
+  /** The package's share of `amountInr`, snapshotted at booking time. */
+  packageAmountInr: number;
+  addons: BookingAddonLine[];
   assignment?: Assignment | null;
   payment?: Payment | null;
   videoUrl?: string | null;

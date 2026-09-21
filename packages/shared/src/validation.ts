@@ -119,10 +119,31 @@ export type CreateStaffInput = z.infer<typeof createStaffSchema>;
 export const packageSchema = z.object({
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(2000).optional().default(''),
+  // Hindi is optional throughout: a blank field falls back to the English.
+  nameHi: z.string().trim().max(120).optional().default(''),
+  descriptionHi: z.string().trim().max(2000).optional().default(''),
   priceInr: z.number().int().positive('Price must be greater than 0'),
   inclusions: z.array(z.string().trim().min(1)).default([]),
 });
 export type PackageInput = z.infer<typeof packageSchema>;
+
+export const addonSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  nameHi: z.string().trim().max(120).optional().default(''),
+  slug: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase words separated by hyphens'),
+  description: z.string().trim().max(2000).optional().default(''),
+  descriptionHi: z.string().trim().max(2000).optional().default(''),
+  priceInr: z.number().int().positive('Price must be greater than 0'),
+  imageUrl: z.string().url().optional(),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).default(0),
+});
+export type AddonInput = z.infer<typeof addonSchema>;
+export const updateAddonSchema = addonSchema.partial();
+export type UpdateAddonInput = z.infer<typeof updateAddonSchema>;
 
 export const createPujaSchema = z.object({
   title: z.string().trim().min(2).max(160),
@@ -132,6 +153,9 @@ export const createPujaSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase words separated by hyphens'),
   summary: z.string().trim().max(500).optional().default(''),
   description: z.string().trim().max(8000).optional().default(''),
+  titleHi: z.string().trim().max(160).optional().default(''),
+  summaryHi: z.string().trim().max(500).optional().default(''),
+  descriptionHi: z.string().trim().max(8000).optional().default(''),
   imageUrl: z.string().url().optional(),
   locationType: z.enum([
     PujaLocationType.HOME,
@@ -266,6 +290,12 @@ export type UpdatePanditAvailabilityInput = z.infer<typeof updatePanditAvailabil
 export const createBookingSchema = z.object({
   pujaId: z.string().cuid(),
   packageId: z.string().cuid(),
+  /**
+   * Ids only — never prices. The server looks each one up and sums the stored
+   * amount, for the same reason there is no generic create-order endpoint
+   * taking an amount: a client-supplied price lets anyone pay ₹1.
+   */
+  addonIds: z.array(z.string().cuid()).max(20).default([]),
   // Sankalp details
   devoteeName: z.string().trim().min(2).max(120),
   gotra: z.string().trim().max(120).optional().default(''),

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  addonSchema,
   assignPanditSchema,
   bulkImportSchema,
   createBenefitSchema,
@@ -26,6 +27,7 @@ import {
   createProductSchema,
   createTempleSchema,
   panditProfileSchema,
+  updateAddonSchema,
   updateBenefitSchema,
   updateBlogPostSchema,
   updateInquirySchema,
@@ -41,6 +43,7 @@ import {
   UserRole,
 } from '@poozari/shared';
 import { z } from 'zod';
+import { AddonsService } from '../addons/addons.service';
 import { CatalogService } from '../catalog/catalog.service';
 import { ContentService } from '../content/content.service';
 import { CurrencyService } from '../currency/currency.service';
@@ -71,6 +74,7 @@ const createPanditSchema = panditProfileSchema.extend({
 @Controller('admin')
 export class AdminController {
   constructor(
+    private readonly addons: AddonsService,
     private readonly admin: AdminService,
     private readonly assignment: AssignmentService,
     private readonly bulkImport: BulkImportService,
@@ -264,6 +268,30 @@ export class AdminController {
   @Delete('currencies/:code')
   deleteCurrency(@Param('code') code: string) {
     return this.currency.remove(code);
+  }
+
+  /* Checkout add-ons (offered on every puja) */
+  @Get('addons')
+  listAddons() {
+    return this.addons.listAll();
+  }
+
+  @Post('addons')
+  createAddon(@Body(new ZodValidationPipe(addonSchema)) body: any) {
+    return this.addons.create(body);
+  }
+
+  @Patch('addons/:id')
+  updateAddon(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateAddonSchema)) body: any,
+  ) {
+    return this.addons.update(id, body);
+  }
+
+  @Delete('addons/:id')
+  deleteAddon(@Param('id') id: string) {
+    return this.addons.remove(id);
   }
 
   /* Bulk CSV import */

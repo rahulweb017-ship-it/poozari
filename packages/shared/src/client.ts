@@ -12,6 +12,7 @@ import type {
   VerifyOtpInput,
 } from './validation';
 import type {
+  Addon,
   AuthResponse,
   AccountProfile,
   Booking,
@@ -216,6 +217,10 @@ export class PoozariClient {
   listCurrencies() {
     return this.get<Currency[]>('/currencies');
   }
+  /** Active checkout add-ons, in display order. Offered on every puja. */
+  listAddons() {
+    return this.get<Addon[]>('/addons');
+  }
   listProducts(params?: { category?: string; q?: string }) {
     const qs = params
       ? `?${new URLSearchParams(Object.entries(params).filter(([, value]) => value)).toString()}`
@@ -381,6 +386,21 @@ export class PoozariClient {
   }
   adminDeleteCurrency(code: string) {
     return this.delete<{ ok: true }>(`/admin/currencies/${code}`);
+  }
+
+  /* Admin checkout add-ons */
+  /** Lists every add-on including deactivated ones. */
+  adminListAddons() {
+    return this.get<Addon[]>('/admin/addons');
+  }
+  adminCreateAddon(data: unknown) {
+    return this.post<Addon>('/admin/addons', data);
+  }
+  adminUpdateAddon(id: string, data: unknown) {
+    return this.patch<Addon>(`/admin/addons/${id}`, data);
+  }
+  adminDeleteAddon(id: string) {
+    return this.delete<{ ok: true }>(`/admin/addons/${id}`);
   }
 
   /* Admin bulk CSV import */

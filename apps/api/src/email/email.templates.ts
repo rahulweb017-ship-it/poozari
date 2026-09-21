@@ -120,10 +120,29 @@ export function bookingConfirmation(input: {
   pujaTitle: string;
   packageName: string;
   amountInr: number;
+  /** The package's share of the total; the rest is add-ons. */
+  packageAmountInr?: number;
+  addons?: { name: string; priceInr: number }[];
   preferredDate: Date;
   gotra?: string;
   accountUrl: string;
 }): Omit<SendEmailOptions, 'to'> {
+  const addons = input.addons ?? [];
+  // Only itemise when there is something to itemise — a plain booking should
+  // not grow a one-line "breakdown" of itself.
+  const breakdown = addons.length
+    ? [
+        '',
+        'What you paid for:',
+        `  ${input.packageName}${' '.repeat(Math.max(1, 24 - input.packageName.length))}${formatInr(
+          input.packageAmountInr ?? input.amountInr,
+        )}`,
+        ...addons.map(
+          (a) => `  ${a.name}${' '.repeat(Math.max(1, 24 - a.name.length))}${formatInr(a.priceInr)}`,
+        ),
+      ]
+    : [];
+
   const lines = [
     `Namaste ${input.devoteeName},`,
     '',
@@ -132,6 +151,7 @@ export function bookingConfirmation(input: {
     `Reference: ${input.reference}`,
     `Puja:      ${input.pujaTitle}`,
     `Package:   ${input.packageName}`,
+    ...breakdown,
     `Amount:    ${formatInr(input.amountInr)}`,
     `Date:      ${input.preferredDate.toLocaleDateString('en-IN', { dateStyle: 'long' } as never)}`,
     input.gotra ? `Gotra:     ${input.gotra}` : null,

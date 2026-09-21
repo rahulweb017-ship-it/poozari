@@ -1,4 +1,4 @@
-import type { City, NamedEntity, Product, Puja, PujaPackage, Temple } from '@poozari/shared';
+import type { Addon, City, NamedEntity, Product, Puja, PujaPackage, Temple } from '@poozari/shared';
 
 export const pujaInclude = {
   packages: true,
@@ -47,6 +47,8 @@ function serializePackage(p: any): PujaPackage {
     id: p.id,
     name: p.name,
     description: p.description ?? '',
+    nameHi: p.nameHi ?? '',
+    descriptionHi: p.descriptionHi ?? '',
     priceInr: p.priceInr,
     inclusions: p.inclusions ?? [],
   };
@@ -63,6 +65,9 @@ export function serializePuja(p: any): Puja {
     slug: p.slug,
     summary: p.summary ?? '',
     description: p.description ?? '',
+    titleHi: p.titleHi ?? '',
+    summaryHi: p.summaryHi ?? '',
+    descriptionHi: p.descriptionHi ?? '',
     imageUrl: p.imageUrl ?? null,
     locationType: p.locationType,
     isActive: p.isActive,
@@ -73,6 +78,21 @@ export function serializePuja(p: any): Puja {
     benefits: (p.benefits ?? []).map(toNamed),
     packages,
     startingPriceInr,
+  };
+}
+
+export function serializeAddon(a: any): Addon {
+  return {
+    id: a.id,
+    name: a.name,
+    nameHi: a.nameHi ?? '',
+    slug: a.slug,
+    description: a.description ?? '',
+    descriptionHi: a.descriptionHi ?? '',
+    priceInr: a.priceInr,
+    imageUrl: a.imageUrl ?? null,
+    isActive: a.isActive,
+    sortOrder: a.sortOrder ?? 0,
   };
 }
 

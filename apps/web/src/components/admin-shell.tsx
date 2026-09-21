@@ -11,6 +11,7 @@ const NAV = [
   { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
   { href: '/admin/pandits', label: 'Pandits', icon: '👨‍🏫' },
   { href: '/admin/pujas', label: 'Pujas', icon: '🪔' },
+  { href: '/admin/addons', label: 'Add-ons', icon: '🌼' },
   { href: '/admin/products', label: 'Products', icon: '📦' },
   { href: '/admin/catalog', label: 'Catalog', icon: '🗂️' },
   { href: '/admin/import', label: 'Bulk Import', icon: '📥' },

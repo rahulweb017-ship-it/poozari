@@ -107,6 +107,8 @@ export class PaymentsService {
           pujaTitle: updated.puja.title,
           packageName: updated.package.name,
           amountInr: updated.amountInr,
+          packageAmountInr: updated.packageAmountInr || updated.amountInr,
+          addons: updated.addons.map((a) => ({ name: a.name, priceInr: a.priceInr })),
           preferredDate: updated.preferredDate,
           gotra: updated.gotra,
           accountUrl: `${webBase}/account/bookings/${updated.id}`,

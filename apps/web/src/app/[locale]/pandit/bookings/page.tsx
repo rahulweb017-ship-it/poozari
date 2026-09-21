@@ -83,6 +83,11 @@ export default function PanditBookingsPage() {
                     <div className="mt-2 text-sm font-black text-accent">
                       {formatInr(b.amountInr)}
                     </div>
+                    {b.addons.length ? (
+                      <div className="mt-3 rounded-2xl border border-emerald-100/60 bg-emerald-50/70 px-4 py-2.5 text-xs font-semibold text-emerald-900">
+                        🌼 Add-ons to bring: {b.addons.map((a) => a.name).join(', ')}
+                      </div>
+                    ) : null}
                     {b.notes ? (
                       <div className="mt-3 rounded-2xl bg-amber-50/70 border border-amber-100/50 px-4 py-2.5 text-xs font-semibold text-amber-800">
                         📝 Notes: {b.notes}

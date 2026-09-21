@@ -421,11 +421,37 @@ async function main() {
         addressLine: '14 Assi Ghat Road',
         city: 'Varanasi',
         pincode: '221005',
+        packageAmountInr: demoPackage.priceInr,
         amountInr: demoPackage.priceInr,
         payment: {
           create: { amountInr: demoPackage.priceInr, status: 'PAID' },
         },
       },
+    });
+  }
+
+  // Checkout add-ons, offered on every puja. Prices are starting points the
+  // Super Admin edits under Admin -> Add-ons.
+  const addons = [
+    { slug: 'fruits-and-sweets', name: 'Fruits & Sweets', nameHi: 'फल और मिठाई', priceInr: 999, sortOrder: 1,
+      description: 'Seasonal fruits and fresh sweets for the offering and prasad.',
+      descriptionHi: 'भोग और प्रसाद के लिए मौसमी फल और ताज़ी मिठाई।' },
+    { slug: 'hawan-kund', name: 'Hawan Kund', nameHi: 'हवन कुंड', priceInr: 999, sortOrder: 2,
+      description: 'Copper hawan kund with wood and ghee for the fire ritual.',
+      descriptionHi: 'हवन के लिए ताम्र हवन कुंड, समिधा और घी सहित।' },
+    { slug: 'flowers', name: 'Flowers', nameHi: 'पुष्प', priceInr: 999, sortOrder: 3,
+      description: 'Fresh flowers and garlands for the altar and the deity.',
+      descriptionHi: 'वेदी और देव-विग्रह के लिए ताज़े पुष्प और मालाएँ।' },
+    { slug: 'samagri', name: 'Samagri', nameHi: 'सामग्री', priceInr: 999, sortOrder: 4,
+      description: 'Complete puja samagri kit — roli, kalava, akshat, dhoop and more.',
+      descriptionHi: 'संपूर्ण पूजा सामग्री — रोली, कलावा, अक्षत, धूप इत्यादि।' },
+  ];
+  for (const addon of addons) {
+    await prisma.addon.upsert({
+      where: { slug: addon.slug },
+      create: addon,
+      // Never clobber a price an admin has already set.
+      update: {},
     });
   }
 

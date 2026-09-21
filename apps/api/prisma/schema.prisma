@@ -321,6 +321,12 @@ model Puja {
   slug         String           @unique
   summary      String           @default("")
   description  String           @default("")
+  // Hindi copy, entered alongside the English in the admin form. Blank means
+  // "not translated yet" and the English is shown instead — see
+  // packages/shared/src/format.ts `localized`.
+  titleHi       String          @default("")
+  summaryHi     String          @default("")
+  descriptionHi String          @default("")
   imageUrl     String?
   locationType PujaLocationType
   templeId     String?
@@ -343,14 +349,57 @@ model Puja {
 }
 
 model Package {
-  id          String    @id @default(cuid())
-  pujaId      String
-  puja        Puja      @relation(fields: [pujaId], references: [id], onDelete: Cascade)
-  name        String
-  description String    @default("")
-  priceInr    Int
-  inclusions  String[]  @default([])
-  bookings    Booking[]
+  id            String    @id @default(cuid())
+  pujaId        String
+  puja          Puja      @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+  name          String
+  description   String    @default("")
+  nameHi        String    @default("")
+  descriptionHi String    @default("")
+  priceInr      Int
+  inclusions    String[]  @default([])
+  bookings      Booking[]
+}
+
+/// A paid extra a devotee can add to any puja at checkout — fruits, flowers,
+/// samagri, a hawan kund. Global rather than per-puja: the same four are
+/// offered everywhere, priced and retired from Admin -> Add-ons.
+model Addon {
+  id            String   @id @default(cuid())
+  name          String
+  nameHi        String   @default("")
+  slug          String   @unique
+  description   String   @default("")
+  descriptionHi String   @default("")
+  priceInr      Int
+  imageUrl      String?
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookingAddons BookingAddon[]
+
+  @@index([isActive, sortOrder])
+}
+
+/// An add-on as bought, snapshotted onto the booking the way ProductOrder
+/// snapshots a product. Re-pricing or retiring an add-on must never change
+/// what an existing customer was charged.
+model BookingAddon {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  /// Nullable + SetNull: deleting an add-on must not delete booking history.
+  addonId   String?
+  addon     Addon?  @relation(fields: [addonId], references: [id], onDelete: SetNull)
+
+  name     String
+  nameHi   String @default("")
+  priceInr Int
+
+  @@unique([bookingId, addonId])
+  @@index([bookingId])
 }
 
 /// Contact Us and puja Enquiry submissions. One admin inbox.
@@ -457,13 +506,21 @@ model Booking {
   pincode     String?
   notes       String  @default("")
 
+  /// The grand total: package + add-ons. Razorpay, the admin revenue rollup
+  /// and the confirmation email all read this, so it stays the total.
   amountInr    Int
+  /// The package price at booking time. Stored rather than read back through
+  /// `package`, because editing a puja deletes and recreates its packages
+  /// (catalog.service.ts `updatePuja`), so the original price is not
+  /// recoverable afterwards.
+  packageAmountInr Int @default(0)
   videoUrl     String?
   thumbnailUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  addons     BookingAddon[]
   assignment Assignment?
   payment    Payment?
   review     Review?

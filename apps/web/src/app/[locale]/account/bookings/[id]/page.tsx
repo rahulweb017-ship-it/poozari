@@ -172,6 +172,16 @@ export default function BookingDetailPage() {
               <Row label="Date" value={new Date(booking.preferredDate).toLocaleDateString('en-IN')} />
               {booking.preferredTime ? <Row label="Time" value={booking.preferredTime} /> : null}
               {booking.city ? <Row label="City" value={booking.city} /> : null}
+              {/* Itemise only when add-ons were bought, so a plain booking
+                  does not grow a one-line breakdown of itself. */}
+              {booking.addons.length > 0 ? (
+                <div className="!mt-3 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
+                  <Row label={booking.package.name} value={formatInr(booking.packageAmountInr)} />
+                  {booking.addons.map((addon) => (
+                    <Row key={addon.id} label={addon.name} value={formatInr(addon.priceInr)} />
+                  ))}
+                </div>
+              ) : null}
               <div className="!mt-3 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
                 <Row label="Amount" value={formatInr(booking.amountInr)} bold />
               </div>
