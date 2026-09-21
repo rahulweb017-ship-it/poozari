@@ -3,8 +3,8 @@
 import { WhatsappBookButton } from '@/components/whatsapp';
 import { useRouter } from '@/i18n/navigation';
 import { Price, useCurrency } from '@/lib/currency';
-import type { PujaPackage } from '@poozari/shared';
-import { useTranslations } from 'next-intl';
+import { localized, type PujaPackage } from '@poozari/shared';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 export function PackagePicker({
@@ -17,7 +17,9 @@ export function PackagePicker({
   pujaTitle: string;
 }) {
   const router = useRouter();
+  const t = useTranslations('booking');
   const wa = useTranslations('whatsapp');
+  const locale = useLocale();
   const { formatInrExact } = useCurrency();
   const [selected, setSelected] = useState(packages[0]?.id ?? '');
   const selectedPackage = packages.find((p) => p.id === selected);
@@ -25,7 +27,7 @@ export function PackagePicker({
   return (
     <div className="elevated-card saffron-glow p-6 bg-white">
       <h3 className="font-display text-base font-extrabold uppercase tracking-wider text-foreground">
-        Choose a package
+        {t('choosePackage')}
       </h3>
       <div className="mt-4 space-y-3.5">
         {packages.map((p) => {
@@ -48,7 +50,7 @@ export function PackagePicker({
                     onChange={() => setSelected(p.id)}
                     className="h-4 w-4 accent-accent"
                   />
-                  {p.name}
+                  {localized(p, 'name', locale)}
                 </span>
                 <span className="text-base font-black text-accent"><Price amountInr={p.priceInr} /></span>
               </div>
@@ -71,7 +73,7 @@ export function PackagePicker({
         disabled={!selected}
         onClick={() => router.push(`/book/${slug}?packageId=${selected}`)}
       >
-        Book Now
+        {t('bookNow')}
       </button>
 
       {/* Booking over WhatsApp, with the chosen package already in the message. */}
@@ -81,7 +83,7 @@ export function PackagePicker({
           context={{
             kind: 'puja',
             title: pujaTitle,
-            packageName: selectedPackage?.name,
+            packageName: selectedPackage ? localized(selectedPackage, 'name', locale) : undefined,
             // The rupee amount, since that is what will actually be charged.
             price: selectedPackage ? formatInrExact(selectedPackage.priceInr) : undefined,
           }}

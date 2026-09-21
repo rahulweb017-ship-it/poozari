@@ -1,8 +1,11 @@
 import { Link } from '@/i18n/navigation';
 import { Price } from '@/lib/currency';
-import type { Puja } from '@poozari/shared';
+import { localized, type Puja } from '@poozari/shared';
+import { getLocale } from 'next-intl/server';
 
-export function PujaCard({ puja }: { puja: Puja }) {
+export async function PujaCard({ puja }: { puja: Puja }) {
+  const locale = await getLocale();
+  const title = localized(puja, 'title', locale);
   return (
     <Link
       href={`/puja/${puja.slug}`}
@@ -15,7 +18,7 @@ export function PujaCard({ puja }: { puja: Puja }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={puja.imageUrl}
-            alt={puja.title}
+            alt={title}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
@@ -31,7 +34,7 @@ export function PujaCard({ puja }: { puja: Puja }) {
       {/* Card Content Details */}
       <div className="flex flex-1 flex-col p-6">
         <h3 className="font-display text-base font-extrabold tracking-wide text-foreground transition-colors duration-300 group-hover:text-accent">
-          {puja.title}
+          {title}
         </h3>
 
         {puja.temple ? (
@@ -42,7 +45,7 @@ export function PujaCard({ puja }: { puja: Puja }) {
         ) : null}
 
         <p className="mt-3.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {puja.summary}
+          {localized(puja, 'summary', locale)}
         </p>
 
         {/* Verification badges */}

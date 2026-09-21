@@ -15,17 +15,28 @@ import { useEffect, useState } from 'react';
 
 interface PackageDraft {
   name: string;
+  /** Hindi name. Blank means Hindi readers see the English. */
+  nameHi: string;
   priceInr: string;
   inclusions: string; // comma-separated in the form
 }
 
-const EMPTY_PACKAGE: PackageDraft = { name: 'Standard', priceInr: '5100', inclusions: '' };
+const EMPTY_PACKAGE: PackageDraft = {
+  name: 'Standard',
+  nameHi: '',
+  priceInr: '5100',
+  inclusions: '',
+};
 
 const EMPTY_FORM = {
   title: '',
   slug: '',
   summary: '',
   description: '',
+  // Hindi copy. Blank falls back to the English on /hi/ pages.
+  titleHi: '',
+  summaryHi: '',
+  descriptionHi: '',
   imageUrl: '',
   locationType: 'HOME',
   templeId: '',
@@ -96,6 +107,9 @@ export default function AdminPujasPage() {
       slug: p.slug,
       summary: p.summary,
       description: p.description,
+      titleHi: p.titleHi ?? '',
+      summaryHi: p.summaryHi ?? '',
+      descriptionHi: p.descriptionHi ?? '',
       imageUrl: p.imageUrl ?? '',
       locationType: p.locationType,
       templeId: p.temple?.id ?? '',
@@ -109,6 +123,7 @@ export default function AdminPujasPage() {
       p.packages.length
         ? p.packages.map((pk) => ({
             name: pk.name,
+            nameHi: pk.nameHi ?? '',
             priceInr: String(pk.priceInr),
             inclusions: pk.inclusions.join(', '),
           }))
@@ -126,6 +141,7 @@ export default function AdminPujasPage() {
         .filter((p) => p.name.trim() && Number(p.priceInr) > 0)
         .map((p) => ({
           name: p.name.trim(),
+          nameHi: p.nameHi.trim(),
           description: '',
           priceInr: Number(p.priceInr) || 0,
           inclusions: p.inclusions.split(',').map((s) => s.trim()).filter(Boolean),
@@ -140,6 +156,9 @@ export default function AdminPujasPage() {
         slug: form.slug || slugify(form.title),
         summary: form.summary,
         description: form.description,
+        titleHi: form.titleHi,
+        summaryHi: form.summaryHi,
+        descriptionHi: form.descriptionHi,
         imageUrl: form.imageUrl || undefined,
         locationType: form.locationType,
         templeId: form.templeId || undefined,
@@ -228,7 +247,7 @@ export default function AdminPujasPage() {
 
           <div className="mt-5 space-y-4">
             <div>
-              <label className="label">Title *</label>
+              <label className="label">Title (English) *</label>
               <input
                 className="input"
                 placeholder="e.g. Mahabhishek"
@@ -236,6 +255,15 @@ export default function AdminPujasPage() {
                 onChange={(e) =>
                   setForm({ ...form, title: e.target.value, slug: editingId ? form.slug : slugify(e.target.value) })
                 }
+              />
+            </div>
+            <div>
+              <label className="label">शीर्षक (Hindi)</label>
+              <input
+                className="input"
+                placeholder="जैसे महाभिषेक"
+                value={form.titleHi}
+                onChange={(e) => setForm({ ...form, titleHi: e.target.value })}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -253,13 +281,25 @@ export default function AdminPujasPage() {
               </div>
             </div>
             <div>
-              <label className="label">Summary</label>
+              <label className="label">Summary (English)</label>
               <input className="input" placeholder="One-line summary for cards" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
             </div>
             <div>
-              <label className="label">Description</label>
+              <label className="label">सारांश (Hindi)</label>
+              <input className="input" placeholder="कार्ड पर दिखने वाला एक-पंक्ति सारांश" value={form.summaryHi} onChange={(e) => setForm({ ...form, summaryHi: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">Description (English)</label>
               <textarea className="input" rows={3} placeholder="Detailed scriptural background..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
+            <div>
+              <label className="label">विवरण (Hindi)</label>
+              <textarea className="input" rows={3} placeholder="विस्तृत शास्त्रीय पृष्ठभूमि..." value={form.descriptionHi} onChange={(e) => setForm({ ...form, descriptionHi: e.target.value })} />
+            </div>
+            <p className="rounded-2xl bg-amber-50 p-3 text-3xs leading-relaxed text-amber-800">
+              Hindi is optional. A blank Hindi field means Hindi readers see the English text
+              instead of an empty heading.
+            </p>
             <ImagePicker
               label="Cover image"
               hint="Shown on puja cards and at the top of the listing"
@@ -301,7 +341,7 @@ export default function AdminPujasPage() {
                 <button
                   type="button"
                   className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
-                  onClick={() => setPackages([...packages, { name: '', priceInr: '', inclusions: '' }])}
+                  onClick={() => setPackages([...packages, { name: '', nameHi: '', priceInr: '', inclusions: '' }])}
                 >
                   + Add package
                 </button>
@@ -312,7 +352,7 @@ export default function AdminPujasPage() {
                     <div className="flex items-center gap-2">
                       <input
                         className="input flex-1 py-1.5 text-xs"
-                        placeholder="Package name"
+                        placeholder="Package name (English)"
                         value={pk.name}
                         onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)))}
                       />
@@ -333,6 +373,12 @@ export default function AdminPujasPage() {
                         </button>
                       ) : null}
                     </div>
+                    <input
+                      className="input mt-2 py-1.5 text-xs"
+                      placeholder="पैकेज का नाम (Hindi, optional)"
+                      value={pk.nameHi}
+                      onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, nameHi: e.target.value } : x)))}
+                    />
                     <input
                       className="input mt-2 py-1.5 text-xs"
                       placeholder="Inclusions (comma separated)"

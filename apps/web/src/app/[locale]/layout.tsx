@@ -82,6 +82,7 @@ export default async function LocaleLayout({
     'contact',
     'enquiry',
     'becomePujari',
+    'booking',
   ] as const;
   const clientMessages = Object.fromEntries(
     clientNamespaces.filter((key) => key in messages).map((key) => [key, messages[key]]),

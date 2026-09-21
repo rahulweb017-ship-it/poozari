@@ -1,7 +1,9 @@
 import { Link } from '@/i18n/navigation';
 import { PackagePicker } from '@/components/package-picker';
 import { getPuja } from '@/lib/server-api';
+import { localized } from '@poozari/shared';
 import type { Metadata } from 'next';
+import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 60;
@@ -12,20 +14,26 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   try {
+    const locale = await getLocale();
     const puja = await getPuja(params.slug);
-    return { title: `${puja.title} — poozari.com`, description: puja.summary };
+    return {
+      title: `${localized(puja, 'title', locale)} — poozari.com`,
+      description: localized(puja, 'summary', locale),
+    };
   } catch {
     return { title: 'Puja — poozari.com' };
   }
 }
 
 export default async function PujaDetailPage({ params }: { params: { slug: string } }) {
+  const locale = await getLocale();
   let puja;
   try {
     puja = await getPuja(params.slug);
   } catch {
     notFound();
   }
+  const title = localized(puja, 'title', locale);
 
   return (
     <div>
@@ -37,7 +45,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
             <span>/</span>
             <Link href="/puja" className="hover:text-accent transition-colors">Puja</Link>
             <span>/</span>
-            <span className="font-extrabold" style={{ color: 'hsl(var(--foreground))' }}>{puja.title}</span>
+            <span className="font-extrabold" style={{ color: 'hsl(var(--foreground))' }}>{title}</span>
           </nav>
         </div>
       </div>
@@ -50,14 +58,14 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
                style={{ aspectRatio: '16/9', borderColor: 'hsl(var(--border) / 0.5)' }}>
             {puja.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={puja.imageUrl} alt={puja.title} className="h-full w-full object-cover" />
+              <img src={puja.imageUrl} alt={title} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center text-7xl">🪔</div>
             )}
           </div>
 
           <h1 className="mt-8 font-display text-3xl font-extrabold tracking-wide" style={{ color: 'hsl(var(--foreground))' }}>
-            {puja.title}
+            {title}
           </h1>
           {puja.temple ? (
             <p className="mt-2 text-xs font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -85,7 +93,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
           {/* Description content */}
           <p className="mt-8 whitespace-pre-line text-sm leading-relaxed"
              style={{ color: 'hsl(var(--foreground) / 0.8)' }}>
-            {puja.description}
+            {localized(puja, 'description', locale)}
           </p>
 
           {/* Linked entities: deities */}
@@ -138,7 +146,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
         {/* Right Column: Sticky package picker */}
         <aside className="lg:col-span-1">
           <div className="sticky top-20">
-            <PackagePicker slug={puja.slug} packages={puja.packages} pujaTitle={puja.title} />
+            <PackagePicker slug={puja.slug} packages={puja.packages} pujaTitle={title} />
           </div>
         </aside>
       </div>
