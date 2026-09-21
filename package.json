@@ -10,6 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "deploy:server": "pnpm install --frozen-lockfile && pnpm --filter @poozari/shared build && pnpm --filter @poozari/api exec prisma migrate deploy && pnpm --filter @poozari/api exec prisma generate && pnpm --filter @poozari/api build && pnpm --filter @poozari/web build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

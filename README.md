@@ -607,13 +607,46 @@ rebuilding the web app, not just restarting it.
 ### Deploy steps
 
 ```bash
-pnpm install
+git pull
+pnpm deploy:server      # install, shared, migrate, generate, api, web
+# then restart the API and web processes (pm2 restart all, systemctl, …)
+```
+
+`deploy:server` is the sequence below in one command:
+
+```bash
+pnpm install --frozen-lockfile
 pnpm --filter @poozari/shared build
 pnpm --filter @poozari/api exec prisma migrate deploy   # never `migrate dev`
+pnpm --filter @poozari/api exec prisma generate
 pnpm --filter @poozari/api build
 pnpm --filter @poozari/web build                        # after the env is set
-pnpm --filter @poozari/api seed                         # optional, guarded
+pnpm --filter @poozari/api seed                         # optional, guarded, NOT in the script
 ```
+
+### "I pulled but nothing changed"
+
+**`git pull` alone never updates a running site.** Everything the browser and
+Node actually execute is a build artifact, and build artifacts are gitignored
+— pulling replaces `src/`, not `dist/` or `.next/`. Four things bite, in
+rough order of how often:
+
+1. **The migration did not run.** New tables and columns do not arrive with a
+   pull. Until `prisma migrate deploy` runs, the API 500s on anything touching
+   them — add-ons are the current example.
+2. **`packages/shared` was not rebuilt.** The API and web both resolve it
+   through `dist/`, so a pull leaves them compiling against the *old* shared
+   package and new client methods and types simply are not there.
+3. **The web app was not rebuilt.** `.next/` is the site; unbuilt, the server
+   keeps serving the previous compile no matter what is in `src/`.
+4. **The processes were not restarted.** Node holds the old `dist/main.js` in
+   memory until it is told otherwise.
+
+**Do not commit `.next/` or `dist/` to work around this.** `NEXT_PUBLIC_*`
+values are frozen into the bundle at build time, so a build made on a laptop
+carries `http://localhost:4000/api` inside it — deploy that and every visitor's
+browser calls their own machine. The build has to happen on the host, after
+the host's env is set.
 
 Uploads are written to `UPLOAD_DIR` (default `apps/api/uploads`) and served by
 the API. On a host with an ephemeral filesystem that directory needs to be a
