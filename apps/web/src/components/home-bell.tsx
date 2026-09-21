@@ -8,8 +8,15 @@ export function HomeBell() {
   useEffect(() => {
     if (window.sessionStorage.getItem(PLAYED_KEY)) return;
 
-    const audio = new Audio('/audio/temple-bell.wav');
+    // Saved as .mp3, not the .mpeg it arrived as, so it is served as
+    // audio/mpeg — some hosts map .mpeg to video/mpeg and Safari then
+    // refuses to decode it.
+    const audio = new Audio('/audio/bell.mp3');
     audio.volume = 0.35;
+    // Lets the browser fetch it before the tab is interacted with, so the
+    // first-click fallback below rings immediately rather than after a
+    // network round trip.
+    audio.preload = 'auto';
     let completed = false;
 
     function removeFallbackListeners() {
