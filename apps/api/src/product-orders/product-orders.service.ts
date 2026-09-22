@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -22,6 +23,8 @@ interface PaymentVerificationInput {
 
 @Injectable()
 export class ProductOrdersService {
+  private readonly logger = new Logger(ProductOrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly gateway: PaymentGatewayService,
@@ -149,6 +152,55 @@ export class ProductOrdersService {
       include: productOrderInclude,
     });
     return serializeProductOrder(paidOrder);
+  }
+
+  /**
+   * Settle whatever product order owns this Razorpay order id. Called by the
+   * webhook, which knows the order id but not ours.
+   *
+   * The stock decrement mirrors verifyPayment, but a webhook cannot report a
+   * sold-out race back to a customer, so running out of stock is logged as an
+   * oversell to reconcile by hand rather than thrown — the money has already
+   * been taken and refusing here would leave a paid order unrecorded.
+   */
+  async settleByOrderId(razorpayOrderId: string, paymentId: string): Promise<boolean> {
+    const order = await this.prisma.productOrder.findFirst({ where: { razorpayOrderId } });
+    if (!order) return false;
+    if (order.status === ProductOrderStatus.PAID) return true;
+
+    const claimed = await this.prisma.productOrder.updateMany({
+      where: { id: order.id, status: ProductOrderStatus.PENDING_PAYMENT },
+      data: {
+        status: ProductOrderStatus.PAID,
+        paymentStatus: PaymentStatus.PAID,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: 'webhook',
+      },
+    });
+    if (claimed.count === 1) {
+      const stock = await this.prisma.product.updateMany({
+        where: { id: order.productId, stockQuantity: { gte: order.quantity } },
+        data: { stockQuantity: { decrement: order.quantity } },
+      });
+      if (stock.count !== 1) {
+        this.logger.error(
+          `Oversold product ${order.productId}: order ${order.reference} was paid ` +
+            `(${paymentId}) but stock was insufficient. Reconcile by hand.`,
+        );
+      }
+    }
+    return true;
+  }
+
+  /** Record a webhook-reported failure, without touching an already paid order. */
+  async failByOrderId(razorpayOrderId: string): Promise<boolean> {
+    const order = await this.prisma.productOrder.findFirst({ where: { razorpayOrderId } });
+    if (!order) return false;
+    await this.prisma.productOrder.updateMany({
+      where: { id: order.id, status: ProductOrderStatus.PENDING_PAYMENT },
+      data: { paymentStatus: PaymentStatus.FAILED },
+    });
+    return true;
   }
 
   private async findOwned(customerId: string, id: string) {

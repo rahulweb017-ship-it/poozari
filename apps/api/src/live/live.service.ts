@@ -133,6 +133,25 @@ export class LiveService {
     return serializeLiveAccess(updated);
   }
 
+  /**
+   * Settle whatever live-darshan access owns this Razorpay order id. Called by
+   * the webhook, which knows the order id but not ours.
+   */
+  async settleByOrderId(razorpayOrderId: string, paymentId: string): Promise<boolean> {
+    const access = await this.prisma.liveAccess.findFirst({ where: { razorpayOrderId } });
+    if (!access) return false;
+    if (access.status === LiveAccessStatus.PAID) return true;
+    await this.prisma.liveAccess.updateMany({
+      where: { id: access.id, status: { not: LiveAccessStatus.PAID } },
+      data: {
+        status: LiveAccessStatus.PAID,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: 'webhook',
+      },
+    });
+    return true;
+  }
+
   async myAccess(customerId: string) {
     const rows = await this.prisma.liveAccess.findMany({
       where: { customerId },

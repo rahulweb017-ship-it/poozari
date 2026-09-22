@@ -14,6 +14,7 @@ import { LiveModule } from './live/live.module';
 import { PanditPortalModule } from './pandit-portal/pandit-portal.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RazorpayWebhookModule } from './payments/webhook/razorpay-webhook.module';
 import { ProductOrdersModule } from './product-orders/product-orders.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -31,6 +32,7 @@ import { StorageModule } from './storage/storage.module';
     BookingsModule,
     PaymentsModule,
     ProductOrdersModule,
+    RazorpayWebhookModule,
     AdminModule,
     PanditPortalModule,
     LiveModule,

@@ -17,5 +17,6 @@ import { LiveService } from './live.service';
     LivePanditController,
   ],
   providers: [LiveService],
+  exports: [LiveService],
 })
 export class LiveModule {}

@@ -8,6 +8,6 @@ import { PaymentsService } from './payments.service';
   imports: [AdminModule],
   controllers: [PaymentsController],
   providers: [PaymentsService, PaymentGatewayService],
-  exports: [PaymentGatewayService],
+  exports: [PaymentGatewayService, PaymentsService],
 })
 export class PaymentsModule {}

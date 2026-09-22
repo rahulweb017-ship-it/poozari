@@ -38,17 +38,28 @@ export class PaymentGatewayService {
   readonly keyId: string;
   private readonly keySecret: string;
   readonly liveMode: boolean;
+  /** Separate from the API key secret; set in the Razorpay webhook settings. */
+  private readonly webhookSecret: string;
   private readonly rzp?: Razorpay;
 
   constructor(private readonly config: ConfigService) {
     this.keyId = this.config.get<string>('RAZORPAY_KEY_ID') ?? '';
     this.keySecret = this.config.get<string>('RAZORPAY_KEY_SECRET') ?? '';
+    this.webhookSecret = this.config.get<string>('RAZORPAY_WEBHOOK_SECRET') ?? '';
     // Live mode only when real-looking keys are configured. `rzp_test_...` keys
     // are live in this sense: they talk to Razorpay, they just do not move money.
     this.liveMode = this.keyId.startsWith('rzp_') && this.keySecret.length > 8;
     if (this.liveMode) {
       this.rzp = new Razorpay({ key_id: this.keyId, key_secret: this.keySecret });
       this.logger.log(`Razorpay live: ${this.keyId}`);
+      if (!this.webhookSecret) {
+        // Without this, a payment whose browser tab closed mid-redirect is
+        // never settled — Razorpay has the money and the booking stays unpaid.
+        this.logger.warn(
+          'RAZORPAY_WEBHOOK_SECRET is not set — payments confirm only via the ' +
+            'browser callback, so a closed tab leaves a paid booking unpaid.',
+        );
+      }
     } else {
       this.logger.warn('Razorpay keys not configured — payments run in mock mode.');
     }
@@ -129,6 +140,36 @@ export class PaymentGatewayService {
     // signature was correct through its timing.
     const a = Buffer.from(expected, 'utf8');
     const b = Buffer.from(razorpay_signature, 'utf8');
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  }
+
+  /** True when a webhook secret is configured and webhooks can be trusted. */
+  get webhooksEnabled(): boolean {
+    return this.webhookSecret.length > 0;
+  }
+
+  /**
+   * Verify a webhook delivery: HMAC-SHA256 of the **raw request body**, keyed
+   * with RAZORPAY_WEBHOOK_SECRET, compared against `x-razorpay-signature`.
+   *
+   * This is a different secret and a different payload from
+   * `verifySignature` above — that one hashes `order_id|payment_id` with the
+   * API key secret. Using the API secret here silently fails every delivery.
+   *
+   * The raw bytes matter: JSON.stringify of the parsed body reorders keys and
+   * drops whitespace, so the hash would never match what Razorpay signed.
+   */
+  verifyWebhookSignature(rawBody: Buffer | string, signature?: string): boolean {
+    if (!this.webhooksEnabled || !signature) return false;
+
+    const expected = crypto
+      .createHmac('sha256', this.webhookSecret)
+      .update(rawBody)
+      .digest('hex');
+
+    const a = Buffer.from(expected, 'utf8');
+    const b = Buffer.from(signature, 'utf8');
     if (a.length !== b.length) return false;
     return crypto.timingSafeEqual(a, b);
   }
