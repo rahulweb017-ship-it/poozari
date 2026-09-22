@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { CustomerPanelNav } from '@/components/customer-panel-nav';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
-import { formatInr, UserRole, type Booking } from '@poozari/shared';
+import { BookingStatus, formatInr, UserRole, type Booking } from '@poozari/shared';
 
 import { useEffect, useState } from 'react';
 
@@ -74,6 +74,13 @@ export default function MyBookingsPage() {
                   <span>{b.package.name}</span>
                   <span>📅 {new Date(b.preferredDate).toLocaleDateString('en-IN')}</span>
                 </div>
+                {/* The row is already a link, so this points at the detail page
+                    where the pay button lives rather than nesting a button. */}
+                {b.status === BookingStatus.PENDING_PAYMENT ? (
+                  <div className="mt-2.5 text-2xs font-extrabold uppercase tracking-wider text-amber-700">
+                    ⚠ Not paid — open to pay {formatInr(b.amountInr)}
+                  </div>
+                ) : null}
               </div>
               <div className="flex shrink-0 items-center gap-4">
                 <span className="hidden font-black text-accent sm:inline">{formatInr(b.amountInr)}</span>

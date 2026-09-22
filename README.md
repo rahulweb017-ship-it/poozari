@@ -333,6 +333,47 @@ modal. All three flows go through it, so none can be left missing a case:
 While the modal is open the submit button stays disabled, so a second booking
 cannot be started underneath it.
 
+### The webhook is what makes a payment reliable
+
+The browser callback is best-effort. A customer who pays and closes the tab, or
+whose mobile 3-D Secure redirect never comes back, would otherwise leave
+Razorpay holding the money and the booking on `PENDING_PAYMENT` forever. The
+webhook closes that:
+
+    POST /api/payments/webhook        (public — Razorpay carries no token)
+
+Configure it at **Razorpay -> Settings -> Webhooks**, pointing at
+`<PUBLIC_BASE_URL>/api/payments/webhook`, subscribed to `payment.captured`,
+`payment.failed` and `order.paid`, with the secret matching
+`RAZORPAY_WEBHOOK_SECRET`. Unset, the endpoint answers 503 so Razorpay keeps
+retrying rather than discarding deliveries, and the API warns at boot.
+
+The signature is **HMAC-SHA256 of the raw request body** keyed with the webhook
+secret — a different secret and a different payload from the `order_id|payment_id`
+check above. `main.ts` enables `rawBody` for this: hashing a re-serialised body
+reorders keys and never matches.
+
+One Razorpay order id belongs to exactly one record, so the handler tries
+bookings, then product orders, then live access, and stops at the first that
+claims it. Settlement is a conditional `updateMany` on the pending state, so
+when the webhook and the browser callback arrive together exactly one wins and
+auto-assignment and the confirmation email fire once. Redeliveries — Razorpay
+retries for hours — are no-ops. A handler that throws is logged and still
+answers 200, because a non-2xx turns a bug into a retry storm.
+
+### Paying later
+
+A booking created but not paid stays payable from **My Bookings**: the list
+flags it and the detail page carries a Pay button
+(`apps/web/src/components/pay-now-button.tsx`) that reuses the same
+create-order -> checkout -> verify path, so the amount still comes from the
+stored booking.
+
+Verification binds the signature to the booking's own order id. Without that, a
+genuine `{order_id, payment_id, signature}` triple from any cheap payment of
+one's own could be replayed against an expensive unpaid booking — it would
+verify, being validly signed, just not for that order.
+
 ### Test cards
 
 Use Razorpay's test cards, e.g. **4111 1111 1111 1111**, any future expiry, any

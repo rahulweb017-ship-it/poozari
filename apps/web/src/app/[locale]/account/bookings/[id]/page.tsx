@@ -3,11 +3,12 @@
 import { Link, useRouter } from '@/i18n/navigation';
 import { StatusBadge } from '@/components/status-badge';
 import { CustomerPanelNav } from '@/components/customer-panel-nav';
+import { PayNowButton } from '@/components/pay-now-button';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
 import { BOOKING_STATUS_FLOW, BOOKING_STATUS_LABELS, BookingStatus, formatInr, UserRole, type Booking } from '@poozari/shared';
 import {useParams} from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function BookingDetailPage() {
   const { user, ready } = useAuth();
@@ -23,11 +24,13 @@ export default function BookingDetailPage() {
     else if (ready && user && user.role !== UserRole.CUSTOMER) router.replace('/');
   }, [ready, user, router]);
 
+  const reload = useCallback(() => {
+    api.getBooking(params.id).then(setBooking).catch(() => setBooking(null));
+  }, [params.id]);
+
   useEffect(() => {
-    if (user?.role === UserRole.CUSTOMER) {
-      api.getBooking(params.id).then(setBooking).catch(() => setBooking(null));
-    }
-  }, [user, params.id]);
+    if (user?.role === UserRole.CUSTOMER) reload();
+  }, [user, reload]);
 
   async function submitReview() {
     setMsg('');
@@ -186,6 +189,23 @@ export default function BookingDetailPage() {
                 <Row label="Amount" value={formatInr(booking.amountInr)} bold />
               </div>
             </div>
+
+            {/* An unpaid booking is payable from here. Without this a dismissed
+                checkout modal left the booking permanently unpayable. */}
+            {booking.status === BookingStatus.PENDING_PAYMENT ? (
+              <div className="mt-5 border-t pt-5" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
+                <p className="mb-3 text-3xs font-bold uppercase tracking-wider text-amber-700">
+                  This booking is not paid yet
+                </p>
+                <PayNowButton
+                  bookingId={booking.id}
+                  amountInr={booking.amountInr}
+                  description={booking.puja.title}
+                  className="btn-primary w-full text-2xs uppercase tracking-widest"
+                  onPaid={reload}
+                />
+              </div>
+            ) : null}
           </div>
 
           {booking.assignment?.pandit ? (
