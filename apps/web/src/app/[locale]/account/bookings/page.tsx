@@ -7,9 +7,11 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
 import { BookingStatus, formatInr, UserRole, type Booking } from '@poozari/shared';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 export default function MyBookingsPage() {
+  const t = useTranslations('account.bookings');
   const { user, ready } = useAuth();
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[] | null>(null);
@@ -30,9 +32,9 @@ export default function MyBookingsPage() {
   return (
     <div className="app-container py-8 sm:py-12">
       <CustomerPanelNav />
-      <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">My Bookings</h1>
+      <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">{t('title')}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Track your registered puja bookings, live status, and uploaded video logs.
+        {t('lead')}
       </p>
 
       {bookings === null ? (
@@ -48,13 +50,13 @@ export default function MyBookingsPage() {
         <div className="card mt-8 p-12 text-center bg-white">
           <div className="text-5xl">🕉️</div>
           <p className="mt-4 font-display text-base font-bold text-foreground">
-            You have no bookings yet.
+            {t('emptyTitle')}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Browse our list of Vedic services and coordinate your first booking.
+            {t('emptyBody')}
           </p>
           <Link href="/puja" className="btn-primary mt-6 inline-flex text-2xs uppercase tracking-widest">
-            Browse Puja
+            {t('browse')}
           </Link>
         </div>
       ) : (
@@ -78,7 +80,7 @@ export default function MyBookingsPage() {
                     where the pay button lives rather than nesting a button. */}
                 {b.status === BookingStatus.PENDING_PAYMENT ? (
                   <div className="mt-2.5 text-2xs font-extrabold uppercase tracking-wider text-amber-700">
-                    ⚠ Not paid — open to pay {formatInr(b.amountInr)}
+                    ⚠ {t('notPaid', { amount: formatInr(b.amountInr) })}
                   </div>
                 ) : null}
               </div>

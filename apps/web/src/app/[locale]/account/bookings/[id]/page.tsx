@@ -6,11 +6,14 @@ import { CustomerPanelNav } from '@/components/customer-panel-nav';
 import { PayNowButton } from '@/components/pay-now-button';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
-import { BOOKING_STATUS_FLOW, BOOKING_STATUS_LABELS, BookingStatus, formatInr, UserRole, type Booking } from '@poozari/shared';
+import { BOOKING_STATUS_FLOW, BookingStatus, formatInr, UserRole, type Booking } from '@poozari/shared';
 import {useParams} from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function BookingDetailPage() {
+  const t = useTranslations('account.booking');
+  const ts = useTranslations('account.status');
   const { user, ready } = useAuth();
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -36,9 +39,9 @@ export default function BookingDetailPage() {
     setMsg('');
     try {
       await api.createReview(params.id, { rating, comment });
-      setMsg('Thank you for your review!');
+      setMsg(t('reviewThanks'));
     } catch (e: any) {
-      setMsg(e.message ?? 'Could not submit review');
+      setMsg(e.message ?? t('errors.reviewFailed'));
     }
   }
 
@@ -46,7 +49,7 @@ export default function BookingDetailPage() {
   if (!booking) {
     return (
       <div className="app-container py-16 text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        Loading…
+        {t('loading')}
       </div>
     );
   }
@@ -59,7 +62,7 @@ export default function BookingDetailPage() {
       {/* Back navigation */}
       <Link href="/account/bookings" className="text-2xs font-bold uppercase tracking-wider transition-colors hover:text-accent"
             style={{ color: 'hsl(var(--muted-foreground))' }}>
-        ← Back to list
+        ← {t('back')}
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
@@ -89,7 +92,7 @@ export default function BookingDetailPage() {
               <span className={`text-2xs font-bold uppercase tracking-wider transition-colors ${
                 i <= currentIndex ? 'text-accent' : 'text-gray-400'
               }`}>
-                {BOOKING_STATUS_LABELS[s]}
+                {ts(s)}
               </span>
               {i < BOOKING_STATUS_FLOW.length - 1 && (
                 <div className={`hidden h-0.5 w-8 sm:block ${i < currentIndex ? 'bg-accent/40' : 'bg-gray-200'}`} />
@@ -106,7 +109,7 @@ export default function BookingDetailPage() {
             <div className="card overflow-hidden bg-white">
               <div className="border-b px-6 py-4 bg-gray-50/50" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
                 <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
-                  🎥 Recorded Pooja Video
+                  🎥 {t('videoTitle')}
                 </h3>
               </div>
               <div className="p-6">
@@ -121,10 +124,10 @@ export default function BookingDetailPage() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-xl text-accent shadow-sm">🎥</span>
                 <div>
                   <div className="text-sm font-bold text-foreground">
-                    Video log pending
+                    {t('videoPending')}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
-                    Your recorded pooja video will be uploaded by the pandit once completed.
+                    {t('videoPendingBody')}
                   </div>
                 </div>
               </div>
@@ -135,7 +138,7 @@ export default function BookingDetailPage() {
           {booking.status === BookingStatus.COMPLETED ? (
             <div className="card p-6 bg-white">
               <h3 className="font-display text-sm font-bold uppercase tracking-wider text-foreground">
-                Rate your experience
+                {t('rateTitle')}
               </h3>
               {msg ? <p className="mt-3 rounded-2xl bg-green-50 p-3 text-xs text-green-700">{msg}</p> : null}
               <div className="mt-4 flex gap-1.5 text-3xl">
@@ -152,12 +155,12 @@ export default function BookingDetailPage() {
               <textarea
                 className="input mt-4"
                 rows={3}
-                placeholder="Share your experience..."
+                placeholder={t('reviewPlaceholder')}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
               <button className="btn-primary mt-4 text-2xs uppercase tracking-widest" onClick={submitReview}>
-                Submit review
+                {t('submitReview')}
               </button>
             </div>
           ) : null}
@@ -167,14 +170,14 @@ export default function BookingDetailPage() {
         <aside className="space-y-4">
           <div className="card p-6 bg-white">
             <h3 className="mb-4 font-display text-xs font-bold uppercase tracking-widest text-foreground">
-              Booking details
+              {t('details')}
             </h3>
             <div className="space-y-1.5 text-xs font-semibold">
-              <Row label="Devotee" value={booking.devoteeName} />
-              {booking.gotra ? <Row label="Gotra" value={booking.gotra} /> : null}
-              <Row label="Date" value={new Date(booking.preferredDate).toLocaleDateString('en-IN')} />
-              {booking.preferredTime ? <Row label="Time" value={booking.preferredTime} /> : null}
-              {booking.city ? <Row label="City" value={booking.city} /> : null}
+              <Row label={t('devotee')} value={booking.devoteeName} />
+              {booking.gotra ? <Row label={t('gotra')} value={booking.gotra} /> : null}
+              <Row label={t('date')} value={new Date(booking.preferredDate).toLocaleDateString('en-IN')} />
+              {booking.preferredTime ? <Row label={t('time')} value={booking.preferredTime} /> : null}
+              {booking.city ? <Row label={t('city')} value={booking.city} /> : null}
               {/* Itemise only when add-ons were bought, so a plain booking
                   does not grow a one-line breakdown of itself. */}
               {booking.addons.length > 0 ? (
@@ -186,7 +189,7 @@ export default function BookingDetailPage() {
                 </div>
               ) : null}
               <div className="!mt-3 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-                <Row label="Amount" value={formatInr(booking.amountInr)} bold />
+                <Row label={t('amount')} value={formatInr(booking.amountInr)} bold />
               </div>
             </div>
 
@@ -195,7 +198,7 @@ export default function BookingDetailPage() {
             {booking.status === BookingStatus.PENDING_PAYMENT ? (
               <div className="mt-5 border-t pt-5" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
                 <p className="mb-3 text-3xs font-bold uppercase tracking-wider text-amber-700">
-                  This booking is not paid yet
+                  {t('notPaid')}
                 </p>
                 <PayNowButton
                   bookingId={booking.id}
@@ -211,7 +214,7 @@ export default function BookingDetailPage() {
           {booking.assignment?.pandit ? (
             <div className="card p-6 bg-white">
               <h3 className="mb-4 font-display text-xs font-bold uppercase tracking-widest text-foreground">
-                Your pandit
+                {t('yourPandit')}
               </h3>
               <div className="flex items-center gap-3.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent shadow-sm">
@@ -222,7 +225,7 @@ export default function BookingDetailPage() {
                     {booking.assignment.pandit.displayName}
                   </div>
                   <div className="text-2xs text-muted-foreground mt-0.5">
-                    {booking.assignment.pandit.experienceYears} yrs experience
+                    {t('experience', { years: booking.assignment.pandit.experienceYears })}
                   </div>
                 </div>
               </div>

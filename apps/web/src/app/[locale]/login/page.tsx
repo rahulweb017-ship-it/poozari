@@ -4,6 +4,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/client';
 import { useAuth } from '@/lib/auth';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Suspense, useEffect, useState } from 'react';
 
 /** Which identifier the devotee is signing in with. */
@@ -15,9 +16,10 @@ type Channel = 'phone' | 'email';
  */
 const PHONE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_PHONE_LOGIN_ENABLED === 'true';
 
-const REASSURANCES = ['No password needed', '30-second login', 'Quick verification'];
+const REASSURANCES = ['noPassword', 'quickLogin', 'quickVerify'] as const;
 
 function LoginInner() {
+  const t = useTranslations('login');
   const { login } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
@@ -77,7 +79,7 @@ function LoginInner() {
       setResendIn(res.resendAfterSeconds ?? 60);
       setStep('code');
     } catch (e: any) {
-      setError(e.message ?? 'Failed to send the code');
+      setError(e.message ?? t('errors.sendFailed'));
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,7 @@ function LoginInner() {
       login(res);
       router.push(next);
     } catch (e: any) {
-      setError(e.message ?? 'Invalid code');
+      setError(e.message ?? t('errors.invalidCode'));
     } finally {
       setLoading(false);
     }
@@ -105,7 +107,7 @@ function LoginInner() {
       login(res);
       router.push(next);
     } catch (e: any) {
-      setError(e.message ?? 'Invalid credentials');
+      setError(e.message ?? t('errors.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -114,25 +116,25 @@ function LoginInner() {
   const identifierField =
     channel === 'phone' ? (
       <div>
-        <label className="label">Mobile number</label>
+        <label className="label">{t('mobileLabel')}</label>
         <input
           className="input"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="10-digit number"
+          placeholder={t('mobilePlaceholder')}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
       </div>
     ) : (
       <div>
-        <label className="label">Email address</label>
+        <label className="label">{t('emailLabel')}</label>
         <input
           className="input"
           type="email"
           inputMode="email"
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={t('emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -154,12 +156,12 @@ function LoginInner() {
         <div className="mx-auto mt-4 h-0.5 w-16 rounded-full bg-gradient-to-r from-accent to-primary" />
 
         <h1 className="mt-6 text-center font-display text-base font-extrabold uppercase tracking-wider text-foreground">
-          Create account or sign in
+          {t('title')}
         </h1>
         <p className="mt-1.5 text-center text-xs text-muted-foreground">
           {method === 'password'
-            ? 'Sign in with the password on your account.'
-            : 'Enter your details to get started. We will send you a code to verify.'}
+            ? t('leadPassword')
+            : t('leadOtp')}
         </p>
 
         {/* Channel toggle — governs both the OTP and the password form. */}
@@ -180,7 +182,7 @@ function LoginInner() {
                     : 'text-muted-foreground hover:text-foreground')
                 }
               >
-                {option === 'phone' ? 'Mobile' : 'Email'}
+                {option === 'phone' ? t('tabMobile') : t('tabEmail')}
               </button>
             ))}
           </div>
@@ -194,14 +196,14 @@ function LoginInner() {
           <div className="mt-6 space-y-4">
             {identifierField}
             <div>
-              <label className="label">Password</label>
+              <label className="label">{t('passwordLabel')}</label>
               <input
                 className="input"
                 type="password"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder={t('passwordPlaceholder')}
               />
             </div>
             <button
@@ -209,26 +211,26 @@ function LoginInner() {
               onClick={passwordLogin}
               disabled={loading || !identifier.trim() || password.length < 8}
             >
-              {loading ? 'Signing in…' : 'Sign in with password'}
+              {loading ? t('signingIn') : t('signInWithPassword')}
             </button>
             <button
               className="btn-outline w-full text-2xs uppercase tracking-widest"
               onClick={() => switchMethod('otp')}
             >
-              Use a one-time code instead
+              {t('useOtpInstead')}
             </button>
           </div>
         ) : step === 'identify' ? (
           <div className="mt-6 space-y-4">
             {identifierField}
             <div>
-              <label className="label">Name (optional)</label>
+              <label className="label">{t('nameLabel')}</label>
               <input
                 className="input"
                 autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Rahul Sharma"
+                placeholder={t('namePlaceholder')}
               />
             </div>
             <button
@@ -236,7 +238,7 @@ function LoginInner() {
               onClick={requestOtp}
               disabled={loading || !identifier.trim()}
             >
-              {loading ? 'Sending…' : 'Send OTP'}
+              {loading ? t('sending') : t('sendOtp')}
             </button>
 
             <ul className="space-y-1.5 pt-1">
@@ -246,7 +248,7 @@ function LoginInner() {
                   className="flex items-center justify-center gap-2 text-2xs text-muted-foreground"
                 >
                   <span className="text-emerald-500">✓</span>
-                  {line}
+                  {t(`reassurance.${line}`)}
                 </li>
               ))}
             </ul>
@@ -255,24 +257,26 @@ function LoginInner() {
               className="btn-outline w-full text-2xs uppercase tracking-widest"
               onClick={() => switchMethod('password')}
             >
-              Sign in with password
+              {t('signInWithPassword')}
             </button>
           </div>
         ) : (
           <div className="mt-6 space-y-4">
             {devCode ? (
               <p className="rounded-2xl bg-amber-50 p-3 text-center text-xs font-semibold text-amber-800 border border-amber-100">
-                Dev mode — nothing was sent. Code:{' '}
+                {t('devMode')}{' '}
                 <strong className="ml-1 tracking-[0.2em]">{devCode}</strong>
               </p>
             ) : (
               <p className="text-center text-xs text-muted-foreground">
-                We sent a 6-digit code to{' '}
-                <strong className="text-foreground">{identifier.trim()}</strong>.
+                {t.rich('codeSent', {
+                  target: identifier.trim(),
+                  strong: (chunks) => <strong className="text-foreground">{chunks}</strong>,
+                })}
               </p>
             )}
             <div>
-              <label className="label">Enter 6-digit OTP</label>
+              <label className="label">{t('otpLabel')}</label>
               <input
                 className="input text-center text-lg tracking-[0.4em]"
                 inputMode="numeric"
@@ -288,14 +292,14 @@ function LoginInner() {
               onClick={verifyOtp}
               disabled={loading || code.length !== 6}
             >
-              {loading ? 'Verifying…' : 'Verify & Continue'}
+              {loading ? t('verifying') : t('verify')}
             </button>
             <button
               className="btn-outline w-full text-2xs uppercase tracking-widest"
               onClick={requestOtp}
               disabled={loading || resendIn > 0}
             >
-              {resendIn > 0 ? 'Resend code in ' + resendIn + 's' : 'Resend code'}
+              {resendIn > 0 ? t('resendIn', { seconds: resendIn }) : t('resend')}
             </button>
             <button
               className="btn-outline w-full text-2xs uppercase tracking-widest"
@@ -305,25 +309,25 @@ function LoginInner() {
                 setError('');
               }}
             >
-              {channel === 'phone' ? 'Change number' : 'Change email'}
+              {channel === 'phone' ? t('changeNumber') : t('changeEmail')}
             </button>
           </div>
         )}
 
         <p className="mt-6 text-center text-2xs leading-relaxed text-muted-foreground">
-          By continuing, you agree to our{' '}
+          {t('agreePrefix')}{' '}
           <Link href="/terms-and-conditions" className="font-bold text-accent hover:underline">
-            Terms of Service
+            {t('terms')}
           </Link>{' '}
-          and{' '}
+          {t('agreeAnd')}{' '}
           <Link href="/privacy-policy" className="font-bold text-accent hover:underline">
-            Privacy Policy
+            {t('privacy')}
           </Link>
-          .
+          {t('agreeSuffix')}
         </p>
 
         <p className="mt-4 text-center text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">
-          <span className="mr-1.5 text-emerald-500">●</span> Support Active
+          <span className="mr-1.5 text-emerald-500">●</span> {t('supportActive')}
         </p>
       </div>
     </div>

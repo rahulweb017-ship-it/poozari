@@ -2,6 +2,7 @@
 
 import { api } from '@/lib/client';
 import { LIVE_CAPTION_LANGS, type LiveCaptionLang } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 type Translations = Partial<Record<LiveCaptionLang, string>>;
@@ -69,6 +70,7 @@ export function LiveCaptionControls({
   sessionId: string;
   variant: 'pandit' | 'admin';
 }) {
+  const t = useTranslations('live');
   const [texts, setTexts] = useState<Record<LiveCaptionLang, string>>({ sa: '', hi: '', en: '' });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -81,10 +83,10 @@ export function LiveCaptionControls({
     try {
       if (variant === 'pandit') await api.panditPushLiveCaption(sessionId, translations);
       else await api.adminPushLiveCaption(sessionId, translations);
-      setMsg('Caption pushed live.');
+      setMsg(t('captions.pushed'));
       setTexts({ sa: '', hi: '', en: '' });
     } catch (e: any) {
-      setErr(e.message ?? 'Could not push caption');
+      setErr(e.message ?? t('captions.pushFailed'));
     } finally {
       setBusy(false);
     }
@@ -96,10 +98,10 @@ export function LiveCaptionControls({
     <div className="w-full">
       <div className="flex items-center justify-between gap-2">
         <h4 className="text-2xs font-black uppercase tracking-widest text-foreground">
-          💬 Live captions
+          💬 {t('captions.title')}
         </h4>
         <span className="text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-          Shown to viewers in real time
+          {t('captions.hint')}
         </span>
       </div>
 
@@ -134,9 +136,9 @@ export function LiveCaptionControls({
             </span>
             <input
               className="input flex-1 bg-white py-1.5 text-xs"
-              placeholder={`Caption in ${l.label} (optional)`}
+              placeholder={t('captions.placeholder', { language: l.label })}
               value={texts[l.code]}
-              onChange={(e) => setTexts((t) => ({ ...t, [l.code]: e.target.value }))}
+              onChange={(e) => setTexts((prev) => ({ ...prev, [l.code]: e.target.value }))}
             />
           </div>
         ))}
@@ -148,7 +150,7 @@ export function LiveCaptionControls({
         onClick={() => push(texts)}
         className="btn-primary mt-3 w-full text-2xs uppercase tracking-widest disabled:opacity-50"
       >
-        {busy ? 'Pushing…' : '📣 Push caption'}
+        {busy ? t('captions.pushing') : `📣 ${t('captions.push')}`}
       </button>
     </div>
   );

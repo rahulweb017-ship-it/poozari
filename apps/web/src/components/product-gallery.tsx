@@ -1,6 +1,7 @@
 'use client';
 
 import { youtubeEmbedUrl } from '@/lib/video';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 type Slide = { kind: 'image' | 'video'; src: string };
@@ -19,6 +20,7 @@ export function ProductGallery({
     ...images.map((src) => ({ kind: 'image' as const, src })),
     ...(videoUrl ? [{ kind: 'video' as const, src: videoUrl }] : []),
   ];
+  const t = useTranslations('products');
   const [active, setActive] = useState(0);
   const current = slides[active];
 
@@ -45,7 +47,7 @@ export function ProductGallery({
               key={`${slide.src}-${i}`}
               type="button"
               onClick={() => setActive(i)}
-              aria-label={slide.kind === 'video' ? 'Play video' : `Show image ${i + 1}`}
+              aria-label={slide.kind === 'video' ? t('gallery.playVideo') : t('gallery.showImage', { n: i + 1 })}
               aria-current={i === active}
               className={
                 'relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-gray-100 transition ' +

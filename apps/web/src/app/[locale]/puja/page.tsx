@@ -1,5 +1,6 @@
 import { PujaCard } from '@/components/puja-card';
 import { getPujas } from '@/lib/server-api';
+import { getTranslations } from 'next-intl/server';
 
 export const revalidate = 60;
 
@@ -18,6 +19,7 @@ export default async function PujaListingPage({
     q: searchParams.q,
   }).catch(() => []);
   const atHome = searchParams.locationType === 'HOME';
+  const t = await getTranslations('pujaList');
 
   return (
     <div>
@@ -25,19 +27,19 @@ export default async function PujaListingPage({
       <section className="border-b bg-gradient-to-b from-accent-soft to-transparent" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
         <div className="app-container py-12 sm:py-16">
           <div className="flex flex-col items-center text-center">
-            <span className="section-pill">Puja Services</span>
+            <span className="section-pill">{t('pill')}</span>
             {atHome ? (
               <h1 className="section-heading mt-3">
-                Pujas at <span className="text-accent">Home</span>
+                {t('homeTitleLead')} <span className="text-accent">{t('homeTitleAccent')}</span>
               </h1>
             ) : (
               <h1 className="section-heading mt-3">
-                Book <span className="text-accent">Puja</span>
+                {t('titleLead')} <span className="text-accent">{t('titleAccent')}</span>
               </h1>
             )}
             <div className="section-bar mx-auto" aria-hidden="true" />
             <p className="section-subheading mx-auto">
-              Explore our ritual categories, package tiers, and traditional inclusions. {pujas.length} pujas available.
+              {t('lead', { count: pujas.length })}
             </p>
           </div>
         </div>
@@ -56,7 +58,7 @@ export default async function PujaListingPage({
             <div className="card p-12 text-center">
               <div className="text-4xl">🕉️</div>
               <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                No pujas match your filters yet.
+                {t('empty')}
               </p>
             </div>
           )}

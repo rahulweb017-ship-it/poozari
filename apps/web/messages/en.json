@@ -23,7 +23,9 @@
     "language": "Language",
     "currency": "Currency",
     "more": "More",
-    "digitalPuja": "Digital Puja"
+    "digitalPuja": "Digital Puja",
+    "deity": "By Deity",
+    "primaryAria": "Primary"
   },
   "footer": {
     "tagline": "Authentic Vedic rituals, performed by verified pandits and delivered to you as a recorded pooja video with prasad.",
@@ -502,5 +504,521 @@
       }
     },
     "empty": "No digital pujas yet. Check back soon."
+  },
+  "home": {
+    "heroPill": "Ancient Faith, Modern Trust",
+    "heroTitleLead": "Book",
+    "heroTitleAccent": "Authentic Vedic Puja",
+    "heroTitleTrail": "with Vetted Priests",
+    "heroLead": "Coordinate Vedic ceremonies seamlessly. We source authentic samagri, assign verified localized pandits, and deliver recorded proof directly to your home.",
+    "trust": [
+      "Vetted Pandits",
+      "Complete Samagri",
+      "Scriptural Rigor",
+      "Muhurat Support"
+    ],
+    "ctaBrowse": "Browse Puja Catalog",
+    "ctaTeerth": "Teerth Destinations",
+    "assistance": "Guided booking assistance on call & WhatsApp",
+    "stats": [
+      "Happy Devotees",
+      "Verified Priests",
+      "Temples Connected",
+      "Cities Served"
+    ],
+    "aboutPill": "About Us",
+    "aboutTitleLead": "What Is",
+    "aboutTitleAccent": "poozari?",
+    "aboutLead": "Poozari is a dedicated Vastu and Vedic service coordination desk. We handle localized priest matching, source organic samagri lists, schedule muhurats, and arrange high-definition recorded proofs. You focus on devotion — we take care of details.",
+    "features": [
+      {
+        "title": "Authentic Vedic Vidhi",
+        "desc": "All ceremonies strictly follow Vedic scriptures, managed by authorized, vetted pandits."
+      },
+      {
+        "title": "Verified Pujari Directory",
+        "desc": "Priests are screen-vetted for scriptural knowledge, experience, and area specialization."
+      },
+      {
+        "title": "Dedicated Helpline Support",
+        "desc": "Consult our booking desk for guidance on muhurat selection and custom arrangements."
+      }
+    ],
+    "citiesPill": "Sacred Gallery",
+    "citiesTitleLead": "Holy",
+    "citiesTitleAccent": "Teerth Cities",
+    "citiesLead": "Explore major teerths and coordinate temple pujas.",
+    "templesServed": "{count, plural, one {# Temple Served} other {# Temples Served}}",
+    "exploreCities": "Explore All Teerth Cities",
+    "homePill": "At Home",
+    "homeTitleLead": "Home",
+    "homeTitleAccent": "Services",
+    "homeLead": "We match localized priests to your doorstep, bringing all organic samagri elements.",
+    "viewAllHome": "View all home pujas",
+    "teerthPill": "Sacred Rites",
+    "teerthTitleLead": "Sacred",
+    "teerthTitleAccent": "Teerth Pujas",
+    "teerthLead": "Authorized pandits coordinate remote rituals on your behalf.",
+    "stepsPill": "Ritual Steps",
+    "stepsTitleLead": "Standard",
+    "stepsTitleAccent": "Booking Flow",
+    "steps": [
+      {
+        "title": "Share your sankalp",
+        "desc": "Specify the puja, date, family details, and personal gotra."
+      },
+      {
+        "title": "Pujari Auto-Match",
+        "desc": "Our system instantly assigns a verified pandit matching your location."
+      },
+      {
+        "title": "Premium Samagri",
+        "desc": "We arrange all organic, high-quality ritual items beforehand."
+      },
+      {
+        "title": "Authentic Rituals",
+        "desc": "Vedic chants and ceremonies performed according to shastras."
+      },
+      {
+        "title": "Video Proof & Prasad",
+        "desc": "Receive a recording of the puja and holy prasad at your home."
+      }
+    ],
+    "emptyTitle": "No pujas available yet. Run the API seed to load sample pujas.",
+    "emptyCta": "Browse all pujas"
+  },
+  "liveCarousel": {
+    "liveNow": "Live puja now",
+    "upcomingPujas": "Upcoming pujas",
+    "viewSchedule": "View schedule",
+    "carouselLabel": "Live and upcoming pujas",
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "withPandit": "With {name}",
+    "joinNow": "Join the ceremony happening now",
+    "startsAt": "Starts {when}",
+    "joinFee": "Join fee",
+    "joinLive": "Join Live Puja",
+    "viewDetails": "View Details",
+    "emptyTitle": "New live pujas are being scheduled",
+    "emptyCta": "View Live Puja",
+    "selectSlide": "Select puja slide",
+    "showSlide": "Show {title}",
+    "rating": "{rating} rating"
+  },
+  "pujaList": {
+    "pill": "Puja Services",
+    "homeTitleLead": "Pujas at",
+    "homeTitleAccent": "Home",
+    "titleLead": "Book",
+    "titleAccent": "Puja",
+    "lead": "Explore our ritual categories, package tiers, and traditional inclusions. {count, plural, one {# puja available.} other {# pujas available.}}",
+    "empty": "No pujas match your filters yet."
+  },
+  "pujaDetail": {
+    "fallbackTitle": "Puja",
+    "breadcrumbHome": "Home",
+    "breadcrumbPuja": "Puja",
+    "badgeVerified": "Verified Pujari",
+    "badgeSamagri": "Samagri Included",
+    "badgeVideo": "Recorded Video Proof",
+    "deities": "Deities",
+    "benefits": "Benefits",
+    "featuresHeading": "Coordinated features list"
+  },
+  "pujaCard": {
+    "location": {
+      "HOME": "At Home",
+      "TEERTH": "Teerth",
+      "TEMPLE": "Temple",
+      "DIGITAL": "Digital"
+    },
+    "verified": "Verified Pujari",
+    "inclusions": "Inclusions",
+    "startingFrom": "Starting from",
+    "book": "Book"
+  },
+  "teerth": {
+    "pill": "Sacred Destinations",
+    "titleLead": "Teerth",
+    "titleAccent": "Puja",
+    "lead": "Temple-authorised pandits and coordinated Vedic samagri at holy sites.",
+    "empty": "No teerth pujas yet. Check back soon."
+  },
+  "temples": {
+    "pill": "Sacred Places",
+    "titleLead": "Famous",
+    "titleAccent": "Temples",
+    "lead": "Explore famous temples and coordinate authentic puja rites.",
+    "viewPujas": "View pujas",
+    "empty": "No temples yet."
+  },
+  "catalogue": {
+    "deity": {
+      "pill": "By Deity",
+      "titleLead": "Puja by",
+      "titleAccent": "Deity",
+      "lead": "Filter and select pujas dedicated to specific deities."
+    },
+    "festival": {
+      "pill": "Festivals",
+      "titleLead": "Puja by",
+      "titleAccent": "Festival",
+      "lead": "Find ceremonies and listings timed to upcoming major festivals."
+    },
+    "benefit": {
+      "pill": "Benefits",
+      "titleLead": "Puja by",
+      "titleAccent": "Benefit",
+      "lead": "Select Vedic services aligned to specific personal intents (health, peace, prosperity)."
+    },
+    "empty": "Nothing here yet. Check back soon.",
+    "view": "View"
+  },
+  "live": {
+    "metaTitle": "Live Puja — poozari.com",
+    "metaDescription": "Watch a live puja with verified pandits. Join a live Vedic ritual, pay the join fee, and take darshan from anywhere.",
+    "pill": "Live Puja",
+    "titleLead": "Join a",
+    "titleAccent": "Live Pooja",
+    "titleTail": "from Anywhere",
+    "subtitle": "Take darshan of authentic Vedic rituals performed live by verified pandits. Pay the join fee and watch the ceremony in real time.",
+    "liveNow": "Live Now",
+    "emptyLive": "No live puja right now. Check the upcoming schedule below.",
+    "upcoming": "Upcoming",
+    "pastPujas": "Past Pujas",
+    "badgeLive": "LIVE",
+    "badgeEnded": "ENDED",
+    "badgeUpcoming": "UPCOMING",
+    "watching": "{count} watching",
+    "happeningNow": "Happening now",
+    "endedAt": "Ended {time}",
+    "startsAt": "Starts {time}",
+    "joinFee": "Join fee",
+    "joinLive": "Join live",
+    "view": "View",
+    "details": "Details",
+    "errorLoad": "Could not load live puja",
+    "errorStartPayment": "Could not start payment",
+    "razorpayDescription": "Live Puja — {title}",
+    "paymentCancelled": "Payment was cancelled. You have not been charged.",
+    "notFound": "Live puja not found",
+    "backToLive": "Back to Live Puja",
+    "loading": "Loading…",
+    "breadcrumb": "Live Puja",
+    "aboutThis": "About this darshan",
+    "paywallLiveTitle": "This pooja is live now",
+    "paywallUpcomingTitle": "This live puja is upcoming",
+    "paywallLiveBody": "Pay the join fee to watch the live ceremony and take darshan with panditji.",
+    "paywallUpcomingBody": "Reserve your spot now — the live puja begins {time}.",
+    "processing": "Processing…",
+    "payAndJoin": "Pay {amount} & Join",
+    "loginToJoin": "Login to Join",
+    "securePayment": "Secure payment via Razorpay",
+    "endedTitle": "This darshan has ended",
+    "watchRecording": "Watch recording",
+    "recordingSoon": "A recording will be available here soon.",
+    "browseOther": "Browse other darshan",
+    "player": {
+      "unavailable": "The live stream is unavailable right now.",
+      "unsupported": "Your browser cannot play this live stream.",
+      "loadFailed": "Failed to load the live player.",
+      "changeCaptionLang": "Change caption language"
+    },
+    "captions": {
+      "title": "Live captions",
+      "hint": "Shown to viewers in real time",
+      "pushed": "Caption pushed live.",
+      "pushFailed": "Could not push caption",
+      "placeholder": "Caption in {language} (optional)",
+      "pushing": "Pushing…",
+      "push": "Push caption"
+    }
+  },
+  "products": {
+    "pill": "Sacred Essentials",
+    "titleLead": "Puja",
+    "titleAccent": "Products",
+    "subtitle": "Discover authentic rudraksha, havan samagri, puja kits, and devotional essentials selected for traditional worship.",
+    "fallbackDescriptionShort": "Authentic devotional essential for your daily worship and sacred rituals.",
+    "fallbackDescription": "An authentic devotional essential selected for traditional worship and sacred rituals.",
+    "price": "Price",
+    "inStockCount": "{count} in stock",
+    "outOfStock": "Out of stock",
+    "viewDetails": "View Details",
+    "buyNow": "Buy Now",
+    "soldOut": "Sold Out",
+    "emptyTitle": "Products coming soon",
+    "emptyBody": "Our sacred essentials catalog is being prepared. Please check back shortly.",
+    "breadcrumb": "Products",
+    "assurances": [
+      {
+        "title": "Authentically sourced",
+        "text": "Selected with care for traditional puja and devotional use."
+      },
+      {
+        "title": "Secure checkout",
+        "text": "Protected online payment powered by Razorpay."
+      },
+      {
+        "title": "Delivery support",
+        "text": "Your order is carefully packed and delivered to your address."
+      }
+    ],
+    "gallery": {
+      "playVideo": "Play video",
+      "showImage": "Show image {n}"
+    },
+    "buy": {
+      "inclusiveTaxes": "Inclusive of all taxes",
+      "inStock": "In stock",
+      "quantity": "Quantity",
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "available": "{count} available",
+      "orderTotal": "Order total",
+      "unavailable": "Currently unavailable",
+      "trustSecure": "Secure payment",
+      "trustPackaging": "Careful packaging",
+      "trustAuthentic": "Authentic products",
+      "trustDelivery": "Delivery support"
+    }
+  },
+  "productCheckout": {
+    "errorLoad": "Could not load product",
+    "errorCheckout": "Could not complete checkout",
+    "paymentCancelled": "Payment was cancelled. Your order is saved and unpaid — you can pay for it from My Orders.",
+    "loading": "Loading checkout…",
+    "notFound": "Product not found",
+    "back": "Back to product",
+    "pill": "Secure checkout",
+    "title": "Delivery details",
+    "subtitle": "Enter the address where you want your sacred product delivered.",
+    "fullName": "Full name",
+    "mobile": "Mobile number",
+    "email": "Email address",
+    "address": "Address",
+    "addressPlaceholder": "House number, street, landmark",
+    "city": "City",
+    "state": "State",
+    "pincode": "Pincode",
+    "orderSummary": "Order summary",
+    "quantity": "Quantity: {quantity}",
+    "each": "each",
+    "subtotal": "Subtotal",
+    "delivery": "Delivery",
+    "free": "Free",
+    "total": "Total",
+    "processing": "Processing…",
+    "pay": "Pay {amount}",
+    "securePayment": "Secure payment via Razorpay"
+  },
+  "faq": {
+    "pill": "Help Center",
+    "titleLead": "Frequently Asked",
+    "titleAccent": "Questions",
+    "subtitle": "Common questions about coordinating Vedic and temple pujas online.",
+    "items": [
+      {
+        "q": "Do I need to arrange the samagri myself?",
+        "a": "No. For any puja you book through poozari, we coordinate the complete premium puja samagri along with the verified pandit. You only share your sankalp details — we handle the rest."
+      },
+      {
+        "q": "How does puja booking work?",
+        "a": "Choose a puja, select a package, add your sankalp details and complete secure payment. The assigned pandit performs the ritual and shares completion proof, including a recorded video."
+      },
+      {
+        "q": "Can I book a puja for a specific date and muhurat?",
+        "a": "Yes. During checkout you can share your preferred date and time. Our team confirms pandit availability and the final schedule."
+      },
+      {
+        "q": "Are pandits on poozari verified?",
+        "a": "Yes. Every pandit is screened for ritual knowledge and service quality before being assigned to bookings."
+      },
+      {
+        "q": "What is included in puja packages?",
+        "a": "Package inclusions vary by ritual and can include samagri, sankalp process, vidhi details, and video proof. Each package card lists exact inclusions."
+      },
+      {
+        "q": "Can devotees outside India book puja services?",
+        "a": "Yes. Devotees in India and abroad can book rituals, share sankalp details digitally, and watch the recorded pooja video online."
+      }
+    ],
+    "ctaTitle": "Still have questions?",
+    "ctaBody": "Contact our booking desk directly for support with custom packages, muhurat schedule inquiries, or scriptural questions.",
+    "ctaStatus": "Helpline Support Active"
+  },
+  "payNow": {
+    "cancelled": "Payment cancelled. This booking is still unpaid.",
+    "errorStart": "Could not start the payment",
+    "processing": "Processing…",
+    "pay": "Pay {amount}"
+  },
+  "login": {
+    "title": "Create account or sign in",
+    "leadPassword": "Sign in with the password on your account.",
+    "leadOtp": "Enter your details to get started. We will send you a code to verify.",
+    "tabMobile": "Mobile",
+    "tabEmail": "Email",
+    "mobileLabel": "Mobile number",
+    "mobilePlaceholder": "10-digit number",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Your password",
+    "signingIn": "Signing in…",
+    "signInWithPassword": "Sign in with password",
+    "useOtpInstead": "Use a one-time code instead",
+    "nameLabel": "Name (optional)",
+    "namePlaceholder": "e.g. Rahul Sharma",
+    "sending": "Sending…",
+    "sendOtp": "Send OTP",
+    "reassurance": {
+      "noPassword": "No password needed",
+      "quickLogin": "30-second login",
+      "quickVerify": "Quick verification"
+    },
+    "devMode": "Dev mode — nothing was sent. Code:",
+    "codeSent": "We sent a 6-digit code to <strong>{target}</strong>.",
+    "otpLabel": "Enter 6-digit OTP",
+    "verifying": "Verifying…",
+    "verify": "Verify & Continue",
+    "resendIn": "Resend code in {seconds}s",
+    "resend": "Resend code",
+    "changeNumber": "Change number",
+    "changeEmail": "Change email",
+    "agreePrefix": "By continuing, you agree to our",
+    "terms": "Terms of Service",
+    "agreeAnd": "and",
+    "privacy": "Privacy Policy",
+    "agreeSuffix": ".",
+    "supportActive": "Support Active",
+    "errors": {
+      "sendFailed": "Failed to send the code",
+      "invalidCode": "Invalid code",
+      "invalidCredentials": "Invalid credentials"
+    }
+  },
+  "account": {
+    "nav": {
+      "aria": "Customer account",
+      "bookings": "My Bookings",
+      "orders": "Product Orders",
+      "profile": "Profile & Security"
+    },
+    "status": {
+      "PENDING_PAYMENT": "Awaiting payment",
+      "PAID": "Payment received",
+      "ASSIGNED": "Pandit assigned",
+      "ACCEPTED": "Pandit confirmed",
+      "SCHEDULED": "Scheduled",
+      "IN_PROGRESS": "Puja in progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "orderStatus": {
+      "PENDING_PAYMENT": "Pending payment",
+      "PAID": "Paid",
+      "PROCESSING": "Processing",
+      "SHIPPED": "Shipped",
+      "DELIVERED": "Delivered",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "gender": {
+      "UNSPECIFIED": "Prefer not to say",
+      "MALE": "Male",
+      "FEMALE": "Female",
+      "OTHER": "Other"
+    },
+    "bookings": {
+      "title": "My Bookings",
+      "lead": "Track your registered puja bookings, live status, and uploaded video logs.",
+      "emptyTitle": "You have no bookings yet.",
+      "emptyBody": "Browse our list of Vedic services and coordinate your first booking.",
+      "browse": "Browse Puja",
+      "notPaid": "Not paid — open to pay {amount}"
+    },
+    "booking": {
+      "loading": "Loading…",
+      "back": "Back to list",
+      "videoTitle": "Recorded Pooja Video",
+      "videoPending": "Video log pending",
+      "videoPendingBody": "Your recorded pooja video will be uploaded by the pandit once completed.",
+      "rateTitle": "Rate your experience",
+      "reviewPlaceholder": "Share your experience...",
+      "submitReview": "Submit review",
+      "reviewThanks": "Thank you for your review!",
+      "details": "Booking details",
+      "devotee": "Devotee",
+      "gotra": "Gotra",
+      "date": "Date",
+      "time": "Time",
+      "city": "City",
+      "amount": "Amount",
+      "notPaid": "This booking is not paid yet",
+      "yourPandit": "Your pandit",
+      "experience": "{years} yrs experience",
+      "errors": {
+        "reviewFailed": "Could not submit review"
+      }
+    },
+    "orders": {
+      "title": "Product Orders",
+      "lead": "View your puja product purchases and delivery details.",
+      "emptyTitle": "You have no product orders yet",
+      "browse": "Browse Products",
+      "qty": "Qty {quantity}"
+    },
+    "order": {
+      "loading": "Loading order…",
+      "back": "Back to product orders",
+      "paidTitle": "Payment successful",
+      "paidBody": "Your order has been confirmed. We will carefully prepare it for delivery.",
+      "reference": "Order {reference}",
+      "orderedOn": "Ordered on {date}",
+      "items": "Items",
+      "totalPaid": "Total paid",
+      "deliveryAddress": "Delivery address",
+      "errors": {
+        "loadFailed": "Could not load order"
+      }
+    },
+    "profile": {
+      "title": "Profile & Security",
+      "lead": "Keep your contact details, sankalp details and sign-in password up to date.",
+      "basicDetails": "Basic details",
+      "fullName": "Full name",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "verifiedMobile": "Verified mobile",
+      "mobileHint": "Mobile changes require OTP verification.",
+      "sankalpTitle": "Sankalp details",
+      "sankalpBody": "Saved once, then filled in for you every time you book. The pandit recites your name and gotra when the puja is offered.",
+      "gotra": "Gotra",
+      "gotraPlaceholder": "e.g. Bharadwaj",
+      "dateOfBirth": "Date of birth",
+      "gender": "Gender",
+      "address": "Address",
+      "addressPlaceholder": "Flat / house, street, area",
+      "addressHint": "Used for pujas at home and for couriering prasad.",
+      "city": "City",
+      "state": "State",
+      "pincode": "Pincode",
+      "save": "Save profile",
+      "saved": "Profile updated successfully.",
+      "resetPassword": "Reset password",
+      "createPassword": "Create password",
+      "passwordLead": "Your verified OTP session authorizes this reset. OTP login will continue to work.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "passwordSaved": "Password saved. You can now sign in with your mobile number or email and this password.",
+      "errors": {
+        "loadFailed": "Could not load profile",
+        "saveFailed": "Could not update profile",
+        "passwordFailed": "Could not save password"
+      }
+    }
   }
 }

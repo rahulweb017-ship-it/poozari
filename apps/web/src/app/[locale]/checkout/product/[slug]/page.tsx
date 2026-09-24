@@ -6,10 +6,12 @@ import { api } from '@/lib/client';
 import { Price, PriceNote } from '@/lib/currency';
 import { openRazorpayCheckout } from '@/lib/razorpay';
 import { formatInr, UserRole, type Product } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 import {useParams, useSearchParams} from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 
 function ProductCheckout() {
+  const t = useTranslations('productCheckout');
   const { user, ready } = useAuth();
   const router = useRouter();
   const params = useParams<{ slug: string }>();
@@ -45,9 +47,9 @@ function ProductCheckout() {
     api
       .getProduct(params.slug)
       .then(setProduct)
-      .catch((e: any) => setError(e.message ?? 'Could not load product'))
+      .catch((e: any) => setError(e.message ?? t('errorLoad')))
       .finally(() => setLoadingProduct(false));
-  }, [params.slug]);
+  }, [params.slug, t]);
 
   useEffect(() => {
     if (!user) return;
@@ -113,9 +115,7 @@ function ProductCheckout() {
         },
         onDismiss: () => {
           setSubmitting(false);
-          setError(
-            'Payment was cancelled. Your order is saved and unpaid — you can pay for it from My Orders.',
-          );
+          setError(t('paymentCancelled'));
         },
         onError: (message) => {
           setSubmitting(false);
@@ -123,17 +123,17 @@ function ProductCheckout() {
         },
       });
     } catch (e: any) {
-      setError(e.message ?? 'Could not complete checkout');
+      setError(e.message ?? t('errorCheckout'));
       setSubmitting(false);
     }
   }
 
   if (!ready || !user || user.role !== UserRole.CUSTOMER) return null;
   if (loadingProduct) {
-    return <div className="app-container py-16 text-center text-muted-foreground">Loading checkout…</div>;
+    return <div className="app-container py-16 text-center text-muted-foreground">{t('loading')}</div>;
   }
   if (!product) {
-    return <div className="app-container py-16 text-center text-red-600">{error || 'Product not found'}</div>;
+    return <div className="app-container py-16 text-center text-red-600">{error || t('notFound')}</div>;
   }
 
   const total = product.priceInr * quantity;
@@ -144,17 +144,17 @@ function ProductCheckout() {
         href={`/products/${product.slug}`}
         className="text-2xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-accent"
       >
-        ← Back to product
+        ← {t('back')}
       </Link>
 
       <div className="mt-5 grid gap-8 lg:grid-cols-[1fr_380px] lg:gap-12">
         <section>
-          <span className="section-pill">Secure checkout</span>
+          <span className="section-pill">{t('pill')}</span>
           <h1 className="mt-4 font-display text-3xl font-black text-foreground">
-            Delivery details
+            {t('title')}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Enter the address where you want your sacred product delivered.
+            {t('subtitle')}
           </p>
 
           {error ? (
@@ -164,29 +164,29 @@ function ProductCheckout() {
           ) : null}
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
-            <Field label="Full name *">
+            <Field label={`${t('fullName')} *`}>
               <input className="input" value={form.customerName} onChange={(e) => update('customerName', e.target.value)} />
             </Field>
-            <Field label="Mobile number *">
+            <Field label={`${t('mobile')} *`}>
               <input className="input" inputMode="tel" value={form.contactPhone} onChange={(e) => update('contactPhone', e.target.value)} />
             </Field>
             <div className="sm:col-span-2">
-              <Field label="Email address">
+              <Field label={t('email')}>
                 <input className="input" type="email" value={form.contactEmail} onChange={(e) => update('contactEmail', e.target.value)} />
               </Field>
             </div>
             <div className="sm:col-span-2">
-              <Field label="Address *">
-                <textarea className="input" rows={3} placeholder="House number, street, landmark" value={form.addressLine} onChange={(e) => update('addressLine', e.target.value)} />
+              <Field label={`${t('address')} *`}>
+                <textarea className="input" rows={3} placeholder={t('addressPlaceholder')} value={form.addressLine} onChange={(e) => update('addressLine', e.target.value)} />
               </Field>
             </div>
-            <Field label="City *">
+            <Field label={`${t('city')} *`}>
               <input className="input" value={form.city} onChange={(e) => update('city', e.target.value)} />
             </Field>
-            <Field label="State *">
+            <Field label={`${t('state')} *`}>
               <input className="input" value={form.state} onChange={(e) => update('state', e.target.value)} />
             </Field>
-            <Field label="Pincode *">
+            <Field label={`${t('pincode')} *`}>
               <input className="input" inputMode="numeric" maxLength={6} value={form.pincode} onChange={(e) => update('pincode', e.target.value.replace(/\D/g, ''))} />
             </Field>
           </div>
@@ -195,7 +195,7 @@ function ProductCheckout() {
         <aside>
           <div className="elevated-card sticky top-20 bg-white p-6">
             <h2 className="font-display text-sm font-extrabold uppercase tracking-widest text-foreground">
-              Order summary
+              {t('orderSummary')}
             </h2>
             <div className="mt-5 flex gap-4">
               <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-accent-soft">
@@ -206,17 +206,17 @@ function ProductCheckout() {
               </div>
               <div>
                 <div className="font-display text-sm font-bold text-foreground">{product.name}</div>
-                <div className="mt-1 text-xs text-muted-foreground">Quantity: {quantity}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{t('quantity', { quantity })}</div>
                 <div className="mt-1 text-xs font-bold text-accent">
-                  <Price amountInr={product.priceInr} /> each
+                  <Price amountInr={product.priceInr} /> {t('each')}
                 </div>
               </div>
             </div>
             <div className="mt-6 space-y-3 border-t pt-5 text-xs">
-              <SummaryRow label="Subtotal" value={<Price amountInr={total} />} />
-              <SummaryRow label="Delivery" value="Free" />
+              <SummaryRow label={t('subtotal')} value={<Price amountInr={total} />} />
+              <SummaryRow label={t('delivery')} value={t('free')} />
               <div className="flex items-center justify-between border-t pt-4">
-                <span className="font-black uppercase tracking-wider text-foreground">Total</span>
+                <span className="font-black uppercase tracking-wider text-foreground">{t('total')}</span>
                 <span className="font-display text-xl font-black text-accent">
                   <Price amountInr={total} />
                 </span>
@@ -234,10 +234,10 @@ function ProductCheckout() {
               disabled={submitting || !canSubmit}
               onClick={submit}
             >
-              {submitting ? 'Processing…' : `Pay ${formatInr(total)}`}
+              {submitting ? t('processing') : t('pay', { amount: formatInr(total) })}
             </button>
             <p className="mt-4 text-center text-3xs font-bold uppercase tracking-widest text-muted-foreground">
-              Secure payment via Razorpay
+              {t('securePayment')}
             </p>
           </div>
         </aside>

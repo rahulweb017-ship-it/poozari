@@ -27,10 +27,6 @@ const SECONDARY = [
   { href: '/become-a-pujari', key: 'becomePujari' },
 ] as const;
 
-const SECONDARY_LABELS: Record<string, string> = {
-  deity: 'By Deity',
-};
-
 export function Navbar() {
   const { user, logout, ready } = useAuth();
   const pathname = usePathname();
@@ -52,7 +48,7 @@ export function Navbar() {
   // work the same in every language.
   if (pathname.startsWith('/admin') || pathname.startsWith('/pandit')) return null;
 
-  const label = (key: string) => SECONDARY_LABELS[key] ?? t(key as never);
+  const label = (key: string) => t(key as never);
 
   return (
     <>
@@ -75,7 +71,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden items-center gap-5 xl:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-5 xl:flex" aria-label={t('primaryAria')}>
             {PRIMARY.map((n) => (
               <Link
                 key={n.href}

@@ -15,12 +15,14 @@ import {
   type LiveCaptionLang,
   type LiveSession,
 } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 import {useParams} from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const CAPTION_LANG_KEY = 'poozari_caption_lang';
 
 export default function LiveDarshanViewerPage() {
+  const t = useTranslations('live');
   const { user, ready } = useAuth();
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -39,9 +41,9 @@ export default function LiveDarshanViewerPage() {
       setSession(s);
     } catch (e: any) {
       if (e.status === 404) setNotFound(true);
-      else setError(e.message ?? 'Could not load live puja');
+      else setError(e.message ?? t('errorLoad'));
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     load().catch(() => undefined);
@@ -57,8 +59,8 @@ export default function LiveDarshanViewerPage() {
   useEffect(() => {
     if (!session) return;
     if (session.status === LiveSessionStatus.ENDED) return;
-    const t = setInterval(() => load().catch(() => undefined), 15000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => load().catch(() => undefined), 15000);
+    return () => clearInterval(timer);
   }, [session, load]);
 
   const isLive = session?.status === LiveSessionStatus.LIVE;
@@ -76,10 +78,10 @@ export default function LiveDarshanViewerPage() {
         })
         .catch(() => undefined);
     tick();
-    const t = setInterval(tick, 5000);
+    const timer = setInterval(tick, 5000);
     return () => {
       stop = true;
-      clearInterval(t);
+      clearInterval(timer);
     };
   }, [canWatch, id]);
 
@@ -123,7 +125,7 @@ export default function LiveDarshanViewerPage() {
       }
       await openRazorpayCheckout({
         order,
-        description: `Live Puja — ${session.title}`,
+        description: t('razorpayDescription', { title: session.title }),
         prefill: { name: user.name, contact: user.phone ?? '', email: user.email ?? '' },
         onVerify: async (response) => {
           await api.verifyLiveAccess(session.id, response);
@@ -132,7 +134,7 @@ export default function LiveDarshanViewerPage() {
         },
         onDismiss: () => {
           setPaying(false);
-          setError('Payment was cancelled. You have not been charged.');
+          setError(t('paymentCancelled'));
         },
         onError: (message) => {
           setPaying(false);
@@ -141,7 +143,7 @@ export default function LiveDarshanViewerPage() {
       });
       // `paying` stays set while the modal is open; the callbacks above clear it.
     } catch (e: any) {
-      setError(e.message ?? 'Could not start payment');
+      setError(e.message ?? t('errorStartPayment'));
       setPaying(false);
     }
   }
@@ -150,9 +152,9 @@ export default function LiveDarshanViewerPage() {
     return (
       <div className="app-container py-24 text-center">
         <div className="text-5xl">🪔</div>
-        <h1 className="section-heading mt-4">Live puja not found</h1>
+        <h1 className="section-heading mt-4">{t('notFound')}</h1>
         <Link href="/live-darshan" className="btn-outline mt-6 inline-flex text-2xs uppercase tracking-wider">
-          ← Back to Live Puja
+          ← {t('backToLive')}
         </Link>
       </div>
     );
@@ -161,7 +163,7 @@ export default function LiveDarshanViewerPage() {
   if (!session) {
     return (
       <div className="app-container py-24 text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        {error || 'Loading…'}
+        {error || t('loading')}
       </div>
     );
   }
@@ -174,7 +176,7 @@ export default function LiveDarshanViewerPage() {
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-2xs font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>
           <Link href="/live-darshan" className="transition-colors hover:text-accent">
-            ← Live Puja
+            ← {t('breadcrumb')}
           </Link>
         </nav>
 
@@ -185,11 +187,11 @@ export default function LiveDarshanViewerPage() {
               {isLive ? (
                 <span className="badge bg-red-600 text-white shadow-md">
                   <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-                  LIVE
+                  {t('badgeLive')}
                 </span>
               ) : null}
-              {isEnded ? <span className="badge bg-gray-800 text-white/90">ENDED</span> : null}
-              {!isLive && !isEnded ? <span className="badge bg-[#0b0f19] text-white/95">UPCOMING</span> : null}
+              {isEnded ? <span className="badge bg-gray-800 text-white/90">{t('badgeEnded')}</span> : null}
+              {!isLive && !isEnded ? <span className="badge bg-[#0b0f19] text-white/95">{t('badgeUpcoming')}</span> : null}
             </div>
             <h1 className="display-title mt-3 !text-3xl sm:!text-4xl">{session.title}</h1>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-muted-foreground">
@@ -197,10 +199,10 @@ export default function LiveDarshanViewerPage() {
               {session.puja ? <span>🪔 {session.puja.title}</span> : null}
               <span>
                 {isLive
-                  ? 'Happening now'
+                  ? t('happeningNow')
                   : isEnded
-                    ? `Ended ${new Date(session.endedAt ?? session.scheduledAt).toLocaleString('en-IN')}`
-                    : `Starts ${new Date(session.scheduledAt).toLocaleString('en-IN')}`}
+                    ? t('endedAt', { time: new Date(session.endedAt ?? session.scheduledAt).toLocaleString('en-IN') })
+                    : t('startsAt', { time: new Date(session.scheduledAt).toLocaleString('en-IN') })}
               </span>
             </div>
           </div>
@@ -242,7 +244,7 @@ export default function LiveDarshanViewerPage() {
         {session.description ? (
           <div className="card mt-8 bg-white p-6">
             <h3 className="font-display text-sm font-extrabold uppercase tracking-widest text-foreground">
-              About this darshan
+              {t('aboutThis')}
             </h3>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
               {session.description}
@@ -267,6 +269,7 @@ function PaywallPanel({
   loggedIn: boolean;
   onPay: () => void;
 }) {
+  const t = useTranslations('live');
   return (
     <div
       className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-[#0b0f19] to-[#1a1025] p-10 text-center shadow-lg"
@@ -275,12 +278,12 @@ function PaywallPanel({
       <div className="flex h-full flex-col items-center justify-center">
         <div className="text-5xl">🪔</div>
         <h2 className="font-display mt-4 text-xl font-extrabold text-white">
-          {isLive ? 'This pooja is live now' : 'This live puja is upcoming'}
+          {isLive ? t('paywallLiveTitle') : t('paywallUpcomingTitle')}
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
           {isLive
-            ? 'Pay the join fee to watch the live ceremony and take darshan with panditji.'
-            : `Reserve your spot now — the live puja begins ${new Date(session.scheduledAt).toLocaleString('en-IN')}.`}
+            ? t('paywallLiveBody')
+            : t('paywallUpcomingBody', { time: new Date(session.scheduledAt).toLocaleString('en-IN') })}
         </p>
         <div className="mt-6 flex flex-col items-center gap-3">
           <div className="text-2xl font-black text-saffron-400">
@@ -296,7 +299,7 @@ function PaywallPanel({
             disabled={paying}
             className="btn-primary btn-lg text-2xs uppercase tracking-widest"
           >
-            {paying ? 'Processing…' : loggedIn ? `Pay ${formatInr(session.joinPriceInr)} & Join` : 'Login to Join'}
+            {paying ? t('processing') : loggedIn ? t('payAndJoin', { amount: formatInr(session.joinPriceInr) }) : t('loginToJoin')}
           </button>
           {/* Devotees who would rather arrange it in chat. */}
           <WhatsappBookButton
@@ -308,7 +311,7 @@ function PaywallPanel({
             }}
           />
           <p className="text-3xs font-bold uppercase tracking-widest text-white/40">
-            🔒 Secure payment via Razorpay
+            🔒 {t('securePayment')}
           </p>
         </div>
       </div>
@@ -317,6 +320,7 @@ function PaywallPanel({
 }
 
 function EndedPanel({ session }: { session: LiveSession }) {
+  const t = useTranslations('live');
   return (
     <div
       className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-[#0b0f19] to-[#1a1025] p-10 text-center shadow-lg"
@@ -324,7 +328,7 @@ function EndedPanel({ session }: { session: LiveSession }) {
     >
       <div className="flex h-full flex-col items-center justify-center">
         <div className="text-5xl">📿</div>
-        <h2 className="font-display mt-4 text-xl font-extrabold text-white">This darshan has ended</h2>
+        <h2 className="font-display mt-4 text-xl font-extrabold text-white">{t('endedTitle')}</h2>
         {session.recordingUrl ? (
           <a
             href={session.recordingUrl}
@@ -332,13 +336,13 @@ function EndedPanel({ session }: { session: LiveSession }) {
             rel="noreferrer"
             className="btn-primary mt-6 text-2xs uppercase tracking-widest"
           >
-            ▶ Watch recording
+            ▶ {t('watchRecording')}
           </a>
         ) : (
-          <p className="mt-2 text-sm text-white/60">A recording will be available here soon.</p>
+          <p className="mt-2 text-sm text-white/60">{t('recordingSoon')}</p>
         )}
         <Link href="/live-darshan" className="btn-outline mt-4 text-2xs uppercase tracking-wider !text-white/80">
-          Browse other darshan
+          {t('browseOther')}
         </Link>
       </div>
     </div>

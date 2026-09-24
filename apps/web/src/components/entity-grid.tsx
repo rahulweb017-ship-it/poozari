@@ -1,8 +1,9 @@
 import { Link } from '@/i18n/navigation';
 import type { NamedEntity } from '@poozari/shared';
+import { getTranslations } from 'next-intl/server';
 
 /** Renders a grid of named catalog entities (deities / festivals / benefits). */
-export function EntityGrid({
+export async function EntityGrid({
   items,
   queryKey,
   emoji,
@@ -11,12 +12,13 @@ export function EntityGrid({
   queryKey: 'deityId' | 'festivalId' | 'benefitId';
   emoji: string;
 }) {
+  const t = await getTranslations('catalogue');
   if (!items.length) {
     return (
       <div className="card mt-8 p-12 text-center">
         <div className="text-4xl">🕉️</div>
         <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Nothing here yet. Check back soon.
+          {t('empty')}
         </p>
       </div>
     );
@@ -56,7 +58,7 @@ export function EntityGrid({
               ) : null}
             </div>
             <span className="ml-3 text-xs font-bold uppercase tracking-wider text-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              View →
+              {t('view')} →
             </span>
           </div>
         </Link>

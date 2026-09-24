@@ -6,9 +6,12 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
 import { formatInr, UserRole, type ProductOrder } from '@poozari/shared';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 export default function ProductOrdersPage() {
+  const t = useTranslations('account.orders');
+  const to = useTranslations('account.orderStatus');
   const { user, ready } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<ProductOrder[] | null>(null);
@@ -30,10 +33,10 @@ export default function ProductOrdersPage() {
     <main className="app-container py-8 sm:py-12">
       <CustomerPanelNav />
       <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-        Product Orders
+        {t('title')}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        View your puja product purchases and delivery details.
+        {t('lead')}
       </p>
 
       {orders === null ? (
@@ -46,10 +49,10 @@ export default function ProductOrdersPage() {
         <div className="card mt-8 bg-white p-12 text-center">
           <div className="text-5xl">🪔</div>
           <h2 className="mt-4 font-display text-lg font-bold text-foreground">
-            You have no product orders yet
+            {t('emptyTitle')}
           </h2>
           <Link href="/products" className="btn-primary mt-6 inline-flex">
-            Browse Products
+            {t('browse')}
           </Link>
         </div>
       ) : (
@@ -71,14 +74,14 @@ export default function ProductOrdersPage() {
                   {order.productName}
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {order.reference} · Qty {order.quantity} ·{' '}
+                  {order.reference} · {t('qty', { quantity: order.quantity })} ·{' '}
                   {new Date(order.createdAt).toLocaleDateString('en-IN')}
                 </p>
               </div>
               <div className="text-right">
                 <div className="font-black text-accent">{formatInr(order.totalAmountInr)}</div>
                 <span className={`badge mt-2 ${order.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                  {order.status.replaceAll('_', ' ')}
+                  {to.has(order.status as never) ? to(order.status as never) : order.status.replaceAll('_', ' ')}
                 </span>
               </div>
             </Link>

@@ -6,9 +6,12 @@ import {
   LiveSessionStatus,
   type LiveSession,
 } from '@poozari/shared';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
+  const t = useTranslations('liveCarousel');
+  const locale = useLocale();
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const hasLiveSession = sessions.some(
@@ -49,13 +52,13 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
               hasLiveSession ? 'animate-pulse bg-red-600' : 'bg-emerald-600'
             }`}
           />
-          {hasLiveSession ? 'Live puja now' : 'Upcoming pujas'}
+          {hasLiveSession ? t('liveNow') : t('upcomingPujas')}
         </span>
         <Link
           href="/live-darshan"
           className="text-3xs font-extrabold uppercase tracking-widest text-accent transition-colors hover:text-accent-hover"
         >
-          View schedule →
+          {t('viewSchedule')} →
         </Link>
       </div>
 
@@ -63,7 +66,7 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
         className="mt-5 overflow-hidden rounded-3xl border bg-accent-soft"
         style={{ borderColor: 'hsl(var(--accent) / 0.15)' }}
         aria-roledescription="carousel"
-        aria-label="Live and upcoming pujas"
+        aria-label={t('carouselLabel')}
       >
         {sessions.length ? (
           <div
@@ -100,7 +103,7 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
                           isLive ? 'bg-red-600' : 'bg-[#0b0f19]/90'
                         }`}
                       >
-                        {isLive ? '● Live' : 'Upcoming'}
+                        {isLive ? `● ${t('live')}` : t('upcoming')}
                       </span>
                     </div>
 
@@ -110,21 +113,23 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
                       </p>
                       {session.pandit ? (
                         <p className="mt-2 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
-                          With {session.pandit.displayName}
+                          {t('withPandit', { name: session.pandit.displayName })}
                         </p>
                       ) : null}
                       <p className="mt-2 text-xs font-semibold text-muted-foreground">
                         {isLive
-                          ? 'Join the ceremony happening now'
-                          : `Starts ${new Date(session.scheduledAt).toLocaleString('en-IN', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}`}
+                          ? t('joinNow')
+                          : t('startsAt', {
+                              when: new Date(session.scheduledAt).toLocaleString(`${locale}-IN`, {
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              }),
+                            })}
                       </p>
                       <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-5">
                         <div>
                           <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">
-                            Join fee
+                            {t('joinFee')}
                           </div>
                           <div className="text-base font-black text-accent">
                             <Price amountInr={session.joinPriceInr} />
@@ -135,7 +140,7 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
                           tabIndex={index === activeIndex ? 0 : -1}
                           className="btn-primary rounded-full text-2xs"
                         >
-                          {isLive ? 'Join Live Puja' : 'View Details'}
+                          {isLive ? t('joinLive') : t('viewDetails')}
                         </Link>
                       </div>
                     </div>
@@ -148,17 +153,17 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
           <div className="p-6 text-center">
             <div className="text-4xl">🪔</div>
             <p className="mt-3 font-display text-lg font-bold text-foreground">
-              New live pujas are being scheduled
+              {t('emptyTitle')}
             </p>
             <Link href="/live-darshan" className="btn-primary mt-5 inline-flex rounded-full">
-              View Live Puja
+              {t('emptyCta')}
             </Link>
           </div>
         )}
       </div>
 
       <div className="mt-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2" aria-label="Select puja slide">
+        <div className="flex items-center gap-2" aria-label={t('selectSlide')}>
           {sessions.map((session, index) => (
             <button
               key={session.id}
@@ -166,14 +171,14 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
               className={`h-2 rounded-full transition-all ${
                 index === activeIndex ? 'w-7 bg-accent' : 'w-2 bg-accent/25 hover:bg-accent/50'
               }`}
-              aria-label={`Show ${session.title}`}
+              aria-label={t('showSlide', { title: session.title })}
               aria-current={index === activeIndex ? 'true' : undefined}
               onClick={() => setActiveIndex(index)}
             />
           ))}
         </div>
         <span className="rounded-full bg-amber-100/70 px-3 py-1 text-2xs font-bold uppercase tracking-wider text-amber-800">
-          ★ 4.9 rating
+          ★ {t('rating', { rating: '4.9' })}
         </span>
       </div>
     </div>

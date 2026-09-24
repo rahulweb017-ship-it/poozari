@@ -1,19 +1,16 @@
 import { Link } from '@/i18n/navigation';
 import { Price } from '@/lib/currency';
 import { localized, type Puja } from '@poozari/shared';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
-/** Card badge per puja type; the enum value itself is not customer copy. */
-const LOCATION_BADGES: Record<string, string> = {
-  HOME: 'At Home',
-  TEERTH: 'Teerth',
-  TEMPLE: 'Temple',
-  DIGITAL: 'Digital',
-};
+/** Puja types with a card badge (`pujaCard.location.*`); the enum value itself is not customer copy. */
+const LOCATION_BADGES = ['HOME', 'TEERTH', 'TEMPLE', 'DIGITAL'] as const;
 
 export async function PujaCard({ puja }: { puja: Puja }) {
   const locale = await getLocale();
   const title = localized(puja, 'title', locale);
+  const t = await getTranslations('pujaCard');
+  const badgeKey = LOCATION_BADGES.find((k) => k === puja.locationType);
   return (
     <Link
       href={`/puja/${puja.slug}`}
@@ -34,7 +31,7 @@ export async function PujaCard({ puja }: { puja: Puja }) {
         )}
         <div className="absolute left-3 top-3">
           <span className="badge bg-[#0b0f19] text-white/95 text-3xs font-black uppercase tracking-widest shadow-md">
-            {LOCATION_BADGES[puja.locationType] ?? puja.locationType}
+            {badgeKey ? t(`location.${badgeKey}`) : puja.locationType}
           </span>
         </div>
       </div>
@@ -59,21 +56,21 @@ export async function PujaCard({ puja }: { puja: Puja }) {
         {/* Verification badges */}
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="badge bg-emerald-50 text-emerald-700">
-            ✓ Verified Pujari
+            ✓ {t('verified')}
           </span>
           <span className="badge bg-amber-50 text-amber-700">
-            ✓ Inclusions
+            ✓ {t('inclusions')}
           </span>
         </div>
 
         {/* Action bar and price tag */}
         <div className="mt-auto pt-6 flex items-center justify-between border-t border-gray-100">
           <div>
-            <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">Starting from</div>
+            <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">{t('startingFrom')}</div>
             <div className="text-base font-black text-accent"><Price amountInr={puja.startingPriceInr} /></div>
           </div>
           <span className="flex h-9 items-center justify-center rounded-full bg-accent px-4 py-2 text-2xs font-extrabold uppercase tracking-widest text-white shadow-sm transition-all duration-300 group-hover:bg-accent-hover group-hover:shadow-md">
-            Book <span className="arrow-slide ml-1" aria-hidden="true">→</span>
+            {t('book')} <span className="arrow-slide ml-1" aria-hidden="true">→</span>
           </span>
         </div>
       </div>

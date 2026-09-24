@@ -4,6 +4,7 @@ import { useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/client';
 import { openRazorpayCheckout } from '@/lib/razorpay';
 import { formatInr } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 /**
@@ -30,6 +31,7 @@ export function PayNowButton({
   /** Called after a verified payment; defaults to refreshing the page. */
   onPaid?: () => void;
 }) {
+  const t = useTranslations('payNow');
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +57,7 @@ export function PayNowButton({
         },
         onDismiss: () => {
           setBusy(false);
-          setError('Payment cancelled. This booking is still unpaid.');
+          setError(t('cancelled'));
         },
         onError: (message) => {
           setBusy(false);
@@ -65,7 +67,7 @@ export function PayNowButton({
       // `busy` stays set while the modal is open, so the button underneath
       // cannot start a second payment for the same booking.
     } catch (e: any) {
-      setError(e.message ?? 'Could not start the payment');
+      setError(e.message ?? t('errorStart'));
       setBusy(false);
     }
   }
@@ -83,7 +85,7 @@ export function PayNowButton({
         disabled={busy}
         onClick={pay}
       >
-        {busy ? 'Processing…' : `Pay ${formatInr(amountInr)}`}
+        {busy ? t('processing') : t('pay', { amount: formatInr(amountInr) })}
       </button>
       {error ? (
         <p className="mt-2 rounded-2xl bg-red-50 p-2.5 text-3xs font-semibold text-red-700">

@@ -10,6 +10,7 @@ import { useState } from 'react';
 
 export function ProductBuyPanel({ product }: { product: Product }) {
   const router = useRouter();
+  const t = useTranslations('products');
   const wa = useTranslations('whatsapp');
   const { formatInrExact } = useCurrency();
   const maxQuantity = Math.min(product.stockQuantity, 10);
@@ -24,12 +25,12 @@ export function ProductBuyPanel({ product }: { product: Product }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-3xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Price
+            {t('price')}
           </div>
           <div className="mt-1 font-display text-3xl font-black text-accent">
             <Price amountInr={product.priceInr} />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">Inclusive of all taxes</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('buy.inclusiveTaxes')}</p>
         </div>
         <span
           className={`badge ${
@@ -38,19 +39,19 @@ export function ProductBuyPanel({ product }: { product: Product }) {
               : 'bg-gray-100 text-gray-500'
           }`}
         >
-          {product.stockQuantity > 0 ? 'In stock' : 'Out of stock'}
+          {product.stockQuantity > 0 ? t('buy.inStock') : t('outOfStock')}
         </span>
       </div>
 
       {product.stockQuantity > 0 ? (
         <>
           <div className="mt-6">
-            <label className="label">Quantity</label>
+            <label className="label">{t('buy.quantity')}</label>
             <div className="mt-2 flex items-center gap-3">
               <div className="flex items-center overflow-hidden rounded-xl border border-gray-200">
                 <button
                   type="button"
-                  aria-label="Decrease quantity"
+                  aria-label={t('buy.decrease')}
                   className="h-11 w-11 text-lg font-bold text-foreground transition-colors hover:bg-accent-soft hover:text-accent"
                   onClick={() => changeQuantity(quantity - 1)}
                   disabled={quantity <= 1}
@@ -62,7 +63,7 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                 </span>
                 <button
                   type="button"
-                  aria-label="Increase quantity"
+                  aria-label={t('buy.increase')}
                   className="h-11 w-11 text-lg font-bold text-foreground transition-colors hover:bg-accent-soft hover:text-accent"
                   onClick={() => changeQuantity(quantity + 1)}
                   disabled={quantity >= maxQuantity}
@@ -71,13 +72,13 @@ export function ProductBuyPanel({ product }: { product: Product }) {
                 </button>
               </div>
               <span className="text-xs text-muted-foreground">
-                {product.stockQuantity} available
+                {t('buy.available', { count: product.stockQuantity })}
               </span>
             </div>
           </div>
 
           <div className="mt-6 flex items-center justify-between border-t pt-5 text-sm">
-            <span className="font-bold text-muted-foreground">Order total</span>
+            <span className="font-bold text-muted-foreground">{t('buy.orderTotal')}</span>
             <span className="font-display text-xl font-black text-foreground">
               <Price amountInr={product.priceInr * quantity} />
             </span>
@@ -94,7 +95,7 @@ export function ProductBuyPanel({ product }: { product: Product }) {
               router.push(`/checkout/product/${product.slug}?quantity=${quantity}`)
             }
           >
-            Buy Now
+            {t('buyNow')}
           </button>
           {/* Ordering over WhatsApp, with the item and quantity pre-filled. */}
           <div className="mt-3">
@@ -110,15 +111,15 @@ export function ProductBuyPanel({ product }: { product: Product }) {
         </>
       ) : (
         <button type="button" className="btn-primary mt-6 w-full" disabled>
-          Currently unavailable
+          {t('buy.unavailable')}
         </button>
       )}
 
       <div className="mt-5 grid grid-cols-2 gap-3 border-t pt-5 text-center text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-        <span>Secure payment</span>
-        <span>Careful packaging</span>
-        <span>Authentic products</span>
-        <span>Delivery support</span>
+        <span>{t('buy.trustSecure')}</span>
+        <span>{t('buy.trustPackaging')}</span>
+        <span>{t('buy.trustAuthentic')}</span>
+        <span>{t('buy.trustDelivery')}</span>
       </div>
     </div>
   );

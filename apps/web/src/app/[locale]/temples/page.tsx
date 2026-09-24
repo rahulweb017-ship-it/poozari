@@ -1,23 +1,25 @@
 import { Link } from '@/i18n/navigation';
 import { getTemples } from '@/lib/server-api';
+import { getTranslations } from 'next-intl/server';
 
 export const revalidate = 60;
 
 export default async function TemplesPage() {
   const temples = await getTemples().catch(() => []);
+  const tr = await getTranslations('temples');
   return (
     <div>
       {/* Header Banner */}
       <section className="border-b bg-gradient-to-b from-accent-soft to-transparent" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
         <div className="app-container py-12 sm:py-16">
           <div className="flex flex-col items-center text-center">
-            <span className="section-pill">Sacred Places</span>
+            <span className="section-pill">{tr('pill')}</span>
             <h1 className="section-heading mt-3">
-              Famous <span className="text-accent">Temples</span>
+              {tr('titleLead')} <span className="text-accent">{tr('titleAccent')}</span>
             </h1>
             <div className="section-bar mx-auto" aria-hidden="true" />
             <p className="section-subheading mx-auto">
-              Explore famous temples and coordinate authentic puja rites.
+              {tr('lead')}
             </p>
           </div>
         </div>
@@ -57,7 +59,7 @@ export default async function TemplesPage() {
                   </div>
                   <div className="p-4 text-center border-t border-gray-50">
                     <span className="text-xs font-bold uppercase tracking-wider text-accent">
-                      View pujas <span className="arrow-slide inline-block ml-1">→</span>
+                      {tr('viewPujas')} <span className="arrow-slide inline-block ml-1">→</span>
                     </span>
                   </div>
                 </Link>
@@ -66,7 +68,7 @@ export default async function TemplesPage() {
           ) : (
             <div className="card p-12 text-center">
               <div className="text-4xl">🛕</div>
-              <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">No temples yet.</p>
+              <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('empty')}</p>
             </div>
           )}
         </div>

@@ -23,7 +23,9 @@
     "language": "Idioma",
     "currency": "Moneda",
     "more": "Más",
-    "digitalPuja": "Puja digital"
+    "digitalPuja": "Puja digital",
+    "deity": "Por deidad",
+    "primaryAria": "Principal"
   },
   "footer": {
     "tagline": "Rituales védicos auténticos, realizados por pandits verificados y entregados a usted como vídeo grabado, junto con el prasad.",
@@ -300,5 +302,521 @@
       }
     },
     "empty": "Aún no hay pujas digitales. Vuelve pronto."
+  },
+  "home": {
+    "heroPill": "Fe ancestral, confianza moderna",
+    "heroTitleLead": "Reserva una",
+    "heroTitleAccent": "puja védica auténtica",
+    "heroTitleTrail": "con sacerdotes verificados",
+    "heroLead": "Organiza ceremonias védicas sin complicaciones. Conseguimos samagri auténtica, asignamos pandits verificados de tu zona y te entregamos la grabación de la puja en casa.",
+    "trust": [
+      "Pandits verificados",
+      "Samagri completa",
+      "Rigor de las escrituras",
+      "Ayuda con el muhurat"
+    ],
+    "ctaBrowse": "Ver catálogo de pujas",
+    "ctaTeerth": "Destinos teerth",
+    "assistance": "Ayuda con la reserva por teléfono y WhatsApp",
+    "stats": [
+      "Devotos satisfechos",
+      "Sacerdotes verificados",
+      "Templos conectados",
+      "Ciudades atendidas"
+    ],
+    "aboutPill": "Sobre nosotros",
+    "aboutTitleLead": "¿Qué es",
+    "aboutTitleAccent": "poozari?",
+    "aboutLead": "poozari es un servicio dedicado a coordinar rituales védicos y de Vastu. Buscamos un sacerdote en tu zona, reunimos samagri orgánica, fijamos el muhurat y entregamos grabaciones en alta definición. Tú céntrate en la devoción; nosotros nos ocupamos de los detalles.",
+    "features": [
+      {
+        "title": "Vidhi védico auténtico",
+        "desc": "Todas las ceremonias siguen estrictamente las escrituras védicas y las dirigen pandits autorizados y verificados."
+      },
+      {
+        "title": "Directorio de pujaris verificados",
+        "desc": "Seleccionamos a los sacerdotes por su conocimiento de las escrituras, su experiencia y su especialidad local."
+      },
+      {
+        "title": "Línea de ayuda dedicada",
+        "desc": "Consulta a nuestro equipo de reservas para elegir el muhurat y pedir arreglos especiales."
+      }
+    ],
+    "citiesPill": "Galería sagrada",
+    "citiesTitleLead": "Ciudades",
+    "citiesTitleAccent": "teerth sagradas",
+    "citiesLead": "Explora los grandes teerths y organiza pujas en el templo.",
+    "templesServed": "{count, plural, one {# templo atendido} other {# templos atendidos}}",
+    "exploreCities": "Ver todas las ciudades teerth",
+    "homePill": "En casa",
+    "homeTitleLead": "Servicios",
+    "homeTitleAccent": "a domicilio",
+    "homeLead": "Enviamos un sacerdote de tu zona a tu puerta, con toda la samagri orgánica.",
+    "viewAllHome": "Ver todas las pujas a domicilio",
+    "teerthPill": "Ritos sagrados",
+    "teerthTitleLead": "Pujas",
+    "teerthTitleAccent": "teerth sagradas",
+    "teerthLead": "Pandits autorizados realizan los rituales a distancia en tu nombre.",
+    "stepsPill": "Pasos del ritual",
+    "stepsTitleLead": "Proceso de",
+    "stepsTitleAccent": "reserva",
+    "steps": [
+      {
+        "title": "Comparte tu sankalp",
+        "desc": "Indica la puja, la fecha, los datos de tu familia y tu gotra."
+      },
+      {
+        "title": "Asignación automática",
+        "desc": "Nuestro sistema asigna al instante un pandit verificado cercano a ti."
+      },
+      {
+        "title": "Samagri de calidad",
+        "desc": "Preparamos de antemano todos los artículos rituales, orgánicos y de calidad."
+      },
+      {
+        "title": "Rituales auténticos",
+        "desc": "Cantos védicos y ceremonias realizados según los shastras."
+      },
+      {
+        "title": "Vídeo y prasad",
+        "desc": "Recibe la grabación de la puja y el prasad sagrado en casa."
+      }
+    ],
+    "emptyTitle": "Aún no hay pujas disponibles. Ejecuta el seed de la API para cargar ejemplos.",
+    "emptyCta": "Ver todas las pujas"
+  },
+  "liveCarousel": {
+    "liveNow": "Puja en directo",
+    "upcomingPujas": "Próximas pujas",
+    "viewSchedule": "Ver programación",
+    "carouselLabel": "Pujas en directo y próximas",
+    "live": "En directo",
+    "upcoming": "Próxima",
+    "withPandit": "Con {name}",
+    "joinNow": "Únete a la ceremonia que está en curso",
+    "startsAt": "Empieza: {when}",
+    "joinFee": "Cuota de acceso",
+    "joinLive": "Unirse a la puja en directo",
+    "viewDetails": "Ver detalles",
+    "emptyTitle": "Estamos programando nuevas pujas en directo",
+    "emptyCta": "Ver puja en directo",
+    "selectSlide": "Elegir diapositiva",
+    "showSlide": "Mostrar {title}",
+    "rating": "Valoración {rating}"
+  },
+  "pujaList": {
+    "pill": "Servicios de puja",
+    "homeTitleLead": "Pujas",
+    "homeTitleAccent": "a domicilio",
+    "titleLead": "Reservar",
+    "titleAccent": "puja",
+    "lead": "Explora nuestras categorías de rituales, paquetes y lo que incluye cada uno. {count, plural, one {# puja disponible.} other {# pujas disponibles.}}",
+    "empty": "Ninguna puja coincide con tus filtros."
+  },
+  "pujaDetail": {
+    "fallbackTitle": "Puja",
+    "breadcrumbHome": "Inicio",
+    "breadcrumbPuja": "Puja",
+    "badgeVerified": "Pujari verificado",
+    "badgeSamagri": "Samagri incluida",
+    "badgeVideo": "Vídeo grabado",
+    "deities": "Deidades",
+    "benefits": "Beneficios",
+    "featuresHeading": "Lo que organizamos"
+  },
+  "pujaCard": {
+    "location": {
+      "HOME": "En casa",
+      "TEERTH": "Teerth",
+      "TEMPLE": "Templo",
+      "DIGITAL": "En línea"
+    },
+    "verified": "Pujari verificado",
+    "inclusions": "Todo incluido",
+    "startingFrom": "Desde",
+    "book": "Reservar"
+  },
+  "teerth": {
+    "pill": "Destinos sagrados",
+    "titleLead": "Puja",
+    "titleAccent": "teerth",
+    "lead": "Pandits autorizados por el templo y samagri védica organizada en lugares sagrados.",
+    "empty": "Aún no hay pujas teerth. Vuelve pronto."
+  },
+  "temples": {
+    "pill": "Lugares sagrados",
+    "titleLead": "Templos",
+    "titleAccent": "famosos",
+    "lead": "Explora templos famosos y organiza ritos de puja auténticos.",
+    "viewPujas": "Ver pujas",
+    "empty": "Aún no hay templos."
+  },
+  "catalogue": {
+    "deity": {
+      "pill": "Por deidad",
+      "titleLead": "Puja por",
+      "titleAccent": "deidad",
+      "lead": "Elige pujas dedicadas a deidades concretas."
+    },
+    "festival": {
+      "pill": "Festividades",
+      "titleLead": "Puja por",
+      "titleAccent": "festividad",
+      "lead": "Encuentra ceremonias pensadas para las próximas grandes festividades."
+    },
+    "benefit": {
+      "pill": "Beneficios",
+      "titleLead": "Puja por",
+      "titleAccent": "beneficio",
+      "lead": "Elige servicios védicos según tu intención (salud, paz, prosperidad)."
+    },
+    "empty": "Aún no hay nada aquí. Vuelve pronto.",
+    "view": "Ver"
+  },
+  "live": {
+    "metaTitle": "Puja en vivo — poozari.com",
+    "metaDescription": "Mira una puja en vivo con pandits verificados. Únete a un ritual védico en directo, paga la cuota de acceso y recibe el darshan desde cualquier lugar.",
+    "pill": "Puja en vivo",
+    "titleLead": "Únete a una",
+    "titleAccent": "puja en vivo",
+    "titleTail": "desde cualquier lugar",
+    "subtitle": "Recibe el darshan de auténticos rituales védicos realizados en directo por pandits verificados. Paga la cuota de acceso y sigue la ceremonia en tiempo real.",
+    "liveNow": "En vivo ahora",
+    "emptyLive": "No hay ninguna puja en vivo en este momento. Consulta el calendario de próximas pujas más abajo.",
+    "upcoming": "Próximas",
+    "pastPujas": "Pujas anteriores",
+    "badgeLive": "EN VIVO",
+    "badgeEnded": "FINALIZADA",
+    "badgeUpcoming": "PRÓXIMA",
+    "watching": "{count} viendo",
+    "happeningNow": "En curso",
+    "endedAt": "Finalizó el {time}",
+    "startsAt": "Comienza el {time}",
+    "joinFee": "Cuota de acceso",
+    "joinLive": "Unirse en vivo",
+    "view": "Ver",
+    "details": "Detalles",
+    "errorLoad": "No se pudo cargar la puja en vivo",
+    "errorStartPayment": "No se pudo iniciar el pago",
+    "razorpayDescription": "Puja en vivo — {title}",
+    "paymentCancelled": "El pago se canceló. No se te ha cobrado nada.",
+    "notFound": "Puja en vivo no encontrada",
+    "backToLive": "Volver a Puja en vivo",
+    "loading": "Cargando…",
+    "breadcrumb": "Puja en vivo",
+    "aboutThis": "Sobre este darshan",
+    "paywallLiveTitle": "Esta puja está en vivo ahora",
+    "paywallUpcomingTitle": "Esta puja en vivo es próxima",
+    "paywallLiveBody": "Paga la cuota de acceso para ver la ceremonia en directo y recibir el darshan con el panditji.",
+    "paywallUpcomingBody": "Reserva tu lugar ahora — la puja en vivo comienza el {time}.",
+    "processing": "Procesando…",
+    "payAndJoin": "Pagar {amount} y unirse",
+    "loginToJoin": "Inicia sesión para unirte",
+    "securePayment": "Pago seguro con Razorpay",
+    "endedTitle": "Este darshan ha finalizado",
+    "watchRecording": "Ver grabación",
+    "recordingSoon": "Pronto habrá una grabación disponible aquí.",
+    "browseOther": "Ver otros darshan",
+    "player": {
+      "unavailable": "La transmisión en vivo no está disponible en este momento.",
+      "unsupported": "Tu navegador no puede reproducir esta transmisión en vivo.",
+      "loadFailed": "No se pudo cargar el reproductor en vivo.",
+      "changeCaptionLang": "Cambiar idioma de los subtítulos"
+    },
+    "captions": {
+      "title": "Subtítulos en vivo",
+      "hint": "Se muestran a los espectadores en tiempo real",
+      "pushed": "Subtítulo enviado en vivo.",
+      "pushFailed": "No se pudo enviar el subtítulo",
+      "placeholder": "Subtítulo en {language} (opcional)",
+      "pushing": "Enviando…",
+      "push": "Enviar subtítulo"
+    }
+  },
+  "products": {
+    "pill": "Esenciales sagrados",
+    "titleLead": "Productos",
+    "titleAccent": "de puja",
+    "subtitle": "Descubre rudrakshas auténticos, havan samagri, kits de puja y artículos devocionales seleccionados para el culto tradicional.",
+    "fallbackDescriptionShort": "Artículo devocional auténtico para tu culto diario y tus rituales sagrados.",
+    "fallbackDescription": "Un artículo devocional auténtico seleccionado para el culto tradicional y los rituales sagrados.",
+    "price": "Precio",
+    "inStockCount": "{count} en stock",
+    "outOfStock": "Agotado",
+    "viewDetails": "Ver detalles",
+    "buyNow": "Comprar ahora",
+    "soldOut": "Agotado",
+    "emptyTitle": "Productos próximamente",
+    "emptyBody": "Estamos preparando nuestro catálogo de esenciales sagrados. Vuelve pronto.",
+    "breadcrumb": "Productos",
+    "assurances": [
+      {
+        "title": "Origen auténtico",
+        "text": "Seleccionados con cuidado para la puja tradicional y el uso devocional."
+      },
+      {
+        "title": "Pago seguro",
+        "text": "Pago en línea protegido con Razorpay."
+      },
+      {
+        "title": "Asistencia en la entrega",
+        "text": "Tu pedido se empaqueta con cuidado y se entrega en tu dirección."
+      }
+    ],
+    "gallery": {
+      "playVideo": "Reproducir vídeo",
+      "showImage": "Mostrar imagen {n}"
+    },
+    "buy": {
+      "inclusiveTaxes": "Impuestos incluidos",
+      "inStock": "En stock",
+      "quantity": "Cantidad",
+      "decrease": "Reducir cantidad",
+      "increase": "Aumentar cantidad",
+      "available": "{count} disponibles",
+      "orderTotal": "Total del pedido",
+      "unavailable": "No disponible por ahora",
+      "trustSecure": "Pago seguro",
+      "trustPackaging": "Embalaje cuidadoso",
+      "trustAuthentic": "Productos auténticos",
+      "trustDelivery": "Asistencia en la entrega"
+    }
+  },
+  "productCheckout": {
+    "errorLoad": "No se pudo cargar el producto",
+    "errorCheckout": "No se pudo completar la compra",
+    "paymentCancelled": "El pago se canceló. Tu pedido está guardado y pendiente de pago — puedes pagarlo desde Mis pedidos.",
+    "loading": "Cargando la compra…",
+    "notFound": "Producto no encontrado",
+    "back": "Volver al producto",
+    "pill": "Pago seguro",
+    "title": "Datos de entrega",
+    "subtitle": "Introduce la dirección donde quieres recibir tu producto sagrado.",
+    "fullName": "Nombre completo",
+    "mobile": "Número de móvil",
+    "email": "Correo electrónico",
+    "address": "Dirección",
+    "addressPlaceholder": "Número, calle, referencia",
+    "city": "Ciudad",
+    "state": "Estado / Provincia",
+    "pincode": "Código postal",
+    "orderSummary": "Resumen del pedido",
+    "quantity": "Cantidad: {quantity}",
+    "each": "c/u",
+    "subtotal": "Subtotal",
+    "delivery": "Envío",
+    "free": "Gratis",
+    "total": "Total",
+    "processing": "Procesando…",
+    "pay": "Pagar {amount}",
+    "securePayment": "Pago seguro con Razorpay"
+  },
+  "faq": {
+    "pill": "Centro de ayuda",
+    "titleLead": "Preguntas",
+    "titleAccent": "frecuentes",
+    "subtitle": "Preguntas comunes sobre cómo organizar pujas védicas y de templo en línea.",
+    "items": [
+      {
+        "q": "¿Tengo que conseguir la samagri yo mismo?",
+        "a": "No. Para cualquier puja que reserves a través de poozari, coordinamos toda la samagri de primera calidad junto con el pandit verificado. Tú solo compartes los detalles de tu sankalp — nosotros nos encargamos del resto."
+      },
+      {
+        "q": "¿Cómo funciona la reserva de una puja?",
+        "a": "Elige una puja, selecciona un paquete, añade los detalles de tu sankalp y completa el pago seguro. El pandit asignado realiza el ritual y comparte una prueba de su realización, incluido un vídeo grabado."
+      },
+      {
+        "q": "¿Puedo reservar una puja para una fecha y un muhurat concretos?",
+        "a": "Sí. Durante la compra puedes indicar la fecha y la hora que prefieras. Nuestro equipo confirma la disponibilidad del pandit y el horario final."
+      },
+      {
+        "q": "¿Los pandits de poozari están verificados?",
+        "a": "Sí. Cada pandit es evaluado en conocimiento ritual y calidad de servicio antes de recibir reservas."
+      },
+      {
+        "q": "¿Qué incluyen los paquetes de puja?",
+        "a": "El contenido varía según el ritual y puede incluir samagri, el proceso de sankalp, detalles de la vidhi y prueba en vídeo. Cada paquete indica exactamente lo que incluye."
+      },
+      {
+        "q": "¿Pueden reservar devotos que viven fuera de la India?",
+        "a": "Sí. Los devotos en la India y en el extranjero pueden reservar rituales, compartir los detalles de su sankalp en línea y ver el vídeo grabado de la puja."
+      }
+    ],
+    "ctaTitle": "¿Todavía tienes preguntas?",
+    "ctaBody": "Contacta directamente con nuestro equipo de reservas para paquetes personalizados, consultas sobre el muhurat o preguntas sobre las escrituras.",
+    "ctaStatus": "Asistencia telefónica activa"
+  },
+  "payNow": {
+    "cancelled": "Pago cancelado. Esta reserva sigue pendiente de pago.",
+    "errorStart": "No se pudo iniciar el pago",
+    "processing": "Procesando…",
+    "pay": "Pagar {amount}"
+  },
+  "login": {
+    "title": "Crea una cuenta o inicia sesión",
+    "leadPassword": "Inicia sesión con la contraseña de tu cuenta.",
+    "leadOtp": "Introduce tus datos para empezar. Te enviaremos un código de verificación.",
+    "tabMobile": "Móvil",
+    "tabEmail": "Correo",
+    "mobileLabel": "Número de móvil",
+    "mobilePlaceholder": "Número de 10 dígitos",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Tu contraseña",
+    "signingIn": "Iniciando sesión…",
+    "signInWithPassword": "Iniciar sesión con contraseña",
+    "useOtpInstead": "Usar un código de un solo uso",
+    "nameLabel": "Nombre (opcional)",
+    "namePlaceholder": "p. ej. Rahul Sharma",
+    "sending": "Enviando…",
+    "sendOtp": "Enviar código",
+    "reassurance": {
+      "noPassword": "Sin contraseña",
+      "quickLogin": "Acceso en 30 segundos",
+      "quickVerify": "Verificación rápida"
+    },
+    "devMode": "Modo dev — no se envió nada. Código:",
+    "codeSent": "Enviamos un código de 6 dígitos a <strong>{target}</strong>.",
+    "otpLabel": "Introduce el código de 6 dígitos",
+    "verifying": "Verificando…",
+    "verify": "Verificar y continuar",
+    "resendIn": "Reenviar código en {seconds} s",
+    "resend": "Reenviar código",
+    "changeNumber": "Cambiar número",
+    "changeEmail": "Cambiar correo",
+    "agreePrefix": "Al continuar, aceptas nuestros",
+    "terms": "Términos del servicio",
+    "agreeAnd": "y nuestra",
+    "privacy": "Política de privacidad",
+    "agreeSuffix": ".",
+    "supportActive": "Soporte disponible",
+    "errors": {
+      "sendFailed": "No se pudo enviar el código",
+      "invalidCode": "Código no válido",
+      "invalidCredentials": "Credenciales no válidas"
+    }
+  },
+  "account": {
+    "nav": {
+      "aria": "Cuenta de cliente",
+      "bookings": "Mis reservas",
+      "orders": "Pedidos de productos",
+      "profile": "Perfil y seguridad"
+    },
+    "status": {
+      "PENDING_PAYMENT": "Pendiente de pago",
+      "PAID": "Pago recibido",
+      "ASSIGNED": "Pandit asignado",
+      "ACCEPTED": "Pandit confirmado",
+      "SCHEDULED": "Programada",
+      "IN_PROGRESS": "Puja en curso",
+      "COMPLETED": "Completada",
+      "CANCELLED": "Cancelada",
+      "REFUNDED": "Reembolsada"
+    },
+    "orderStatus": {
+      "PENDING_PAYMENT": "Pago pendiente",
+      "PAID": "Pagado",
+      "PROCESSING": "En preparación",
+      "SHIPPED": "Enviado",
+      "DELIVERED": "Entregado",
+      "CANCELLED": "Cancelado",
+      "REFUNDED": "Reembolsado"
+    },
+    "gender": {
+      "UNSPECIFIED": "Prefiero no decirlo",
+      "MALE": "Hombre",
+      "FEMALE": "Mujer",
+      "OTHER": "Otro"
+    },
+    "bookings": {
+      "title": "Mis reservas",
+      "lead": "Sigue tus reservas de puja, su estado en tiempo real y los vídeos subidos.",
+      "emptyTitle": "Aún no tienes reservas.",
+      "emptyBody": "Explora nuestros servicios védicos y haz tu primera reserva.",
+      "browse": "Ver pujas",
+      "notPaid": "Sin pagar — ábrela para pagar {amount}"
+    },
+    "booking": {
+      "loading": "Cargando…",
+      "back": "Volver a la lista",
+      "videoTitle": "Vídeo grabado de la puja",
+      "videoPending": "Vídeo pendiente",
+      "videoPendingBody": "El pandit subirá el vídeo grabado de tu puja cuando se complete.",
+      "rateTitle": "Valora tu experiencia",
+      "reviewPlaceholder": "Comparte tu experiencia...",
+      "submitReview": "Enviar reseña",
+      "reviewThanks": "¡Gracias por tu reseña!",
+      "details": "Detalles de la reserva",
+      "devotee": "Devoto",
+      "gotra": "Gotra",
+      "date": "Fecha",
+      "time": "Hora",
+      "city": "Ciudad",
+      "amount": "Importe",
+      "notPaid": "Esta reserva aún no está pagada",
+      "yourPandit": "Tu pandit",
+      "experience": "{years} años de experiencia",
+      "errors": {
+        "reviewFailed": "No se pudo enviar la reseña"
+      }
+    },
+    "orders": {
+      "title": "Pedidos de productos",
+      "lead": "Consulta tus compras de productos para puja y los datos de entrega.",
+      "emptyTitle": "Aún no tienes pedidos de productos",
+      "browse": "Ver productos",
+      "qty": "Cant. {quantity}"
+    },
+    "order": {
+      "loading": "Cargando pedido…",
+      "back": "Volver a pedidos de productos",
+      "paidTitle": "Pago realizado",
+      "paidBody": "Tu pedido está confirmado. Lo prepararemos con cuidado para la entrega.",
+      "reference": "Pedido {reference}",
+      "orderedOn": "Pedido el {date}",
+      "items": "Artículos",
+      "totalPaid": "Total pagado",
+      "deliveryAddress": "Dirección de entrega",
+      "errors": {
+        "loadFailed": "No se pudo cargar el pedido"
+      }
+    },
+    "profile": {
+      "title": "Perfil y seguridad",
+      "lead": "Mantén al día tus datos de contacto, tus datos de sankalp y tu contraseña.",
+      "basicDetails": "Datos básicos",
+      "fullName": "Nombre completo",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "verifiedMobile": "Móvil verificado",
+      "mobileHint": "Para cambiar el móvil se requiere verificación por código.",
+      "sankalpTitle": "Datos de sankalp",
+      "sankalpBody": "Se guardan una vez y se rellenan por ti en cada reserva. El pandit recita tu nombre y tu gotra al ofrecer la puja.",
+      "gotra": "Gotra",
+      "gotraPlaceholder": "p. ej. Bharadwaj",
+      "dateOfBirth": "Fecha de nacimiento",
+      "gender": "Género",
+      "address": "Dirección",
+      "addressPlaceholder": "Piso / casa, calle, zona",
+      "addressHint": "Se usa para pujas a domicilio y para enviar el prasad.",
+      "city": "Ciudad",
+      "state": "Estado",
+      "pincode": "Código postal",
+      "save": "Guardar perfil",
+      "saved": "Perfil actualizado correctamente.",
+      "resetPassword": "Restablecer contraseña",
+      "createPassword": "Crear contraseña",
+      "passwordLead": "Tu sesión verificada por código autoriza este cambio. El acceso por código seguirá funcionando.",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "passwordSaved": "Contraseña guardada. Ahora puedes iniciar sesión con tu número de móvil o correo y esta contraseña.",
+      "errors": {
+        "loadFailed": "No se pudo cargar el perfil",
+        "saveFailed": "No se pudo actualizar el perfil",
+        "passwordFailed": "No se pudo guardar la contraseña"
+      }
+    }
   }
 }

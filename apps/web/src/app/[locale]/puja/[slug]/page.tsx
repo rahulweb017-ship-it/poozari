@@ -3,7 +3,7 @@ import { PackagePicker } from '@/components/package-picker';
 import { getPuja } from '@/lib/server-api';
 import { localized, localizedList } from '@poozari/shared';
 import type { Metadata } from 'next';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 60;
@@ -21,7 +21,8 @@ export async function generateMetadata({
       description: localized(puja, 'summary', locale),
     };
   } catch {
-    return { title: 'Puja — poozari.com' };
+    const t = await getTranslations('pujaDetail');
+    return { title: `${t('fallbackTitle')} — poozari.com` };
   }
 }
 
@@ -35,6 +36,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
   }
   const title = localized(puja, 'title', locale);
   const features = localizedList(puja, 'features', locale);
+  const t = await getTranslations('pujaDetail');
 
   return (
     <div>
@@ -42,9 +44,9 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
       <div className="border-b" style={{ borderColor: 'hsl(var(--border) / 0.3)', background: 'hsl(var(--card))' }}>
         <div className="app-container py-3.5">
           <nav className="flex items-center gap-2 text-2xs font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            <Link href="/" className="hover:text-accent transition-colors">Home</Link>
+            <Link href="/" className="hover:text-accent transition-colors">{t('breadcrumbHome')}</Link>
             <span>/</span>
-            <Link href="/puja" className="hover:text-accent transition-colors">Puja</Link>
+            <Link href="/puja" className="hover:text-accent transition-colors">{t('breadcrumbPuja')}</Link>
             <span>/</span>
             <span className="font-extrabold" style={{ color: 'hsl(var(--foreground))' }}>{title}</span>
           </nav>
@@ -79,15 +81,15 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="trust-badge">
               <span className="trust-badge__icon">✓</span>
-              Verified Pujari
+              {t('badgeVerified')}
             </span>
             <span className="trust-badge">
               <span className="trust-badge__icon">📦</span>
-              Samagri Included
+              {t('badgeSamagri')}
             </span>
             <span className="trust-badge">
               <span className="trust-badge__icon">🎥</span>
-              Recorded Video Proof
+              {t('badgeVideo')}
             </span>
           </div>
 
@@ -100,7 +102,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
           {/* Linked entities: deities */}
           {puja.deities.length ? (
             <div className="mt-8 border-t pt-6" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-              <h3 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Deities</h3>
+              <h3 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">{t('deities')}</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {puja.deities.map((d) => (
                   <span key={d.id} className="badge bg-accent-soft text-accent border" style={{ borderColor: 'hsl(var(--accent) / 0.15)' }}>
@@ -114,7 +116,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
           {/* Linked entities: benefits */}
           {puja.benefits.length ? (
             <div className="mt-6">
-              <h3 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">Benefits</h3>
+              <h3 className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">{t('benefits')}</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {puja.benefits.map((b) => (
                   <span key={b.id} className="badge bg-emerald-50 text-emerald-700 border border-emerald-100">
@@ -128,7 +130,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
           {/* Features container — edited per puja in the admin form */}
           {features.length ? (
             <div className="mt-8 card p-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-              <h3 className="font-display text-base font-bold text-foreground">Coordinated features list</h3>
+              <h3 className="font-display text-base font-bold text-foreground">{t('featuresHeading')}</h3>
               <ul className="mt-5 grid gap-4 text-xs font-semibold sm:grid-cols-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 {features.map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5">

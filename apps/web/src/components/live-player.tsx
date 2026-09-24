@@ -1,6 +1,7 @@
 'use client';
 
 import { LIVE_CAPTION_LANGS, type LiveCaptionLang } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 /** Caption overlay data passed down from the viewer page. */
@@ -34,6 +35,7 @@ export function LivePlayer({
   title: string;
   caption?: LivePlayerCaption;
 }) {
+  const t = useTranslations('live');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState('');
 
@@ -62,13 +64,13 @@ export function LivePlayer({
           hls.loadSource(playbackUrl);
           hls.attachMedia(video);
           hls.on(Hls.Events.ERROR, (_e: unknown, data: any) => {
-            if (data?.fatal) setError('The live stream is unavailable right now.');
+            if (data?.fatal) setError(t('player.unavailable'));
           });
         } else {
-          setError('Your browser cannot play this live stream.');
+          setError(t('player.unsupported'));
         }
       } catch {
-        if (!cancelled) setError('Failed to load the live player.');
+        if (!cancelled) setError(t('player.loadFailed'));
       }
     })();
 
@@ -76,7 +78,7 @@ export function LivePlayer({
       cancelled = true;
       hls?.destroy?.();
     };
-  }, [playbackUrl, isHls, isEmbed]);
+  }, [playbackUrl, isHls, isEmbed, t]);
 
   const langMeta = caption ? LIVE_CAPTION_LANGS.find((l) => l.code === caption.lang) : undefined;
 
@@ -87,8 +89,8 @@ export function LivePlayer({
         type="button"
         onClick={caption.onCycleLang}
         className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-3xs font-black uppercase tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-accent"
-        title="Change caption language"
-        aria-label="Change caption language"
+        title={t('player.changeCaptionLang')}
+        aria-label={t('player.changeCaptionLang')}
       >
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-saffron-400" />
         CC · {langMeta?.short ?? caption.lang.toUpperCase()}

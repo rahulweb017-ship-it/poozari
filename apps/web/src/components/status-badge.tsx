@@ -1,4 +1,7 @@
-import { BOOKING_STATUS_LABELS, BookingStatus } from '@poozari/shared';
+'use client';
+
+import { BookingStatus } from '@poozari/shared';
+import { useTranslations } from 'next-intl';
 
 const STYLES: Record<string, { bg: string; text: string; dot: string }> = {
   [BookingStatus.PENDING_PAYMENT]: { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
@@ -15,11 +18,12 @@ const STYLES: Record<string, { bg: string; text: string; dot: string }> = {
 const DEFAULT = { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' };
 
 export function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations('account.status');
   const s = STYLES[status] ?? DEFAULT;
   return (
     <span className={`badge ${s.bg} ${s.text}`}>
       <span className={`inline-block h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {BOOKING_STATUS_LABELS[status as BookingStatus] ?? status}
+      {t.has(status as never) ? t(status as never) : status}
     </span>
   );
 }

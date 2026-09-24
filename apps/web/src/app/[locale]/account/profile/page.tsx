@@ -4,11 +4,14 @@ import { useRouter } from '@/i18n/navigation';
 import { CustomerPanelNav } from '@/components/customer-panel-nav';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/client';
-import { GENDER_LABELS, UserRole, type AccountProfile, type Gender } from '@poozari/shared';
+import { Gender as GenderValues, UserRole, type AccountProfile, type Gender } from '@poozari/shared';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 export default function CustomerProfilePage() {
+  const t = useTranslations('account.profile');
+  const tg = useTranslations('account.gender');
   const { user, ready, login, logout } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<AccountProfile | null>(null);
@@ -54,7 +57,7 @@ export default function CustomerProfilePage() {
           router.replace('/login?next=/account/profile');
           return;
         }
-        setError(e.message ?? 'Could not load profile');
+        setError(e.message ?? t('errors.loadFailed'));
       });
   }, [user, logout, router]);
 
@@ -77,9 +80,9 @@ export default function CustomerProfilePage() {
       });
       login(auth);
       setProfile((current) => current ? { ...current, ...auth.user } : current);
-      setMessage('Profile updated successfully.');
+      setMessage(t('saved'));
     } catch (e: any) {
-      setError(e.message ?? 'Could not update profile');
+      setError(e.message ?? t('errors.saveFailed'));
     } finally {
       setBusy(false);
     }
@@ -94,9 +97,9 @@ export default function CustomerProfilePage() {
       setNewPassword('');
       setConfirmPassword('');
       setProfile((current) => current ? { ...current, hasPassword: true } : current);
-      setMessage('Password saved. You can now sign in with your mobile number or email and this password.');
+      setMessage(t('passwordSaved'));
     } catch (e: any) {
-      setError(e.message ?? 'Could not save password');
+      setError(e.message ?? t('errors.passwordFailed'));
     } finally {
       setBusy(false);
     }
@@ -109,10 +112,10 @@ export default function CustomerProfilePage() {
       <CustomerPanelNav />
       <div className="mb-8">
         <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-          Profile &amp; Security
+          {t('title')}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Keep your contact details, sankalp details and sign-in password up to date.
+          {t('lead')}
         </p>
       </div>
 
@@ -121,21 +124,21 @@ export default function CustomerProfilePage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card bg-white p-6">
-          <h2 className="font-display text-base font-bold text-foreground">Basic details</h2>
+          <h2 className="font-display text-base font-bold text-foreground">{t('basicDetails')}</h2>
           <div className="mt-5 space-y-4">
             <div>
-              <label className="label">Full name</label>
+              <label className="label">{t('fullName')}</label>
               <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div>
-              <label className="label">Email</label>
-              <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+              <label className="label">{t('email')}</label>
+              <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('emailPlaceholder')} />
             </div>
             <div>
-              <label className="label">Verified mobile</label>
+              <label className="label">{t('verifiedMobile')}</label>
               <input className="input bg-gray-50" value={profile?.phone ?? user.phone ?? ''} disabled />
               <p className="mt-1.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Mobile changes require OTP verification.
+                {t('mobileHint')}
               </p>
             </div>
             <div
@@ -143,25 +146,24 @@ export default function CustomerProfilePage() {
               style={{ borderColor: 'hsl(var(--border) / 0.4)' }}
             >
               <h3 className="text-2xs font-extrabold uppercase tracking-wider text-foreground">
-                Sankalp details
+                {t('sankalpTitle')}
               </h3>
               <p className="mt-1 text-3xs leading-relaxed text-muted-foreground">
-                Saved once, then filled in for you every time you book. The pandit recites your
-                name and gotra when the puja is offered.
+                {t('sankalpBody')}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label">Gotra</label>
+                <label className="label">{t('gotra')}</label>
                 <input
                   className="input"
-                  placeholder="e.g. Bharadwaj"
+                  placeholder={t('gotraPlaceholder')}
                   value={gotra}
                   onChange={(e) => setGotra(e.target.value)}
                 />
               </div>
               <div>
-                <label className="label">Date of birth</label>
+                <label className="label">{t('dateOfBirth')}</label>
                 <input
                   className="input"
                   type="date"
@@ -172,35 +174,35 @@ export default function CustomerProfilePage() {
               </div>
             </div>
             <div>
-              <label className="label">Gender</label>
+              <label className="label">{t('gender')}</label>
               <select
                 className="input"
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
               >
-                {(Object.keys(GENDER_LABELS) as Gender[]).map((key) => (
+                {(Object.values(GenderValues) as Gender[]).map((key) => (
                   <option key={key} value={key}>
-                    {GENDER_LABELS[key]}
+                    {tg(key)}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="label">Address</label>
+              <label className="label">{t('address')}</label>
               <textarea
                 className="input"
                 rows={2}
-                placeholder="Flat / house, street, area"
+                placeholder={t('addressPlaceholder')}
                 value={addressLine}
                 onChange={(e) => setAddressLine(e.target.value)}
               />
               <p className="mt-1.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Used for pujas at home and for couriering prasad.
+                {t('addressHint')}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="label">City</label>
+                <label className="label">{t('city')}</label>
                 <input
                   className="input"
                   value={city}
@@ -208,7 +210,7 @@ export default function CustomerProfilePage() {
                 />
               </div>
               <div>
-                <label className="label">State</label>
+                <label className="label">{t('state')}</label>
                 <input
                   className="input"
                   value={stateName}
@@ -216,7 +218,7 @@ export default function CustomerProfilePage() {
                 />
               </div>
               <div>
-                <label className="label">Pincode</label>
+                <label className="label">{t('pincode')}</label>
                 <input
                   className="input"
                   inputMode="numeric"
@@ -227,25 +229,25 @@ export default function CustomerProfilePage() {
               </div>
             </div>
             <button className="btn-primary w-full" onClick={saveProfile} disabled={busy || name.trim().length < 2}>
-              Save profile
+              {t('save')}
             </button>
           </div>
         </section>
 
         <section className="card bg-white p-6">
           <h2 className="font-display text-base font-bold text-foreground">
-            {profile?.hasPassword ? 'Reset password' : 'Create password'}
+            {profile?.hasPassword ? t('resetPassword') : t('createPassword')}
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Your verified OTP session authorizes this reset. OTP login will continue to work.
+            {t('passwordLead')}
           </p>
           <div className="mt-5 space-y-4">
             <div>
-              <label className="label">New password</label>
+              <label className="label">{t('newPassword')}</label>
               <input className="input" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
             </div>
             <div>
-              <label className="label">Confirm new password</label>
+              <label className="label">{t('confirmPassword')}</label>
               <input className="input" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </div>
             <button
@@ -253,7 +255,7 @@ export default function CustomerProfilePage() {
               onClick={resetPassword}
               disabled={busy || newPassword.length < 8 || confirmPassword.length < 8}
             >
-              {profile?.hasPassword ? 'Reset password' : 'Create password'}
+              {profile?.hasPassword ? t('resetPassword') : t('createPassword')}
             </button>
           </div>
         </section>
