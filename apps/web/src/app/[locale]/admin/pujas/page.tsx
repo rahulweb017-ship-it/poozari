@@ -5,6 +5,8 @@ import { AdminShell } from '@/components/admin-shell';
 import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
 import {
+  DEFAULT_PUJA_FEATURES,
+  DEFAULT_PUJA_FEATURES_HI,
   formatInr,
   type City,
   type NamedEntity,
@@ -37,6 +39,9 @@ const EMPTY_FORM = {
   titleHi: '',
   summaryHi: '',
   descriptionHi: '',
+  // One bullet per line in the form; new pujas start from the standard four.
+  features: DEFAULT_PUJA_FEATURES.join('\n'),
+  featuresHi: DEFAULT_PUJA_FEATURES_HI.join('\n'),
   imageUrl: '',
   locationType: 'HOME',
   templeId: '',
@@ -49,6 +54,11 @@ const EMPTY_FORM = {
 
 function slugify(v: string) {
   return v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/** A one-per-line textarea as a list, dropping blank lines. */
+function toLines(v: string) {
+  return v.split('\n').map((s) => s.trim()).filter(Boolean);
 }
 
 function toggleId(list: string[], id: string) {
@@ -110,6 +120,8 @@ export default function AdminPujasPage() {
       titleHi: p.titleHi ?? '',
       summaryHi: p.summaryHi ?? '',
       descriptionHi: p.descriptionHi ?? '',
+      features: (p.features ?? []).join('\n'),
+      featuresHi: (p.featuresHi ?? []).join('\n'),
       imageUrl: p.imageUrl ?? '',
       locationType: p.locationType,
       templeId: p.temple?.id ?? '',
@@ -159,6 +171,8 @@ export default function AdminPujasPage() {
         titleHi: form.titleHi,
         summaryHi: form.summaryHi,
         descriptionHi: form.descriptionHi,
+        features: toLines(form.features),
+        featuresHi: toLines(form.featuresHi),
         imageUrl: form.imageUrl || undefined,
         locationType: form.locationType,
         templeId: form.templeId || undefined,
@@ -297,6 +311,15 @@ export default function AdminPujasPage() {
             <div>
               <label className="label">विवरण (Hindi)</label>
               <textarea className="input" rows={3} placeholder="विस्तृत शास्त्रीय पृष्ठभूमि..." value={form.descriptionHi} onChange={(e) => setForm({ ...form, descriptionHi: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">Features list (English, one per line)</label>
+              <textarea className="input" rows={4} placeholder="Verified pandit trained in scriptural procedures" value={form.features} onChange={(e) => setForm({ ...form, features: e.target.value })} />
+              <p className="mt-1 text-3xs text-muted-foreground">Shown as ticked points on the puja page. Clear it to hide the list.</p>
+            </div>
+            <div>
+              <label className="label">विशेषताएँ (Hindi, one per line)</label>
+              <textarea className="input" rows={4} placeholder="शास्त्रीय विधि में प्रशिक्षित सत्यापित पंडित" value={form.featuresHi} onChange={(e) => setForm({ ...form, featuresHi: e.target.value })} />
             </div>
             <p className="rounded-2xl bg-amber-50 p-3 text-3xs leading-relaxed text-amber-800">
               Hindi is optional. A blank Hindi field means Hindi readers see the English text

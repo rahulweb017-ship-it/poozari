@@ -1,7 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { PackagePicker } from '@/components/package-picker';
 import { getPuja } from '@/lib/server-api';
-import { localized } from '@poozari/shared';
+import { localized, localizedList } from '@poozari/shared';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -34,6 +34,7 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
     notFound();
   }
   const title = localized(puja, 'title', locale);
+  const features = localizedList(puja, 'features', locale);
 
   return (
     <div>
@@ -124,23 +125,20 @@ export default async function PujaDetailPage({ params }: { params: { slug: strin
             </div>
           ) : null}
 
-          {/* Features container */}
-          <div className="mt-8 card p-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-            <h3 className="font-display text-base font-bold text-foreground">Coordinated features list</h3>
-            <ul className="mt-5 grid gap-4 text-xs font-semibold sm:grid-cols-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              {[
-                'Verified pandit trained in scriptural procedures',
-                'Organic, premium samagri elements organized beforehand',
-                'Rigorous rituals scheduled on correct shastric muhurats',
-                'Recorded video updates and prasad delivery included',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5">
-                  <span className="mt-0.5 text-accent font-bold">✓</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Features container — edited per puja in the admin form */}
+          {features.length ? (
+            <div className="mt-8 card p-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
+              <h3 className="font-display text-base font-bold text-foreground">Coordinated features list</h3>
+              <ul className="mt-5 grid gap-4 text-xs font-semibold sm:grid-cols-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                {features.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 text-accent font-bold">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
 
         {/* Right Column: Sticky package picker */}

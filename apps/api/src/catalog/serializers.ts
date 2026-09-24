@@ -68,6 +68,8 @@ export function serializePuja(p: any): Puja {
     titleHi: p.titleHi ?? '',
     summaryHi: p.summaryHi ?? '',
     descriptionHi: p.descriptionHi ?? '',
+    features: p.features ?? [],
+    featuresHi: p.featuresHi ?? [],
     imageUrl: p.imageUrl ?? null,
     locationType: p.locationType,
     isActive: p.isActive,

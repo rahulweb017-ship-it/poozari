@@ -36,6 +36,42 @@ export function localized<T extends Record<string, any>>(
   return typeof en === 'string' ? en : '';
 }
 
+/**
+ * The feature bullets a new puja starts with. The database column defaults
+ * hold the same lines (apps/api/prisma/schema.prisma `Puja.features`), so a
+ * puja from any source gets them; the admin form prefills from these.
+ */
+export const DEFAULT_PUJA_FEATURES: string[] = [
+  'Verified pandit trained in scriptural procedures',
+  'Organic, premium samagri elements organized beforehand',
+  'Rigorous rituals scheduled on correct shastric muhurats',
+  'Recorded video updates and prasad delivery included',
+];
+export const DEFAULT_PUJA_FEATURES_HI: string[] = [
+  'शास्त्रीय विधि में प्रशिक्षित सत्यापित पंडित',
+  'जैविक, उत्तम पूजा सामग्री पहले से व्यवस्थित',
+  'शुद्ध शास्त्रीय मुहूर्त पर विधिवत अनुष्ठान',
+  'पूजा का वीडियो और प्रसाद वितरण शामिल',
+];
+
+/**
+ * `localized` for list fields such as `features`: the Hindi list when the
+ * reader is on /hi/ and it has entries, otherwise the English.
+ */
+export function localizedList<T extends Record<string, any>>(
+  row: T | null | undefined,
+  field: string,
+  locale: string,
+): string[] {
+  if (!row) return [];
+  if (locale === 'hi') {
+    const hi = row[`${field}Hi`];
+    if (Array.isArray(hi) && hi.length) return hi;
+  }
+  const en = row[field];
+  return Array.isArray(en) ? en : [];
+}
+
 export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   [BookingStatus.PENDING_PAYMENT]: 'Awaiting payment',
   [BookingStatus.PAID]: 'Payment received',

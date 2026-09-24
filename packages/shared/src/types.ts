@@ -112,6 +112,9 @@ export interface Puja {
   titleHi: string;
   summaryHi: string;
   descriptionHi: string;
+  /** Feature bullets on the puja page; `featuresHi` empty means show the English. */
+  features: string[];
+  featuresHi: string[];
   imageUrl?: string | null;
   locationType: PujaLocationType;
   isActive: boolean;

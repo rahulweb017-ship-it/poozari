@@ -156,6 +156,9 @@ export const createPujaSchema = z.object({
   titleHi: z.string().trim().max(160).optional().default(''),
   summaryHi: z.string().trim().max(500).optional().default(''),
   descriptionHi: z.string().trim().max(8000).optional().default(''),
+  // Omitted on create means the database's standard four bullets.
+  features: z.array(z.string().trim().min(1).max(200)).max(12).optional(),
+  featuresHi: z.array(z.string().trim().min(1).max(200)).max(12).optional(),
   imageUrl: z.string().url().optional(),
   locationType: z.enum([
     PujaLocationType.HOME,
