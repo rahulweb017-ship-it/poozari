@@ -265,7 +265,13 @@ model Product {
   slug          String   @unique
   category      String   @default("Puja Essentials")
   description   String   @default("")
+  // Cover image: always images[0], kept as its own column because cards,
+  // checkout and ProductOrder.productImageUrl read it.
   imageUrl      String?
+  // Gallery on the product page, cover first.
+  images        String[] @default([])
+  // One video per product: an uploaded file or a YouTube / hosted URL.
+  videoUrl      String?
   priceInr      Int
   stockQuantity Int      @default(0)
   isActive      Boolean  @default(true)

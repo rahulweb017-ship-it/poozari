@@ -220,6 +220,14 @@ export type UpdateBenefitInput = z.infer<typeof updateBenefitSchema>;
 
 /* ----------------------------- Products ----------------------------- */
 
+/** A product image or video: an absolute URL or a path on this site. */
+function productMediaUrl(message: string) {
+  return z
+    .string()
+    .trim()
+    .refine((value) => value.startsWith('/') || z.string().url().safeParse(value).success, message);
+}
+
 export const createProductSchema = z.object({
   name: z.string().trim().min(2).max(160),
   slug: z
@@ -228,14 +236,11 @@ export const createProductSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase words separated by hyphens'),
   category: z.string().trim().min(2).max(80),
   description: z.string().trim().max(4000).optional().default(''),
-  imageUrl: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value.startsWith('/') || z.string().url().safeParse(value).success,
-      'Enter a valid URL or local image path',
-    )
-    .optional(),
+  imageUrl: productMediaUrl('Enter a valid URL or local image path').optional(),
+  // Gallery, cover first. When sent, the API sets imageUrl to images[0].
+  images: z.array(productMediaUrl('Enter a valid URL or local image path')).max(10, 'Up to 10 images').optional(),
+  // One video: an uploaded file or a YouTube / hosted video URL. '' clears it.
+  videoUrl: z.union([z.literal(''), productMediaUrl('Enter a valid video URL')]).optional(),
   priceInr: z.number().int().positive('Price must be greater than 0'),
   stockQuantity: z.number().int().min(0, 'Stock cannot be negative').default(0),
   isActive: z.boolean().default(true),

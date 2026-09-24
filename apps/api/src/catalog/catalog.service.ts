@@ -60,6 +60,19 @@ export interface ProductFilter {
   includeInactive?: boolean;
 }
 
+/**
+ * Keep the cover column in step with the gallery: when `images` is sent, the
+ * cover is its first entry. An empty `videoUrl` clears the video.
+ */
+function withProductCover<T extends UpdateProductInput>(input: T) {
+  const { images, videoUrl, ...rest } = input;
+  return {
+    ...rest,
+    ...(images ? { images, imageUrl: images[0] ?? null } : {}),
+    ...(videoUrl !== undefined ? { videoUrl: videoUrl || null } : {}),
+  };
+}
+
 @Injectable()
 export class CatalogService {
   constructor(private readonly prisma: PrismaService) {}
@@ -175,7 +188,9 @@ export class CatalogService {
 
   async createProduct(input: CreateProductInput) {
     try {
-      return serializeProduct(await this.prisma.product.create({ data: input }));
+      return serializeProduct(
+        await this.prisma.product.create({ data: withProductCover(input) }),
+      );
     } catch (error) {
       guardProductWrite(error);
     }
@@ -184,7 +199,7 @@ export class CatalogService {
   async updateProduct(id: string, input: UpdateProductInput) {
     try {
       return serializeProduct(
-        await this.prisma.product.update({ where: { id }, data: input }),
+        await this.prisma.product.update({ where: { id }, data: withProductCover(input) }),
       );
     } catch (error) {
       guardProductWrite(error);

@@ -106,6 +106,9 @@ export function serializeProduct(product: any): Product {
     category: product.category,
     description: product.description ?? '',
     imageUrl: product.imageUrl ?? null,
+    // Rows from before the gallery have only a cover.
+    images: product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [],
+    videoUrl: product.videoUrl ?? null,
     priceInr: product.priceInr,
     stockQuantity: product.stockQuantity,
     isActive: product.isActive,

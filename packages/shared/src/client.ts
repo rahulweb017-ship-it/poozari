@@ -373,6 +373,11 @@ export class PoozariClient {
     form.append('file', file, filename);
     return this.upload<{ url: string }>('/admin/uploads/image', form);
   }
+  adminUploadVideo(file: Blob, filename = 'video.mp4') {
+    const form = new FormData();
+    form.append('file', file, filename);
+    return this.upload<{ url: string }>('/admin/uploads/video', form);
+  }
 
   /* Admin currencies */
   adminListCurrencies() {

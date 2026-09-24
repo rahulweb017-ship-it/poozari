@@ -1,7 +1,8 @@
 'use client';
 
 import { AdminShell } from '@/components/admin-shell';
-import { ImagePicker } from '@/components/image-picker';
+import { MultiImagePicker } from '@/components/multi-image-picker';
+import { VideoPicker } from '@/components/video-picker';
 import { api } from '@/lib/client';
 import { formatInr, type Product } from '@poozari/shared';
 import { useEffect, useState } from 'react';
@@ -11,7 +12,8 @@ const EMPTY_FORM = {
   slug: '',
   category: 'Puja Essentials',
   description: '',
-  imageUrl: '',
+  images: [] as string[],
+  videoUrl: '',
   priceInr: '',
   stockQuantity: '0',
   isActive: true,
@@ -53,7 +55,8 @@ export default function AdminProductsPage() {
       slug: product.slug,
       category: product.category,
       description: product.description,
-      imageUrl: product.imageUrl ?? '',
+      images: product.images,
+      videoUrl: product.videoUrl ?? '',
       priceInr: String(product.priceInr),
       stockQuantity: String(product.stockQuantity),
       isActive: product.isActive,
@@ -71,7 +74,8 @@ export default function AdminProductsPage() {
         slug: form.slug || slugify(form.name),
         category: form.category,
         description: form.description,
-        imageUrl: form.imageUrl || undefined,
+        images: form.images,
+        videoUrl: form.videoUrl,
         priceInr: Number(form.priceInr),
         stockQuantity: Number(form.stockQuantity) || 0,
         isActive: form.isActive,
@@ -155,12 +159,17 @@ export default function AdminProductsPage() {
               <label className="label">Description</label>
               <textarea className="input" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
-            <ImagePicker
-              label="Product image"
-              hint="Shown in the store listing and on the product page"
-              value={form.imageUrl}
-              onChange={(imageUrl) => setForm({ ...form, imageUrl })}
-              aspect="1/1"
+            <MultiImagePicker
+              label="Product images"
+              hint="The first image is the cover in the store listing · up to 10"
+              value={form.images}
+              onChange={(images) => setForm({ ...form, images })}
+            />
+            <VideoPicker
+              label="Product video (optional)"
+              hint="MP4, WebM or MOV up to 50 MB, or a YouTube link"
+              value={form.videoUrl}
+              onChange={(videoUrl) => setForm({ ...form, videoUrl })}
             />
             <div className="grid grid-cols-2 gap-3">
               <div>

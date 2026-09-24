@@ -135,7 +135,12 @@ export interface Product {
   slug: string;
   category: string;
   description: string;
+  /** Cover image, always `images[0]` when there is a gallery. */
   imageUrl?: string | null;
+  /** Gallery, cover first. */
+  images: string[];
+  /** An uploaded video file or a YouTube / hosted video URL. */
+  videoUrl?: string | null;
   priceInr: number;
   stockQuantity: number;
   isActive: boolean;

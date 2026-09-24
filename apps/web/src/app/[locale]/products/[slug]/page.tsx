@@ -1,5 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { ProductBuyPanel } from '@/components/product-buy-panel';
+import { ProductGallery } from '@/components/product-gallery';
 import { getProduct } from '@/lib/server-api';
 import { notFound } from 'next/navigation';
 
@@ -29,21 +30,11 @@ export default async function ProductDetailPage({
 
       <main className="app-container py-10 sm:py-14">
         <div className="grid gap-9 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
-          <div
-            className="elevated-card overflow-hidden bg-gradient-to-br from-saffron-100 to-orange-200"
-            style={{ aspectRatio: '1/1' }}
-          >
-            {product.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-8xl">🪔</div>
-            )}
-          </div>
+          <ProductGallery
+            images={product.images}
+            videoUrl={product.videoUrl}
+            name={product.name}
+          />
 
           <div className="lg:py-3">
             <span className="section-pill">{product.category}</span>

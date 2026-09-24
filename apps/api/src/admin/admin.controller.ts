@@ -64,6 +64,11 @@ const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const IMAGE_MIME_PREFIX = 'image/';
 
+/** Product videos are short showcase clips; longer ones belong on YouTube. */
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+const VIDEO_EXTENSIONS = new Set(['.mp4', '.webm', '.mov', '.m4v']);
+const VIDEO_MIME_PREFIX = 'video/';
+
 const createPanditSchema = panditProfileSchema.extend({
   email: z.string().email(),
   password: z.string().min(8),
@@ -150,6 +155,22 @@ export class AdminController {
     const ext = (file.originalname.match(/\.[^.]+$/)?.[0] ?? '').toLowerCase();
     if (!IMAGE_EXTENSIONS.has(ext)) {
       throw new BadRequestException('Use a JPG, PNG or WebP image');
+    }
+    const url = await this.storage.savePublicFile(file.buffer, file.originalname);
+    return { url };
+  }
+
+  /** Video upload for product pages (multipart, field "file"), checked like images. */
+  @Post('uploads/video')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: VIDEO_MAX_BYTES } }))
+  async uploadVideo(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No video provided (field "file")');
+    if (!file.mimetype?.startsWith(VIDEO_MIME_PREFIX)) {
+      throw new BadRequestException('That file is not a video');
+    }
+    const ext = (file.originalname.match(/\.[^.]+$/)?.[0] ?? '').toLowerCase();
+    if (!VIDEO_EXTENSIONS.has(ext)) {
+      throw new BadRequestException('Use an MP4, WebM or MOV video');
     }
     const url = await this.storage.savePublicFile(file.buffer, file.originalname);
     return { url };
