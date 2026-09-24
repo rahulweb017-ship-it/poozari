@@ -1,6 +1,7 @@
 'use client';
 
 import { AdminShell } from '@/components/admin-shell';
+import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
 import type { City } from '@poozari/shared';
 import { useEffect, useState } from 'react';
@@ -269,10 +270,12 @@ function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] 
             <label className="label">Description</label>
             <textarea className="input" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
-          <div>
-            <label className="label">Image URL</label>
-            <input className="input" placeholder="https://…/image.jpg" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
-          </div>
+          <ImagePicker
+            label="Image"
+            value={form.imageUrl}
+            onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+            aspect="1/1"
+          />
           <button className="btn-primary w-full text-2xs uppercase tracking-widest" onClick={submit} disabled={busy || !form.name}>
             {busy ? 'Saving…' : editingId ? 'Update' : 'Create'}
           </button>

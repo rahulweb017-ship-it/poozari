@@ -1,6 +1,7 @@
 'use client';
 
 import { AdminShell } from '@/components/admin-shell';
+import { ImagePicker } from '@/components/image-picker';
 import { LiveCaptionControls } from '@/components/live-caption-controls';
 import { api } from '@/lib/client';
 import { formatInr, LiveSessionStatus, type LiveSession, type Puja } from '@poozari/shared';
@@ -208,15 +209,13 @@ export default function AdminLivePage() {
                 onChange={(e) => setForm({ ...form, playbackUrl: e.target.value })}
               />
             </div>
-            <div>
-              <label className="label">Thumbnail URL</label>
-              <input
-                className="input"
-                placeholder="https://…/cover.jpg"
-                value={form.thumbnailUrl}
-                onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })}
-              />
-            </div>
+            <ImagePicker
+              label="Thumbnail"
+              hint="Shown on the Live Puja cards"
+              value={form.thumbnailUrl}
+              onChange={(thumbnailUrl) => setForm({ ...form, thumbnailUrl })}
+              aspect="16/9"
+            />
             <button
               className="btn-primary w-full text-2xs uppercase tracking-widest"
               onClick={create}

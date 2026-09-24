@@ -1,6 +1,7 @@
 'use client';
 
 import { AdminShell } from '@/components/admin-shell';
+import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
 import { PostStatus, readingMinutes, slugify, type BlogPost } from '@poozari/shared';
 import { useEffect, useState } from 'react';
@@ -197,15 +198,13 @@ export default function AdminBlogPage() {
                 onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
               />
             </div>
-            <div>
-              <label className="label">Cover image URL</label>
-              <input
-                className="input"
-                placeholder="https://…/cover.jpg or /brand/cover.jpg"
-                value={form.coverImageUrl}
-                onChange={(e) => setForm({ ...form, coverImageUrl: e.target.value })}
-              />
-            </div>
+            <ImagePicker
+              label="Cover image"
+              hint="Shown on the blog listing and at the top of the post"
+              value={form.coverImageUrl}
+              onChange={(coverImageUrl) => setForm({ ...form, coverImageUrl })}
+              aspect="16/9"
+            />
             <div>
               <label className="label">Body (Markdown)</label>
               <textarea
