@@ -39,7 +39,7 @@ export default function LiveDarshanViewerPage() {
       setSession(s);
     } catch (e: any) {
       if (e.status === 404) setNotFound(true);
-      else setError(e.message ?? 'Could not load live darshan');
+      else setError(e.message ?? 'Could not load live puja');
     }
   }, [id]);
 
@@ -123,7 +123,7 @@ export default function LiveDarshanViewerPage() {
       }
       await openRazorpayCheckout({
         order,
-        description: `Live Darshan — ${session.title}`,
+        description: `Live Puja — ${session.title}`,
         prefill: { name: user.name, contact: user.phone ?? '', email: user.email ?? '' },
         onVerify: async (response) => {
           await api.verifyLiveAccess(session.id, response);
@@ -150,9 +150,9 @@ export default function LiveDarshanViewerPage() {
     return (
       <div className="app-container py-24 text-center">
         <div className="text-5xl">🪔</div>
-        <h1 className="section-heading mt-4">Live darshan not found</h1>
+        <h1 className="section-heading mt-4">Live puja not found</h1>
         <Link href="/live-darshan" className="btn-outline mt-6 inline-flex text-2xs uppercase tracking-wider">
-          ← Back to Live Darshan
+          ← Back to Live Puja
         </Link>
       </div>
     );
@@ -174,7 +174,7 @@ export default function LiveDarshanViewerPage() {
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-2xs font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--muted-foreground))' }}>
           <Link href="/live-darshan" className="transition-colors hover:text-accent">
-            ← Live Darshan
+            ← Live Puja
           </Link>
         </nav>
 
@@ -275,12 +275,12 @@ function PaywallPanel({
       <div className="flex h-full flex-col items-center justify-center">
         <div className="text-5xl">🪔</div>
         <h2 className="font-display mt-4 text-xl font-extrabold text-white">
-          {isLive ? 'This pooja is live now' : 'This darshan is upcoming'}
+          {isLive ? 'This pooja is live now' : 'This live puja is upcoming'}
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
           {isLive
             ? 'Pay the join fee to watch the live ceremony and take darshan with panditji.'
-            : `Reserve your spot now — the darshan begins ${new Date(session.scheduledAt).toLocaleString('en-IN')}.`}
+            : `Reserve your spot now — the live puja begins ${new Date(session.scheduledAt).toLocaleString('en-IN')}.`}
         </p>
         <div className="mt-6 flex flex-col items-center gap-3">
           <div className="text-2xl font-black text-saffron-400">

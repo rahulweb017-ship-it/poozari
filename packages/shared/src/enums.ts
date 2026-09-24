@@ -12,6 +12,8 @@ export const PujaLocationType = {
   HOME: 'HOME',
   TEERTH: 'TEERTH',
   TEMPLE: 'TEMPLE',
+  /** Performed by a pandit on the devotee's behalf and shared as video. */
+  DIGITAL: 'DIGITAL',
 } as const;
 export type PujaLocationType = (typeof PujaLocationType)[keyof typeof PujaLocationType];
 

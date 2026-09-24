@@ -6,9 +6,9 @@ import { LiveSessionStatus, type LiveSession } from '@poozari/shared';
 export const revalidate = 15;
 
 export const metadata = {
-  title: 'Live Darshan — poozari.com',
+  title: 'Live Puja — poozari.com',
   description:
-    'Watch live pooja darshan with verified pandits. Join a live Vedic ritual, pay the join fee, and take darshan from anywhere.',
+    'Watch a live puja with verified pandits. Join a live Vedic ritual, pay the join fee, and take darshan from anywhere.',
 };
 
 function LiveBadge() {
@@ -109,7 +109,7 @@ export default async function LiveDarshanPage() {
       <div className="app-container">
         {/* Header */}
         <div className="flex flex-col items-center text-center">
-          <span className="section-pill">Live Darshan</span>
+          <span className="section-pill">Live Puja</span>
           <h1 className="section-heading mt-3">
             Join a <span className="text-accent">Live Pooja</span> from Anywhere
           </h1>
@@ -138,7 +138,7 @@ export default async function LiveDarshanPage() {
             <div className="card p-10 text-center">
               <div className="text-4xl">📿</div>
               <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                No live darshan right now. Check the upcoming schedule below.
+                No live puja right now. Check the upcoming schedule below.
               </p>
             </div>
           )}
@@ -162,7 +162,7 @@ export default async function LiveDarshanPage() {
         {ended.length ? (
           <div className="mt-14">
             <h2 className="mb-6 font-display text-xl font-extrabold uppercase tracking-wider text-foreground">
-              Past Darshan
+              Past Pujas
             </h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {ended.map((s) => (

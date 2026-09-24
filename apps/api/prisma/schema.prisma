@@ -20,6 +20,7 @@ enum PujaLocationType {
   HOME
   TEERTH
   TEMPLE
+  DIGITAL
 }
 
 enum BookingStatus {

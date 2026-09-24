@@ -8,7 +8,8 @@ import { useEffect, useRef, useState } from 'react';
 
 /** Main links, shown across the bar on desktop. */
 const PRIMARY = [
-  { href: '/puja', key: 'pujas' },
+  { href: '/puja?locationType=HOME', key: 'pujas' },
+  { href: '/digital-puja', key: 'digitalPuja' },
   { href: '/teerth-puja', key: 'teerthPuja' },
   { href: '/live-darshan', key: 'liveDarshan' },
   { href: '/products', key: 'products' },
@@ -80,7 +81,7 @@ export function Navbar() {
                 key={n.href}
                 href={n.href}
                 className="nav-link py-1"
-                aria-current={pathname === n.href ? 'page' : undefined}
+                aria-current={pathname === n.href.split('?')[0] ? 'page' : undefined}
               >
                 {t(n.key)}
               </Link>
@@ -119,7 +120,7 @@ export function Navbar() {
                       href={n.href}
                       onClick={() => setMoreOpen(false)}
                       className={`block px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-gray-50 ${
-                        pathname === n.href ? 'text-accent' : 'text-gray-700'
+                        pathname === n.href.split('?')[0] ? 'text-accent' : 'text-gray-700'
                       }`}
                     >
                       {label(n.key)}
@@ -205,7 +206,7 @@ export function Navbar() {
                   href={n.href}
                   onClick={() => setMobileOpen(false)}
                   className={`rounded-2xl px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all ${
-                    pathname === n.href
+                    pathname === n.href.split('?')[0]
                       ? 'bg-accent-soft text-accent shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}

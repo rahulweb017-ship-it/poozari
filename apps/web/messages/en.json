@@ -4,11 +4,11 @@
     "description": "Book authentic Vedic puja at home or at sacred teerths. Verified pandits, complete samagri, and recorded pooja video. You book, we handle everything."
   },
   "nav": {
-    "pujas": "Pujas",
+    "pujas": "Pujas at Home",
     "teerthPuja": "Teerth Puja",
     "temples": "Temples",
     "products": "Store",
-    "liveDarshan": "Live Darshan",
+    "liveDarshan": "Live Puja",
     "blog": "Blog",
     "about": "About Us",
     "howItWorks": "How It Works",
@@ -22,7 +22,8 @@
     "close": "Close",
     "language": "Language",
     "currency": "Currency",
-    "more": "More"
+    "more": "More",
+    "digitalPuja": "Digital Puja"
   },
   "footer": {
     "tagline": "Authentic Vedic rituals, performed by verified pandits and delivered to you as a recorded pooja video with prasad.",
@@ -35,7 +36,18 @@
     "refund": "Cancellation & Refund",
     "shipping": "Shipping Policy",
     "rights": "All rights reserved.",
-    "madeIn": "Made with devotion in India."
+    "madeIn": "Made with devotion in India.",
+    "pujasAtHome": "Pujas at Home",
+    "digitalPuja": "Digital Puja",
+    "teerthPuja": "Teerth Puja",
+    "famousTemples": "Famous Temples",
+    "pujaProducts": "Puja Products",
+    "livePuja": "Live Puja",
+    "byDeity": "By Deity",
+    "faq": "FAQ",
+    "enquiry": "Puja Enquiry",
+    "superAdmin": "Super Admin",
+    "panditLogin": "Pandit Login"
   },
   "common": {
     "from": "From",
@@ -467,5 +479,28 @@
     "paymentCancelled": "Payment was cancelled. Your booking is saved and unpaid — you can pay for it from My Bookings.",
     "choosePackage": "Choose a package",
     "bookNow": "Book Now"
+  },
+  "digital": {
+    "pill": "Puja From Anywhere",
+    "titleLead": "Digital",
+    "titleAccent": "Puja",
+    "subtitle": "A verified pandit performs the puja in your name at a sacred place, and you receive the recorded video and prasad at home.",
+    "howTitle": "How Digital Puja Works",
+    "stepLabel": "Step {n}",
+    "steps": {
+      "sankalp": {
+        "title": "Share your sankalp",
+        "body": "Book online and give the devotee's name, gotra and wish. The pandit takes the sankalp in your name."
+      },
+      "perform": {
+        "title": "Pandit performs the puja",
+        "body": "The ritual is done with full vidhi on a shastric muhurat, exactly as it would be in person."
+      },
+      "deliver": {
+        "title": "Video and prasad",
+        "body": "Watch the recorded puja video online, and receive the blessed prasad by post."
+      }
+    },
+    "empty": "No digital pujas yet. Check back soon."
   }
 }

@@ -17,6 +17,7 @@ export default async function PujaListingPage({
     benefitId: searchParams.benefitId,
     q: searchParams.q,
   }).catch(() => []);
+  const atHome = searchParams.locationType === 'HOME';
 
   return (
     <div>
@@ -25,9 +26,15 @@ export default async function PujaListingPage({
         <div className="app-container py-12 sm:py-16">
           <div className="flex flex-col items-center text-center">
             <span className="section-pill">Puja Services</span>
-            <h1 className="section-heading mt-3">
-              Book <span className="text-accent">Puja</span>
-            </h1>
+            {atHome ? (
+              <h1 className="section-heading mt-3">
+                Pujas at <span className="text-accent">Home</span>
+              </h1>
+            ) : (
+              <h1 className="section-heading mt-3">
+                Book <span className="text-accent">Puja</span>
+              </h1>
+            )}
             <div className="section-bar mx-auto" aria-hidden="true" />
             <p className="section-subheading mx-auto">
               Explore our ritual categories, package tiers, and traditional inclusions. {pujas.length} pujas available.

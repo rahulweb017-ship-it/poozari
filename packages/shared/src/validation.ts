@@ -161,6 +161,7 @@ export const createPujaSchema = z.object({
     PujaLocationType.HOME,
     PujaLocationType.TEERTH,
     PujaLocationType.TEMPLE,
+    PujaLocationType.DIGITAL,
   ]),
   templeId: z.string().cuid().optional(),
   cityId: z.string().cuid().optional(),

@@ -265,14 +265,14 @@ export const pujaCsvRowSchema = z
       .default('')
       .transform((value, ctx) => {
         const key = value.toUpperCase();
-        if (key === 'HOME' || key === 'TEERTH' || key === 'TEMPLE') {
+        if (key === 'HOME' || key === 'TEERTH' || key === 'TEMPLE' || key === 'DIGITAL') {
           return key as PujaLocationType;
         }
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: value
-            ? `Use HOME, TEERTH or TEMPLE (got "${value}")`
-            : 'Use HOME, TEERTH or TEMPLE',
+            ? `Use HOME, TEERTH, TEMPLE or DIGITAL (got "${value}")`
+            : 'Use HOME, TEERTH, TEMPLE or DIGITAL',
         });
         return z.NEVER;
       }),
@@ -445,7 +445,7 @@ export const PUJA_CSV_TEMPLATE: CsvTemplate = {
     { key: 'summary', required: false, hint: 'One line shown on cards' },
     { key: 'description', required: false, hint: 'Full scriptural background' },
     { key: 'imageUrl', required: false, hint: 'https:// cover image, or a local /path' },
-    { key: 'locationType', required: true, hint: 'HOME, TEERTH or TEMPLE' },
+    { key: 'locationType', required: true, hint: 'HOME, TEERTH, TEMPLE or DIGITAL' },
     { key: 'city', required: false, hint: 'Existing city name or slug' },
     { key: 'temple', required: false, hint: 'Existing temple name or slug' },
     { key: 'deities', required: false, hint: 'Deity names or slugs separated by |' },

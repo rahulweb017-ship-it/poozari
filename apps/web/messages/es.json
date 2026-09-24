@@ -4,11 +4,11 @@
     "description": "Reserve una puja védica auténtica en su casa o en los teerths sagrados. Pandits verificados, samagri completa y vídeo grabado de la pooja. Usted reserva, nosotros nos encargamos de todo."
   },
   "nav": {
-    "pujas": "Pujas",
+    "pujas": "Pujas a domicilio",
     "teerthPuja": "Puja en teerth",
     "temples": "Templos",
     "products": "Tienda",
-    "liveDarshan": "Darshan en directo",
+    "liveDarshan": "Puja en directo",
     "blog": "Blog",
     "about": "Quiénes somos",
     "howItWorks": "Cómo funciona",
@@ -22,7 +22,8 @@
     "close": "Cerrar",
     "language": "Idioma",
     "currency": "Moneda",
-    "more": "Más"
+    "more": "Más",
+    "digitalPuja": "Puja digital"
   },
   "footer": {
     "tagline": "Rituales védicos auténticos, realizados por pandits verificados y entregados a usted como vídeo grabado, junto con el prasad.",
@@ -35,7 +36,18 @@
     "refund": "Cancelación y reembolso",
     "shipping": "Política de envíos",
     "rights": "Todos los derechos reservados.",
-    "madeIn": "Hecho con devoción en la India."
+    "madeIn": "Hecho con devoción en la India.",
+    "pujasAtHome": "Pujas a domicilio",
+    "digitalPuja": "Puja digital",
+    "teerthPuja": "Teerth Puja",
+    "famousTemples": "Templos famosos",
+    "pujaProducts": "Artículos de puja",
+    "livePuja": "Puja en directo",
+    "byDeity": "Por deidad",
+    "faq": "Preguntas frecuentes",
+    "enquiry": "Consulta de puja",
+    "superAdmin": "Superadmin",
+    "panditLogin": "Acceso pandit"
   },
   "common": {
     "from": "Desde",
@@ -265,5 +277,28 @@
     "preferWhatsapp": "¿Prefiere reservar por WhatsApp?",
     "preferWhatsappBody": "Díganos la puja y le confirmamos el pandit, la fecha y el enlace de pago en el chat.",
     "orPay": "o pague en línea abajo"
+  },
+  "digital": {
+    "pill": "Puja desde cualquier lugar",
+    "titleLead": "Puja",
+    "titleAccent": "digital",
+    "subtitle": "Un pandit verificado realiza la puja en tu nombre en un lugar sagrado, y recibes el vídeo grabado y el prasad en casa.",
+    "howTitle": "Cómo funciona la puja digital",
+    "stepLabel": "Paso {n}",
+    "steps": {
+      "sankalp": {
+        "title": "Comparte tu sankalp",
+        "body": "Reserva en línea e indica el nombre, el gotra y el deseo del devoto. El pandit toma el sankalp en tu nombre."
+      },
+      "perform": {
+        "title": "El pandit realiza la puja",
+        "body": "El ritual se hace con toda la vidhi en un muhurat shástrico, igual que si estuvieras presente."
+      },
+      "deliver": {
+        "title": "Vídeo y prasad",
+        "body": "Mira el vídeo de la puja en línea y recibe el prasad bendecido por correo."
+      }
+    },
+    "empty": "Aún no hay pujas digitales. Vuelve pronto."
   }
 }

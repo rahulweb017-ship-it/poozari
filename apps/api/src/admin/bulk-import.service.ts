@@ -120,7 +120,7 @@ interface PreparedPuja {
     summary: string;
     description: string;
     imageUrl?: string;
-    locationType: 'HOME' | 'TEERTH' | 'TEMPLE';
+    locationType: 'HOME' | 'TEERTH' | 'TEMPLE' | 'DIGITAL';
     templeId?: string;
     cityId?: string;
     isActive: boolean;

@@ -151,7 +151,7 @@ export function HomeLiveCarousel({ sessions }: { sessions: LiveSession[] }) {
               New live pujas are being scheduled
             </p>
             <Link href="/live-darshan" className="btn-primary mt-5 inline-flex rounded-full">
-              View Live Darshan
+              View Live Puja
             </Link>
           </div>
         )}

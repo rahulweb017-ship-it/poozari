@@ -213,6 +213,7 @@ export default function AdminPujasPage() {
     HOME: '🏠 Home',
     TEERTH: '🛕 Teerth',
     TEMPLE: '⛩️ Temple',
+    DIGITAL: '📿 Digital',
   };
 
   return (
@@ -277,6 +278,7 @@ export default function AdminPujasPage() {
                   <option value="HOME">🏠 Home</option>
                   <option value="TEERTH">🛕 Teerth</option>
                   <option value="TEMPLE">⛩️ Temple</option>
+                  <option value="DIGITAL">📿 Digital</option>
                 </select>
               </div>
             </div>

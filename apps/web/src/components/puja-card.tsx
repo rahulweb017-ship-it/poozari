@@ -3,6 +3,14 @@ import { Price } from '@/lib/currency';
 import { localized, type Puja } from '@poozari/shared';
 import { getLocale } from 'next-intl/server';
 
+/** Card badge per puja type; the enum value itself is not customer copy. */
+const LOCATION_BADGES: Record<string, string> = {
+  HOME: 'At Home',
+  TEERTH: 'Teerth',
+  TEMPLE: 'Temple',
+  DIGITAL: 'Digital',
+};
+
 export async function PujaCard({ puja }: { puja: Puja }) {
   const locale = await getLocale();
   const title = localized(puja, 'title', locale);
@@ -26,7 +34,7 @@ export async function PujaCard({ puja }: { puja: Puja }) {
         )}
         <div className="absolute left-3 top-3">
           <span className="badge bg-[#0b0f19] text-white/95 text-3xs font-black uppercase tracking-widest shadow-md">
-            {puja.locationType}
+            {LOCATION_BADGES[puja.locationType] ?? puja.locationType}
           </span>
         </div>
       </div>

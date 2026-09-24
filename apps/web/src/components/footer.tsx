@@ -4,13 +4,14 @@ import { whatsappLink } from '@poozari/shared';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 const EXPLORE = [
-  { href: '/puja', label: 'Book Puja' },
-  { href: '/teerth-puja', label: 'Teerth Puja' },
-  { href: '/temples', label: 'Famous Temples' },
-  { href: '/products', label: 'Puja Products' },
-  { href: '/live-darshan', label: 'Live Darshan' },
-  { href: '/deity', label: 'By Deity' },
-];
+  { href: '/puja?locationType=HOME', key: 'pujasAtHome' },
+  { href: '/digital-puja', key: 'digitalPuja' },
+  { href: '/teerth-puja', key: 'teerthPuja' },
+  { href: '/temples', key: 'famousTemples' },
+  { href: '/products', key: 'pujaProducts' },
+  { href: '/live-darshan', key: 'livePuja' },
+  { href: '/deity', key: 'byDeity' },
+] as const;
 
 const COMPANY = [
   { href: '/about', key: 'about' },
@@ -28,11 +29,11 @@ const LEGAL = [
 ] as const;
 
 const PARTNERS = [
-  { href: '/faq', label: 'FAQ' },
-  { href: '/enquiry', label: 'Puja Enquiry' },
-  { href: '/admin/login', label: 'Super Admin' },
-  { href: '/pandit/login', label: 'Pandit Login' },
-];
+  { href: '/faq', key: 'faq' },
+  { href: '/enquiry', key: 'enquiry' },
+  { href: '/admin/login', key: 'superAdmin' },
+  { href: '/pandit/login', key: 'panditLogin' },
+] as const;
 
 const linkClass = 'text-xs transition-colors duration-300 hover:text-saffron-400';
 const headingClass = 'font-display text-xs font-bold uppercase tracking-widest text-white';
@@ -89,7 +90,7 @@ export async function Footer() {
             {EXPLORE.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className={linkClass}>
-                  {l.label}
+                  {t(l.key)}
                 </Link>
               </li>
             ))}
@@ -127,7 +128,7 @@ export async function Footer() {
             {PARTNERS.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className={linkClass}>
-                  {l.label}
+                  {t(l.key)}
                 </Link>
               </li>
             ))}

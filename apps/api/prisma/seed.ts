@@ -213,6 +213,35 @@ async function main() {
         { name: 'Standard', priceInr: 21000, inclusions: ['Temple-authorised pujari', 'Samagri included', 'Video proof'] },
       ],
     },
+    {
+      title: 'Maha Mrityunjaya Jaap',
+      slug: 'maha-mrityunjaya-jaap-digital',
+      summary: 'Performed in your name at Kashi and shared as video.',
+      description: 'Sankalp in the devotee\'s name and gotra, followed by the Maha Mrityunjaya jaap for health and long life. The recorded video and prasad are sent to you.',
+      imageUrl: 'https://img.pujariji.com/pujas/a404ee1c-8078-402f-b241-2fdf08a47219.jpg?w=480&format=webp',
+      locationType: PujaLocationType.DIGITAL,
+      city: 'varanasi',
+      deities: ['lord-shiva'],
+      benefits: ['health', 'peace'],
+      packages: [
+        { name: '11,000 Jaap', priceInr: 2100, inclusions: ['Sankalp in your name', 'Recorded video', 'Prasad by post'] },
+        { name: '1,25,000 Jaap', priceInr: 11000, inclusions: ['Sankalp in your name', 'Recorded video', 'Prasad by post', '5 pandits'] },
+      ],
+    },
+    {
+      title: 'Lakshmi Kuber Puja',
+      slug: 'lakshmi-kuber-puja-digital',
+      summary: 'A prosperity puja performed on your behalf.',
+      description: 'Pandits perform the Lakshmi Kuber puja with your sankalp on an auspicious muhurat. Watch the recording and receive the blessed prasad at home.',
+      imageUrl: 'https://img.pujariji.com/pujas/b55dd0d2-fc6d-4cea-a9d2-cfdfa69a201d.jpg?w=480&format=webp',
+      locationType: PujaLocationType.DIGITAL,
+      deities: ['lord-vishnu'],
+      festivals: ['diwali'],
+      benefits: ['prosperity'],
+      packages: [
+        { name: 'Standard', priceInr: 1500, inclusions: ['Sankalp in your name', 'Recorded video', 'Prasad by post'] },
+      ],
+    },
   ];
 
   for (const p of pujas) {
