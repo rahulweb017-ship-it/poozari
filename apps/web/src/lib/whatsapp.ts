@@ -8,7 +8,7 @@ import { formatWhatsappNumber, normalizeWhatsappNumber } from '@poozari/shared';
  * Changing it needs a rebuild — it is baked into the client bundle.
  */
 export const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || '+919041399200';
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || '+919041699200';
 
 /** Digits only, for `wa.me` paths. */
 export const WHATSAPP_DIGITS = normalizeWhatsappNumber(WHATSAPP_NUMBER);

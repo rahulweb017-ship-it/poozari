@@ -13,7 +13,7 @@ export function normalizeWhatsappNumber(input: string): string {
   return input.replace(/\D/g, '');
 }
 
-/** Pretty form for display, e.g. "+91 90413 99200". */
+/** Pretty form for display, e.g. "+91 90416 99200". */
 export function formatWhatsappNumber(input: string): string {
   const digits = normalizeWhatsappNumber(input);
   if (digits.length === 12 && digits.startsWith('91')) {

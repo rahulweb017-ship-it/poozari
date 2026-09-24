@@ -211,7 +211,7 @@ Moving the API to a new domain later means rewriting the stored URLs.
 ## Booking over WhatsApp
 
 Devotees can start a booking in chat instead of the checkout — the number is
-**+91 90413 99200**, set with `NEXT_PUBLIC_WHATSAPP_NUMBER`.
+**+91 90416 99200**, set with `NEXT_PUBLIC_WHATSAPP_NUMBER`.
 
 The pre-filled message carries the context, so the conversation opens with the
 details rather than "which puja did you mean?":
