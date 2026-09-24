@@ -117,6 +117,15 @@ export class AuthService {
   }
 
   /**
+   * SMS codes stay off until the DLT sender and template are registered, so
+   * `PHONE_LOGIN_ENABLED=true` has to be set to send one. Email codes are
+   * always available.
+   */
+  private get phoneLoginEnabled(): boolean {
+    return this.config.get('PHONE_LOGIN_ENABLED') === 'true';
+  }
+
+  /**
    * Generate, store and send a one-time code to a mobile number or an email.
    *
    * Rate limited per identifier: sending real SMS costs money, and an
@@ -127,6 +136,12 @@ export class AuthService {
     input: RequestOtpInput,
   ): Promise<{ ok: true; devCode?: string; resendAfterSeconds: number }> {
     const { identifier, channel } = this.resolveTarget(input);
+    if (channel === OtpChannel.SMS && !this.phoneLoginEnabled) {
+      throw new HttpException(
+        'Sign-in with a mobile number is not available yet. Please use your email address.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const now = new Date();
 
     const [latest, lastHourCount] = await Promise.all([

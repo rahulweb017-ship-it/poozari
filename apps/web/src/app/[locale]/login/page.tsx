@@ -9,6 +9,12 @@ import { Suspense, useEffect, useState } from 'react';
 /** Which identifier the devotee is signing in with. */
 type Channel = 'phone' | 'email';
 
+/**
+ * Mobile sign-in waits on DLT registration for SMS, so the Mobile tab only
+ * shows when the build turns it on. The API refuses SMS codes on its own too.
+ */
+const PHONE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_PHONE_LOGIN_ENABLED === 'true';
+
 const REASSURANCES = ['No password needed', '30-second login', 'Quick verification'];
 
 function LoginInner() {
@@ -18,7 +24,7 @@ function LoginInner() {
   const next = params.get('next') ?? '/account/bookings';
 
   const [method, setMethod] = useState<'otp' | 'password'>('otp');
-  const [channel, setChannel] = useState<Channel>('phone');
+  const [channel, setChannel] = useState<Channel>(PHONE_LOGIN_ENABLED ? 'phone' : 'email');
   const [step, setStep] = useState<'identify' | 'code'>('identify');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -157,7 +163,7 @@ function LoginInner() {
         </p>
 
         {/* Channel toggle — governs both the OTP and the password form. */}
-        {step === 'identify' ? (
+        {PHONE_LOGIN_ENABLED && step === 'identify' ? (
           <div
             className="mt-6 grid grid-cols-2 gap-1 rounded-2xl p-1"
             style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }}
