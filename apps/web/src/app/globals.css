@@ -81,7 +81,7 @@ h1, h2, h3, .font-display {
 
 /* ─── Nav Links ──────────────────────────────────────────────────── */
 .nav-link {
-  @apply relative text-xs font-bold uppercase tracking-wider transition-colors duration-300;
+  @apply relative text-sm font-semibold transition-colors duration-300;
   color: hsl(var(--foreground) / 0.8);
 }
 .nav-link:hover,

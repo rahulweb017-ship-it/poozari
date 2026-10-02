@@ -25,7 +25,8 @@
     "more": "Más",
     "digitalPuja": "Puja digital",
     "deity": "Por deidad",
-    "primaryAria": "Principal"
+    "primaryAria": "Principal",
+    "panditLogin": "Acceso pandit"
   },
   "footer": {
     "tagline": "Rituales védicos auténticos, realizados por pandits verificados y entregados a usted como vídeo grabado, junto con el prasad.",
@@ -41,15 +42,15 @@
     "madeIn": "Hecho con devoción en la India.",
     "pujasAtHome": "Pujas a domicilio",
     "digitalPuja": "Puja digital",
-    "teerthPuja": "Teerth Puja",
+    "teerthPuja": "Teerth puja",
     "famousTemples": "Templos famosos",
     "pujaProducts": "Artículos de puja",
     "livePuja": "Puja en directo",
     "byDeity": "Por deidad",
     "faq": "Preguntas frecuentes",
     "enquiry": "Consulta de puja",
-    "superAdmin": "Superadmin",
-    "panditLogin": "Acceso pandit"
+    "panditLogin": "Acceso pandit",
+    "userLogin": "Acceso de usuario"
   },
   "common": {
     "from": "Desde",
@@ -592,7 +593,8 @@
       "trustPackaging": "Embalaje cuidadoso",
       "trustAuthentic": "Productos auténticos",
       "trustDelivery": "Asistencia en la entrega"
-    }
+    },
+    "allCategories": "Todos"
   },
   "productCheckout": {
     "errorLoad": "No se pudo cargar el producto",

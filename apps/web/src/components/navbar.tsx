@@ -136,14 +136,19 @@ export function Navbar() {
                 <Link href="/account/bookings" className="nav-link ml-1 py-1">
                   {t('myAccount')}
                 </Link>
-                <button onClick={logout} className="btn-outline text-2xs uppercase tracking-wider">
+                <button onClick={logout} className="btn-outline text-xs !normal-case !tracking-normal">
                   {t('signOut')}
                 </button>
               </>
             ) : (
-              <Link href="/login" className="btn-primary text-2xs uppercase tracking-wider">
-                {t('login')}
-              </Link>
+              <>
+                <Link href="/pandit/login" className="nav-link ml-1 py-1">
+                  {t('panditLogin')}
+                </Link>
+                <Link href="/login" className="btn-primary text-xs !normal-case !tracking-normal">
+                  {t('login')}
+                </Link>
+              </>
             )}
           </div>
 
@@ -201,7 +206,7 @@ export function Navbar() {
                   key={n.href}
                   href={n.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`rounded-2xl px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
                     pathname === n.href.split('?')[0]
                       ? 'bg-accent-soft text-accent shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -217,7 +222,7 @@ export function Navbar() {
                   <Link
                     href="/account/bookings"
                     onClick={() => setMobileOpen(false)}
-                    className="block rounded-2xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-50"
+                    className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                   >
                     {t('myAccount')}
                   </Link>
@@ -226,19 +231,28 @@ export function Navbar() {
                       logout();
                       setMobileOpen(false);
                     }}
-                    className="btn-outline w-full text-2xs uppercase tracking-wider"
+                    className="btn-outline w-full text-xs !normal-case !tracking-normal"
                   >
                     {t('signOut')}
                   </button>
                 </div>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-primary w-full text-2xs uppercase tracking-wider"
-                >
-                  {t('login')}
-                </Link>
+                <div className="space-y-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-primary w-full text-xs !normal-case !tracking-normal"
+                  >
+                    {t('login')}
+                  </Link>
+                  <Link
+                    href="/pandit/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-outline w-full text-xs !normal-case !tracking-normal"
+                  >
+                    {t('panditLogin')}
+                  </Link>
+                </div>
               )}
             </div>
           </div>

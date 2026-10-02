@@ -7,18 +7,25 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 // Product changes made by Super Admin should appear immediately.
 export const revalidate = 0;
 
-type Props = { params: { locale: string } };
+type Props = { params: { locale: string }; searchParams?: { category?: string | string[] } };
 
 export async function generateMetadata({ params: { locale } }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'products' });
   return { title: `${t('titleLead')} ${t('titleAccent')} — poozari.com`, description: t('subtitle') };
 }
 
-export default async function ProductsPage({ params: { locale } }: Props) {
+export default async function ProductsPage({ params: { locale }, searchParams }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations('products');
-  const products = await getProducts().catch(() => []);
-  const categories = Array.from(new Set(products.map((product) => product.category)));
+  const allProducts = await getProducts().catch(() => []);
+  const categories = Array.from(new Set(allProducts.map((product) => product.category)));
+  const requested = searchParams?.category;
+  const activeCategory = categories.find((c) => c === (Array.isArray(requested) ? requested[0] : requested));
+  const products = activeCategory ? allProducts.filter((p) => p.category === activeCategory) : allProducts;
+  const chipClass = (active: boolean) =>
+    `rounded-full border px-4 py-2 text-2xs font-bold uppercase tracking-wider shadow-sm transition-colors ${
+      active ? 'bg-accent text-white' : 'bg-white text-accent hover:bg-accent-soft'
+    }`;
 
   return (
     <div>
@@ -35,10 +42,26 @@ export default async function ProductsPage({ params: { locale } }: Props) {
           </p>
           {categories.length ? (
             <div className="mt-7 flex flex-wrap justify-center gap-2">
+              <Link
+                href="/products"
+                scroll={false}
+                aria-current={activeCategory ? undefined : 'page'}
+                className={chipClass(!activeCategory)}
+                style={{ borderColor: 'hsl(var(--accent) / 0.15)' }}
+              >
+                {t('allCategories')}
+              </Link>
               {categories.map((category) => (
-                <span key={category} className="rounded-full border bg-white px-4 py-2 text-2xs font-bold uppercase tracking-wider text-accent shadow-sm" style={{ borderColor: 'hsl(var(--accent) / 0.15)' }}>
+                <Link
+                  key={category}
+                  href={`/products?category=${encodeURIComponent(category)}`}
+                  scroll={false}
+                  aria-current={category === activeCategory ? 'page' : undefined}
+                  className={chipClass(category === activeCategory)}
+                  style={{ borderColor: 'hsl(var(--accent) / 0.15)' }}
+                >
                   {category}
-                </span>
+                </Link>
               ))}
             </div>
           ) : null}

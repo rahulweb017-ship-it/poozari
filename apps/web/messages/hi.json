@@ -25,7 +25,8 @@
     "more": "और",
     "digitalPuja": "डिजिटल पूजा",
     "deity": "देवता अनुसार",
-    "primaryAria": "मुख्य"
+    "primaryAria": "मुख्य",
+    "panditLogin": "पंडित लॉगिन"
   },
   "footer": {
     "tagline": "प्रामाणिक वैदिक अनुष्ठान, सत्यापित पंडितों द्वारा संपन्न — पूजा का रिकॉर्ड किया गया वीडियो और प्रसाद आप तक पहुँचाया जाता है।",
@@ -48,8 +49,8 @@
     "byDeity": "देवता अनुसार",
     "faq": "सामान्य प्रश्न",
     "enquiry": "पूजा पूछताछ",
-    "superAdmin": "सुपर एडमिन",
-    "panditLogin": "पंडित लॉगिन"
+    "panditLogin": "पंडित लॉगिन",
+    "userLogin": "यूज़र लॉगिन"
   },
   "common": {
     "from": "से",
@@ -794,7 +795,8 @@
       "trustPackaging": "सावधानीपूर्ण पैकिंग",
       "trustAuthentic": "प्रामाणिक उत्पाद",
       "trustDelivery": "डिलीवरी सहायता"
-    }
+    },
+    "allCategories": "सभी"
   },
   "productCheckout": {
     "errorLoad": "उत्पाद लोड नहीं हो सका",

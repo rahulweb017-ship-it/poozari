@@ -31,7 +31,7 @@ const LEGAL = [
 const PARTNERS = [
   { href: '/faq', key: 'faq' },
   { href: '/enquiry', key: 'enquiry' },
-  { href: '/admin/login', key: 'superAdmin' },
+  { href: '/login', key: 'userLogin' },
   { href: '/pandit/login', key: 'panditLogin' },
 ] as const;
 
