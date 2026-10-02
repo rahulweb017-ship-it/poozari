@@ -1,7 +1,7 @@
 import type { Addon, City, NamedEntity, Product, Puja, PujaPackage, Temple } from '@poozari/shared';
 
 export const pujaInclude = {
-  packages: true,
+  packages: { where: { archived: false } },
   deities: true,
   festivals: true,
   benefits: true,

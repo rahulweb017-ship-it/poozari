@@ -23,6 +23,7 @@ import type { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
 import type { ZodError } from 'zod';
+import { replacePujaPackages } from '../catalog/packages';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Long enough for a bulk write, short enough that a stuck import gives up. */
@@ -419,10 +420,7 @@ export class BulkImportService {
 
           // Packages are replaced wholesale, but only when the sheet has them.
           if (item.packages.length > 0) {
-            await tx.package.deleteMany({ where: { pujaId: item.existingId } });
-            await tx.package.createMany({
-              data: item.packages.map((pkg) => ({ ...pkg, pujaId: item.existingId as string })),
-            });
+            await replacePujaPackages(tx, item.existingId, item.packages);
           }
         } else {
           await tx.puja.create({

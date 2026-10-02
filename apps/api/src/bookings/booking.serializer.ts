@@ -4,7 +4,7 @@ import { serializePuja } from '../catalog/serializers';
 export const bookingInclude = {
   puja: {
     include: {
-      packages: true,
+      packages: { where: { archived: false } },
       deities: true,
       festivals: true,
       benefits: true,

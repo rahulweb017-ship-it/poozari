@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
  *
  * Deliberately global rather than attached to a puja: the same short list is
  * offered on every booking, so there is no per-puja join to maintain and
- * editing a puja (which deletes and recreates its packages) cannot orphan
+ * editing a puja (which replaces its packages) cannot orphan
  * them.
  */
 @Injectable()

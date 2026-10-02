@@ -16,6 +16,7 @@ import type {
   UpdateTempleInput,
 } from '@poozari/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { replacePujaPackages } from './packages';
 import {
   pujaInclude,
   serializeCity,
@@ -131,21 +132,18 @@ export class CatalogService {
 
   async updatePuja(id: string, input: UpdatePujaInput) {
     const { packages, deityIds, festivalIds, benefitIds, ...rest } = input;
-    await this.prisma.puja.update({
-      where: { id },
-      data: {
-        ...rest,
-        ...(deityIds ? { deities: { set: deityIds.map((d) => ({ id: d })) } } : {}),
-        ...(festivalIds ? { festivals: { set: festivalIds.map((f) => ({ id: f })) } } : {}),
-        ...(benefitIds ? { benefits: { set: benefitIds.map((b) => ({ id: b })) } } : {}),
-      },
-    });
-    if (packages) {
-      await this.prisma.package.deleteMany({ where: { pujaId: id } });
-      await this.prisma.package.createMany({
-        data: packages.map((p) => ({ ...p, pujaId: id })),
+    await this.prisma.$transaction(async (tx) => {
+      await tx.puja.update({
+        where: { id },
+        data: {
+          ...rest,
+          ...(deityIds ? { deities: { set: deityIds.map((d) => ({ id: d })) } } : {}),
+          ...(festivalIds ? { festivals: { set: festivalIds.map((f) => ({ id: f })) } } : {}),
+          ...(benefitIds ? { benefits: { set: benefitIds.map((b) => ({ id: b })) } } : {}),
+        },
       });
-    }
+      if (packages) await replacePujaPackages(tx, id, packages);
+    });
     return this.getPujaById(id);
   }
 

@@ -370,6 +370,9 @@ model Package {
   descriptionHi String    @default("")
   priceInr      Int
   inclusions    String[]  @default([])
+  /// Replaced by a later edit but kept because bookings point at it. Hidden
+  /// from the catalogue and cannot be booked; past bookings still show it.
+  archived      Boolean   @default(false)
   bookings      Booking[]
 }
 
@@ -522,9 +525,9 @@ model Booking {
   /// and the confirmation email all read this, so it stays the total.
   amountInr    Int
   /// The package price at booking time. Stored rather than read back through
-  /// `package`, because editing a puja deletes and recreates its packages
-  /// (catalog.service.ts `updatePuja`), so the original price is not
-  /// recoverable afterwards.
+  /// `package`, because editing a puja replaces its packages
+  /// (catalog/packages.ts `replacePujaPackages`), so the original price is
+  /// not recoverable afterwards.
   packageAmountInr Int @default(0)
   videoUrl     String?
   thumbnailUrl String?

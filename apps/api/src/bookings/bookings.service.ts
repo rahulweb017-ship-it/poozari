@@ -18,6 +18,9 @@ export class BookingsService {
     if (!pkg || pkg.pujaId !== input.pujaId) {
       throw new BadRequestException('Selected package does not belong to this puja');
     }
+    if (pkg.archived) {
+      throw new BadRequestException('This package is no longer offered. Please reload the page and choose again.');
+    }
 
     /*
      * Add-on prices are read from the database, never from the request. The
