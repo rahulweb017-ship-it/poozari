@@ -304,25 +304,37 @@
     "empty": "Aucune puja numérique pour le moment. Revenez bientôt."
   },
   "home": {
-    "heroPill": "Foi ancienne, confiance moderne",
-    "heroTitleLead": "Réservez une",
-    "heroTitleAccent": "puja védique authentique",
-    "heroTitleTrail": "avec des prêtres vérifiés",
-    "heroLead": "Organisez vos cérémonies védiques en toute sérénité. Nous fournissons une samagri authentique, assignons des pandits vérifiés près de chez vous et vous remettons l'enregistrement de la puja chez vous.",
-    "trust": [
-      "Pandits vérifiés",
-      "Samagri complète",
-      "Rigueur des écritures",
-      "Aide au muhurat"
-    ],
-    "ctaBrowse": "Parcourir les pujas",
-    "ctaTeerth": "Destinations teerth",
-    "assistance": "Aide à la réservation par téléphone et WhatsApp",
-    "stats": [
-      "Fidèles satisfaits",
-      "Prêtres vérifiés",
-      "Temples partenaires",
-      "Villes desservies"
+    "heroSlides": [
+      {
+        "pill": "Puja Teerth",
+        "title": "Une puja dans les temples les plus sacrés de l’Inde, en votre nom",
+        "subtitle": "Des pandits vérifiés accomplissent votre sankalp dans les teerths sacrés, et vous recevez la vidéo complète de la puja.",
+        "cta": "Découvrir les pujas Teerth"
+      },
+      {
+        "pill": "Puja à domicile",
+        "title": "Un pandit védique dans le mandir de votre maison",
+        "subtitle": "Réservez Griha Pravesh, Satyanarayan et plus encore. Pandit, samagri et installation sont pris en charge.",
+        "cta": "Réserver une puja à domicile"
+      },
+      {
+        "pill": "Darshan en direct",
+        "title": "Participez à une puja en direct, où que vous soyez",
+        "subtitle": "Suivez votre puja en direct avec votre famille et prenez part au sankalp en temps réel.",
+        "cta": "Voir le Darshan en direct"
+      },
+      {
+        "pill": "Havan et Homam",
+        "title": "Des havans sacrés pour la paix, la santé et la prospérité",
+        "subtitle": "Navagraha, Rudrabhishek, Maha Mrityunjaya et plus encore, accomplis par des pandits védiques érudits.",
+        "cta": "Parcourir les pujas"
+      },
+      {
+        "pill": "Samagri de puja",
+        "title": "Tout le samagri de puja, livré chez vous",
+        "subtitle": "Thalis, diyas en laiton et articles de puja purs et authentiques pour chaque rituel.",
+        "cta": "Acheter le samagri"
+      }
     ],
     "aboutPill": "À propos",
     "aboutTitleLead": "Qu'est-ce que",
@@ -818,5 +830,12 @@
         "passwordFailed": "Impossible d'enregistrer le mot de passe"
       }
     }
+  },
+  "heroSlider": {
+    "label": "Pujas à la une",
+    "previous": "Diapositive précédente",
+    "next": "Diapositive suivante",
+    "position": "Diapositive {current} sur {total}",
+    "showSlide": "Afficher la diapositive : {title}"
   }
 }

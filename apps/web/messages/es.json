@@ -304,25 +304,37 @@
     "empty": "Aún no hay pujas digitales. Vuelve pronto."
   },
   "home": {
-    "heroPill": "Fe ancestral, confianza moderna",
-    "heroTitleLead": "Reserva una",
-    "heroTitleAccent": "puja védica auténtica",
-    "heroTitleTrail": "con sacerdotes verificados",
-    "heroLead": "Organiza ceremonias védicas sin complicaciones. Conseguimos samagri auténtica, asignamos pandits verificados de tu zona y te entregamos la grabación de la puja en casa.",
-    "trust": [
-      "Pandits verificados",
-      "Samagri completa",
-      "Rigor de las escrituras",
-      "Ayuda con el muhurat"
-    ],
-    "ctaBrowse": "Ver catálogo de pujas",
-    "ctaTeerth": "Destinos teerth",
-    "assistance": "Ayuda con la reserva por teléfono y WhatsApp",
-    "stats": [
-      "Devotos satisfechos",
-      "Sacerdotes verificados",
-      "Templos conectados",
-      "Ciudades atendidas"
+    "heroSlides": [
+      {
+        "pill": "Puja Teerth",
+        "title": "Puja en los templos más sagrados de la India, en tu nombre",
+        "subtitle": "Pandits verificados realizan tu sankalp en teerths sagrados y recibes el video completo de la puja.",
+        "cta": "Explorar pujas Teerth"
+      },
+      {
+        "pill": "Puja en casa",
+        "title": "Un pandit védico en el mandir de tu hogar",
+        "subtitle": "Reserva Griha Pravesh, Satyanarayan y más. Nos encargamos del pandit, el samagri y la preparación.",
+        "cta": "Reservar puja en casa"
+      },
+      {
+        "pill": "Darshan en vivo",
+        "title": "Únete a una puja en vivo desde cualquier lugar del mundo",
+        "subtitle": "Mira tu puja en vivo con tu familia y participa en el sankalp en tiempo real.",
+        "cta": "Ver Darshan en vivo"
+      },
+      {
+        "pill": "Havan y Homam",
+        "title": "Havans sagrados para la paz, la salud y la prosperidad",
+        "subtitle": "Navagraha, Rudrabhishek, Maha Mrityunjaya y más, realizados por pandits védicos eruditos.",
+        "cta": "Ver pujas"
+      },
+      {
+        "pill": "Samagri de puja",
+        "title": "Samagri de puja completo, entregado en tu puerta",
+        "subtitle": "Thalis, diyas de latón y artículos de puja puros y auténticos para cada ritual.",
+        "cta": "Comprar samagri"
+      }
     ],
     "aboutPill": "Sobre nosotros",
     "aboutTitleLead": "¿Qué es",
@@ -818,5 +830,12 @@
         "passwordFailed": "No se pudo guardar la contraseña"
       }
     }
+  },
+  "heroSlider": {
+    "label": "Pujas destacadas",
+    "previous": "Diapositiva anterior",
+    "next": "Diapositiva siguiente",
+    "position": "Diapositiva {current} de {total}",
+    "showSlide": "Mostrar diapositiva: {title}"
   }
 }

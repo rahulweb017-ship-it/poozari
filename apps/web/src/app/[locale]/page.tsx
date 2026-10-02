@@ -1,8 +1,8 @@
 import { Link } from '@/i18n/navigation';
 import { HomeBell } from '@/components/home-bell';
-import { HomeLiveCarousel } from '@/components/home-live-carousel';
+import { HomeHeroSlider, type HeroSlide } from '@/components/home-hero-slider';
 import { PujaCard } from '@/components/puja-card';
-import { getCities, getLiveSessions, getPujas } from '@/lib/server-api';
+import { getCities, getPujas } from '@/lib/server-api';
 import { getTranslations } from 'next-intl/server';
 
 export const revalidate = 15;
@@ -34,9 +34,14 @@ const FEATURE_ICONS = [
   },
 ];
 
-const TRUST_ICONS = ['🛡️', '📦', '📜', '🎧'];
-
-const STAT_VALUES = ['50,000+', '500+', '100+', '15+'];
+/** Images and links only; the copy is `home.heroSlides`, in the same order. */
+const HERO_SLIDES = [
+  { image: 'temple-dawn', href: '/teerth-puja' },
+  { image: 'home-mandir', href: '/puja' },
+  { image: 'live-puja', href: '/live-darshan' },
+  { image: 'havan', href: '/puja' },
+  { image: 'puja-thali', href: '/products' },
+];
 
 interface Copy {
   title: string;
@@ -44,88 +49,23 @@ interface Copy {
 }
 
 export default async function HomePage() {
-  const [homePujas, teerthPujas, cities, liveSessions, upcomingSessions] = await Promise.all([
+  const [homePujas, teerthPujas, cities] = await Promise.all([
     getPujas({ locationType: 'HOME' }).catch(() => []),
     getPujas({ locationType: 'TEERTH' }).catch(() => []),
     getCities().catch(() => []),
-    getLiveSessions('live').catch(() => []),
-    getLiveSessions('upcoming').catch(() => []),
   ]);
   const t = await getTranslations('home');
   const steps = (t.raw('steps') as Copy[]).map((s, i) => ({ ...s, icon: STEP_ICONS[i] }));
   const features = (t.raw('features') as Copy[]).map((f, i) => ({ ...f, icon: FEATURE_ICONS[i]?.icon }));
-  const trust = (t.raw('trust') as string[]).map((label, i) => ({ label, icon: TRUST_ICONS[i] }));
-  const stats = (t.raw('stats') as string[]).map((label, i) => [STAT_VALUES[i], label]);
+  const slides: HeroSlide[] = (t.raw('heroSlides') as Omit<HeroSlide, 'image' | 'href'>[]).map((s, i) => ({
+    ...s,
+    ...HERO_SLIDES[i]!,
+  }));
 
   return (
     <div>
       <HomeBell />
-      {/* ─── Hero Section ─────────────────────────────────────────── */}
-      <section className="section--default relative overflow-hidden border-b bg-white" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-        {/* Decorative background grids */}
-        <div className="pointer-events-none absolute left-0 top-0 -z-10 h-full w-full bg-gradient-to-b from-accent-soft via-transparent to-transparent opacity-75" />
-        <div className="pointer-events-none absolute right-16 top-24 -z-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-
-        <div className="app-container">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-            {/* Left Column: Heading and CTAs */}
-            <div className="text-center lg:text-left">
-              <span className="section-pill">{t('heroPill')}</span>
-              <h1 className="display-title mt-4">
-                {t('heroTitleLead')} <span className="text-accent">{t('heroTitleAccent')}</span> {t('heroTitleTrail')}
-              </h1>
-              <p className="mx-auto mt-5 max-w-xl px-1 text-sm leading-relaxed sm:text-base lg:mx-0 lg:px-0"
-                 style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {t('heroLead')}
-              </p>
-
-              {/* Trust badges */}
-              <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:mx-auto md:max-w-md lg:mx-0 lg:max-w-none lg:grid-cols-4">
-                {trust.map((item) => (
-                  <li key={item.label} className="flex min-h-[48px] items-center gap-3 text-left">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-lg shadow-sm">
-                      {item.icon}
-                    </span>
-                    <span className="text-2xs font-bold uppercase tracking-wider" style={{ color: 'hsl(var(--foreground))' }}>
-                      {item.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTAs */}
-              <div className="mt-8 flex flex-row flex-wrap items-center justify-center gap-4 lg:justify-start">
-                <Link href="/puja" className="btn-primary btn-lg">
-                  {t('ctaBrowse')}
-                </Link>
-                <Link href="/teerth-puja" className="btn-outline btn-lg">
-                  {t('ctaTeerth')}
-                </Link>
-              </div>
-
-              <p className="mt-6 text-2xs font-extrabold uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                <span className="mr-2 text-emerald-500">●</span>
-                {t('assistance')}
-              </p>
-            </div>
-
-            {/* Right Column: only the live/upcoming card track auto-moves. */}
-            <HomeLiveCarousel sessions={[...liveSessions, ...upcomingSessions]} />
-          </div>
-
-          {/* Stats separator row */}
-          <div className="mx-auto mt-12 max-w-7xl border-t pt-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-              {stats.map(([val, label]) => (
-                <div key={label} className="hero-stat">
-                  <p className="hero-stat__value">{val}</p>
-                  <p className="hero-stat__label">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeHeroSlider slides={slides} />
 
       {/* ─── Features / About Us Section ──────────────────────────── */}
       <section className="section--compact border-b" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>

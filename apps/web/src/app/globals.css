@@ -183,20 +183,6 @@ h1, h2, h3, .font-display {
   box-shadow: 0 10px 30px -10px hsl(var(--accent) / 0.25);
 }
 
-/* ─── Hero Stats ─────────────────────────────────────────────────── */
-.hero-stat {
-  @apply flex flex-col items-center gap-1.5 py-4 text-center border-r last:border-0;
-  border-color: hsl(var(--border) / 0.5);
-}
-.hero-stat__value {
-  @apply text-2xl font-black sm:text-3xl;
-  color: hsl(var(--accent));
-}
-.hero-stat__label {
-  @apply text-2xs font-extrabold uppercase tracking-widest;
-  color: hsl(var(--muted-foreground));
-}
-
 /* ─── Forms ──────────────────────────────────────────────────────── */
 .input {
   @apply w-full rounded-2xl border px-4 py-3 text-sm transition-all duration-300;

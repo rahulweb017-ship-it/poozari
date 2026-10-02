@@ -506,25 +506,37 @@
     "empty": "No digital pujas yet. Check back soon."
   },
   "home": {
-    "heroPill": "Ancient Faith, Modern Trust",
-    "heroTitleLead": "Book",
-    "heroTitleAccent": "Authentic Vedic Puja",
-    "heroTitleTrail": "with Vetted Priests",
-    "heroLead": "Coordinate Vedic ceremonies seamlessly. We source authentic samagri, assign verified localized pandits, and deliver recorded proof directly to your home.",
-    "trust": [
-      "Vetted Pandits",
-      "Complete Samagri",
-      "Scriptural Rigor",
-      "Muhurat Support"
-    ],
-    "ctaBrowse": "Browse Puja Catalog",
-    "ctaTeerth": "Teerth Destinations",
-    "assistance": "Guided booking assistance on call & WhatsApp",
-    "stats": [
-      "Happy Devotees",
-      "Verified Priests",
-      "Temples Connected",
-      "Cities Served"
+    "heroSlides": [
+      {
+        "pill": "Teerth Puja",
+        "title": "Puja at India’s holiest temples, in your name",
+        "subtitle": "Verified pandits perform your sankalp at sacred teerths, and you receive the full puja video.",
+        "cta": "Explore Teerth Pujas"
+      },
+      {
+        "pill": "Puja at Home",
+        "title": "A Vedic pandit at your home mandir",
+        "subtitle": "Book Griha Pravesh, Satyanarayan and more. Pandit, samagri and setup are all taken care of.",
+        "cta": "Book a Home Puja"
+      },
+      {
+        "pill": "Live Darshan",
+        "title": "Join a live puja from anywhere in the world",
+        "subtitle": "Watch your puja live with your family and take part in the sankalp in real time.",
+        "cta": "See Live Darshan"
+      },
+      {
+        "pill": "Havan & Homam",
+        "title": "Sacred havans for peace, health and prosperity",
+        "subtitle": "Navagraha, Rudrabhishek, Maha Mrityunjaya and more, performed by learned Vedic pandits.",
+        "cta": "Browse Pujas"
+      },
+      {
+        "pill": "Puja Samagri",
+        "title": "Complete puja samagri, delivered to your door",
+        "subtitle": "Thalis, brass diyas and pure, authentic puja essentials for every ritual.",
+        "cta": "Shop Samagri"
+      }
     ],
     "aboutPill": "About Us",
     "aboutTitleLead": "What Is",
@@ -1020,5 +1032,12 @@
         "passwordFailed": "Could not save password"
       }
     }
+  },
+  "heroSlider": {
+    "label": "Featured pujas",
+    "previous": "Previous slide",
+    "next": "Next slide",
+    "position": "Slide {current} of {total}",
+    "showSlide": "Show slide: {title}"
   }
 }
