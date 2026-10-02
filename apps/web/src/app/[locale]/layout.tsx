@@ -84,6 +84,7 @@ export default async function LocaleLayout({
     'becomePujari',
     'booking',
     'liveCarousel',
+    'heroSlider',
     'login',
     'account',
     'live',
