@@ -26,7 +26,9 @@ import {
   currencyRateSchema,
   createProductSchema,
   createTempleSchema,
+  homeSlideSchema,
   panditProfileSchema,
+  reorderHomeSlidesSchema,
   updateAddonSchema,
   updateBenefitSchema,
   updateBlogPostSchema,
@@ -35,6 +37,7 @@ import {
   updateCitySchema,
   updateDeitySchema,
   updateFestivalSchema,
+  updateHomeSlideSchema,
   updatePanditSchema,
   updateCurrencyRateSchema,
   updatePujaSchema,
@@ -48,6 +51,7 @@ import { CatalogService } from '../catalog/catalog.service';
 import { ContentService } from '../content/content.service';
 import { CurrencyService } from '../currency/currency.service';
 import { EmailService } from '../email/email.service';
+import { HomeSlidesService } from '../home-slides/home-slides.service';
 import { Roles } from '../common/decorators';
 import { RolesGuard } from '../common/roles.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -87,6 +91,7 @@ export class AdminController {
     private readonly content: ContentService,
     private readonly currency: CurrencyService,
     private readonly email: EmailService,
+    private readonly homeSlides: HomeSlidesService,
     private readonly pandits: PanditsService,
     private readonly storage: LocalDiskStorage,
   ) {}
@@ -313,6 +318,35 @@ export class AdminController {
   @Delete('addons/:id')
   deleteAddon(@Param('id') id: string) {
     return this.addons.remove(id);
+  }
+
+  /* Home page slider */
+  @Get('home-slides')
+  listHomeSlides() {
+    return this.homeSlides.listAll();
+  }
+
+  @Post('home-slides')
+  createHomeSlide(@Body(new ZodValidationPipe(homeSlideSchema)) body: any) {
+    return this.homeSlides.create(body);
+  }
+
+  @Post('home-slides/reorder')
+  reorderHomeSlides(@Body(new ZodValidationPipe(reorderHomeSlidesSchema)) body: { ids: string[] }) {
+    return this.homeSlides.reorder(body.ids);
+  }
+
+  @Patch('home-slides/:id')
+  updateHomeSlide(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateHomeSlideSchema)) body: any,
+  ) {
+    return this.homeSlides.update(id, body);
+  }
+
+  @Delete('home-slides/:id')
+  deleteHomeSlide(@Param('id') id: string) {
+    return this.homeSlides.remove(id);
   }
 
   /* Bulk CSV import */

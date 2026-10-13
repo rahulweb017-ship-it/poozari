@@ -74,6 +74,31 @@ export interface Addon {
   sortOrder: number;
 }
 
+/** The words on a home slider banner, in one language. */
+export interface HomeSlideText {
+  pill: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+}
+
+/** Locales a slide can be translated into; English lives on the slide itself. */
+export const HOME_SLIDE_LOCALES = ['hi', 'fr', 'es'] as const;
+export type HomeSlideLocale = (typeof HOME_SLIDE_LOCALES)[number];
+
+/** A home page banner, managed under Admin -> Home Slider. */
+export interface HomeSlide extends HomeSlideText {
+  id: string;
+  imageUrl: string;
+  mobileImageUrl: string | null;
+  /** A site path such as `/puja`, or a full URL. Blank means no button. */
+  linkUrl: string;
+  /** Blank or missing fields show the English. */
+  translations: Partial<Record<HomeSlideLocale, Partial<HomeSlideText>>>;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 /** An add-on as bought: a price snapshot that later edits never rewrite. */
 export interface BookingAddonLine {
   id: string;

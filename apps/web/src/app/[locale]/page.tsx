@@ -2,8 +2,9 @@ import { Link } from '@/i18n/navigation';
 import { HomeBell } from '@/components/home-bell';
 import { HomeHeroSlider, type HeroSlide } from '@/components/home-hero-slider';
 import { PujaCard } from '@/components/puja-card';
-import { getCities, getPujas } from '@/lib/server-api';
-import { getTranslations } from 'next-intl/server';
+import { getCities, getHomeSlides, getPujas } from '@/lib/server-api';
+import { localizedSlide } from '@poozari/shared';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 export const revalidate = 15;
 
@@ -34,32 +35,28 @@ const FEATURE_ICONS = [
   },
 ];
 
-/** Images and links only; the copy is `home.heroSlides`, in the same order. */
-const HERO_SLIDES = [
-  { image: 'temple-dawn', href: '/teerth-puja' },
-  { image: 'home-mandir', href: '/puja' },
-  { image: 'live-puja', href: '/live-darshan' },
-  { image: 'havan', href: '/puja' },
-  { image: 'puja-thali', href: '/products' },
-];
-
 interface Copy {
   title: string;
   desc: string;
 }
 
 export default async function HomePage() {
-  const [homePujas, teerthPujas, cities] = await Promise.all([
+  const [homePujas, teerthPujas, cities, homeSlides] = await Promise.all([
     getPujas({ locationType: 'HOME' }).catch(() => []),
     getPujas({ locationType: 'TEERTH' }).catch(() => []),
     getCities().catch(() => []),
+    getHomeSlides().catch(() => []),
   ]);
   const t = await getTranslations('home');
+  const locale = await getLocale();
   const steps = (t.raw('steps') as Copy[]).map((s, i) => ({ ...s, icon: STEP_ICONS[i] }));
   const features = (t.raw('features') as Copy[]).map((f, i) => ({ ...f, icon: FEATURE_ICONS[i]?.icon }));
-  const slides: HeroSlide[] = (t.raw('heroSlides') as Omit<HeroSlide, 'image' | 'href'>[]).map((s, i) => ({
-    ...s,
-    ...HERO_SLIDES[i]!,
+  const slides: HeroSlide[] = homeSlides.map((s) => ({
+    id: s.id,
+    imageUrl: s.imageUrl,
+    mobileImageUrl: s.mobileImageUrl,
+    href: s.linkUrl,
+    ...localizedSlide(s, locale),
   }));
 
   return (

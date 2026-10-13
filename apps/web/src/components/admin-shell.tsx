@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/home-slider', label: 'Home Slider', icon: '🖼️' },
   { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
   { href: '/admin/pandits', label: 'Pandits', icon: '👨‍🏫' },
   { href: '/admin/pujas', label: 'Pujas', icon: '🪔' },

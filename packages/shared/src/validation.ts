@@ -145,6 +145,49 @@ export type AddonInput = z.infer<typeof addonSchema>;
 export const updateAddonSchema = addonSchema.partial();
 export type UpdateAddonInput = z.infer<typeof updateAddonSchema>;
 
+/** An uploaded/hosted URL, or a path the web app serves (`/home-slider/x.webp`). */
+const urlOrSitePath = z
+  .string()
+  .trim()
+  .max(1000)
+  .refine((v) => /^https?:\/\/\S+$/.test(v) || /^\/(?!\/)\S*$/.test(v), {
+    message: 'Use a full URL (https://…) or a site path starting with /',
+  });
+const optionalUrlOrSitePath = z.union([z.literal(''), urlOrSitePath]);
+
+const homeSlideTextSchema = z.object({
+  pill: z.string().trim().max(60).optional().default(''),
+  title: z.string().trim().max(160).optional().default(''),
+  subtitle: z.string().trim().max(300).optional().default(''),
+  cta: z.string().trim().max(60).optional().default(''),
+});
+
+export const homeSlideSchema = z.object({
+  imageUrl: urlOrSitePath,
+  mobileImageUrl: optionalUrlOrSitePath.optional().default(''),
+  linkUrl: optionalUrlOrSitePath.optional().default(''),
+  pill: z.string().trim().max(60).optional().default(''),
+  title: z.string().trim().min(2, 'Add a heading').max(160),
+  subtitle: z.string().trim().max(300).optional().default(''),
+  cta: z.string().trim().max(60).optional().default(''),
+  translations: z
+    .object({
+      hi: homeSlideTextSchema.optional(),
+      fr: homeSlideTextSchema.optional(),
+      es: homeSlideTextSchema.optional(),
+    })
+    .optional()
+    .default({}),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).default(0),
+});
+export type HomeSlideInput = z.infer<typeof homeSlideSchema>;
+export const updateHomeSlideSchema = homeSlideSchema.partial();
+export type UpdateHomeSlideInput = z.infer<typeof updateHomeSlideSchema>;
+export const reorderHomeSlidesSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(100),
+});
+
 export const createPujaSchema = z.object({
   title: z.string().trim().min(2).max(160),
   slug: z

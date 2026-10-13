@@ -379,6 +379,31 @@ model Package {
 /// A paid extra a devotee can add to any puja at checkout — fruits, flowers,
 /// samagri, a hawan kund. Global rather than per-puja: the same four are
 /// offered everywhere, priced and retired from Admin -> Add-ons.
+/// A banner in the home page slider, managed under Admin -> Home Slider.
+model HomeSlide {
+  id             String   @id @default(cuid())
+  /// Wide banner. Either an uploaded absolute URL or a path the web app
+  /// serves itself, e.g. `/home-slider/temple-dawn-1920.webp`.
+  imageUrl       String
+  /// Optional 3:2 crop for phones; the wide image is used when blank.
+  mobileImageUrl String?
+  /// Where the button goes: a site path like `/puja`, or a full URL.
+  linkUrl        String   @default("")
+  pill           String   @default("")
+  title          String
+  subtitle       String   @default("")
+  cta            String   @default("")
+  /// Other languages keyed by locale, e.g. { "hi": { "title": "…" } }. A
+  /// blank or missing field shows the English.
+  translations   Json     @default("{}")
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 model Addon {
   id            String   @id @default(cuid())
   name          String

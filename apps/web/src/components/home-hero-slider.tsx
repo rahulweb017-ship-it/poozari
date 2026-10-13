@@ -5,14 +5,19 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 export interface HeroSlide {
-  /** Basename in /public/home-slider, e.g. `temple-dawn`. */
-  image: string;
+  id: string;
+  imageUrl: string;
+  mobileImageUrl: string | null;
+  /** A site path such as `/puja`, or a full URL. Blank hides the button. */
   href: string;
   pill: string;
   title: string;
   subtitle: string;
   cta: string;
 }
+
+/** The banners that ship in /public/home-slider have pre-sized variants. */
+const BUILT_IN = /^\/home-slider\/([a-z0-9-]+)-1920\.webp$/;
 
 const DESKTOP_WIDTHS = [828, 1280, 1920, 2172];
 const MOBILE_WIDTHS = [828, 1200];
@@ -23,24 +28,57 @@ function srcSet(image: string, widths: number[], format: 'avif' | 'webp', prefix
   return widths.map((w) => `/home-slider/${image}-${prefix}${w}.${format} ${w}w`).join(', ');
 }
 
-function SlidePicture({ image, priority }: { image: string; priority: boolean }) {
+function SlidePicture({ slide, priority }: { slide: HeroSlide; priority: boolean }) {
+  const builtIn = BUILT_IN.exec(slide.imageUrl)?.[1];
+  // Pre-sized mobile crops only apply while the mobile image is the matching built-in one.
+  const builtInMobile = builtIn && (!slide.mobileImageUrl || slide.mobileImageUrl === `/home-slider/${builtIn}-m1200.webp`);
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={builtIn ? `/home-slider/${builtIn}-1280.webp` : slide.imageUrl}
+      alt=""
+      width={1920}
+      height={640}
+      fetchPriority={priority ? 'high' : 'low'}
+      decoding={priority ? 'sync' : 'async'}
+      className="h-full w-full object-cover object-right"
+    />
+  );
   return (
     <picture>
-      <source media={MOBILE_MEDIA} type="image/avif" srcSet={srcSet(image, MOBILE_WIDTHS, 'avif', 'm')} sizes="100vw" />
-      <source media={MOBILE_MEDIA} type="image/webp" srcSet={srcSet(image, MOBILE_WIDTHS, 'webp', 'm')} sizes="100vw" />
-      <source type="image/avif" srcSet={srcSet(image, DESKTOP_WIDTHS, 'avif')} sizes="100vw" />
-      <source type="image/webp" srcSet={srcSet(image, DESKTOP_WIDTHS, 'webp')} sizes="100vw" />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`/home-slider/${image}-1280.webp`}
-        alt=""
-        width={1920}
-        height={640}
-        fetchPriority={priority ? 'high' : 'low'}
-        decoding={priority ? 'sync' : 'async'}
-        className="h-full w-full object-cover object-right"
-      />
+      {builtInMobile ? (
+        <>
+          <source media={MOBILE_MEDIA} type="image/avif" srcSet={srcSet(builtIn, MOBILE_WIDTHS, 'avif', 'm')} sizes="100vw" />
+          <source media={MOBILE_MEDIA} type="image/webp" srcSet={srcSet(builtIn, MOBILE_WIDTHS, 'webp', 'm')} sizes="100vw" />
+        </>
+      ) : slide.mobileImageUrl ? (
+        <source media={MOBILE_MEDIA} srcSet={slide.mobileImageUrl} />
+      ) : null}
+      {builtIn ? (
+        <>
+          <source type="image/avif" srcSet={srcSet(builtIn, DESKTOP_WIDTHS, 'avif')} sizes="100vw" />
+          <source type="image/webp" srcSet={srcSet(builtIn, DESKTOP_WIDTHS, 'webp')} sizes="100vw" />
+        </>
+      ) : null}
+      {img}
     </picture>
+  );
+}
+
+function SlideButton({ slide, active }: { slide: HeroSlide; active: boolean }) {
+  if (!slide.href || !slide.cta) return null;
+  const className = 'btn-primary btn-lg mt-6 inline-flex';
+  if (/^https?:\/\//.test(slide.href)) {
+    return (
+      <a href={slide.href} tabIndex={active ? 0 : -1} className={className}>
+        {slide.cta}
+      </a>
+    );
+  }
+  return (
+    <Link href={slide.href} tabIndex={active ? 0 : -1} className={className}>
+      {slide.cta}
+    </Link>
   );
 }
 
@@ -106,7 +144,7 @@ export function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
           const Heading = index === 0 ? 'h1' : 'h2';
           return (
             <div
-              key={slide.image}
+              key={slide.id}
               className="relative w-full shrink-0"
               role="group"
               aria-roledescription="slide"
@@ -114,7 +152,7 @@ export function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
               aria-hidden={!active}
             >
               <div className="relative aspect-[3/2] w-full sm:aspect-[2/1] lg:aspect-[3/1] lg:max-h-[620px]">
-                {index === 0 || restReady ? <SlidePicture image={slide.image} priority={index === 0} /> : null}
+                {index === 0 || restReady ? <SlidePicture slide={slide} priority={index === 0} /> : null}
                 {/* Below lg the copy sits under the image; fade the image into it. */}
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#fdf6ea] to-transparent lg:hidden" />
               </div>
@@ -122,19 +160,19 @@ export function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
               <div className="lg:absolute lg:inset-0 lg:flex lg:items-center">
                 <div className="app-container w-full">
                   <div className="px-1 pb-14 pt-2 text-center lg:max-w-[46%] lg:px-0 lg:pb-0 lg:pt-0 lg:text-left xl:max-w-[42%]">
-                    <span className="section-pill">{slide.pill}</span>
+                    {slide.pill ? <span className="section-pill">{slide.pill}</span> : null}
                     <Heading className="mt-3 font-display text-3xl font-black leading-[1.15] tracking-tight text-foreground sm:text-4xl xl:text-5xl">
                       {slide.title}
                     </Heading>
-                    <p
-                      className="mx-auto mt-3 max-w-xl text-sm leading-relaxed sm:text-base lg:mx-0"
-                      style={{ color: 'hsl(var(--muted-foreground))' }}
-                    >
-                      {slide.subtitle}
-                    </p>
-                    <Link href={slide.href} tabIndex={active ? 0 : -1} className="btn-primary btn-lg mt-6 inline-flex">
-                      {slide.cta}
-                    </Link>
+                    {slide.subtitle ? (
+                      <p
+                        className="mx-auto mt-3 max-w-xl text-sm leading-relaxed sm:text-base lg:mx-0"
+                        style={{ color: 'hsl(var(--muted-foreground))' }}
+                      >
+                        {slide.subtitle}
+                      </p>
+                    ) : null}
+                    <SlideButton slide={slide} active={active} />
                   </div>
                 </div>
               </div>
@@ -169,7 +207,7 @@ export function HomeHeroSlider({ slides }: { slides: HeroSlide[] }) {
           <div className="absolute inset-x-0 bottom-5 flex justify-center gap-2">
             {slides.map((slide, index) => (
               <button
-                key={slide.image}
+                key={slide.id}
                 type="button"
                 className={`h-2 rounded-full transition-all ${
                   index === activeIndex ? 'w-7 bg-accent' : 'w-2 bg-accent/30 ring-1 ring-white/80 hover:bg-accent/60'

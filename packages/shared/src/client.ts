@@ -17,6 +17,7 @@ import type {
   AccountProfile,
   Booking,
   City,
+  HomeSlide,
   LiveAccess,
   LiveCaption,
   LiveSession,
@@ -406,6 +407,25 @@ export class PoozariClient {
   }
   adminDeleteAddon(id: string) {
     return this.delete<{ ok: true }>(`/admin/addons/${id}`);
+  }
+
+  /* Admin home page slider */
+  /** Every slide, hidden ones included, in display order. */
+  adminListHomeSlides() {
+    return this.get<HomeSlide[]>('/admin/home-slides');
+  }
+  adminCreateHomeSlide(data: unknown) {
+    return this.post<HomeSlide>('/admin/home-slides', data);
+  }
+  adminUpdateHomeSlide(id: string, data: unknown) {
+    return this.patch<HomeSlide>(`/admin/home-slides/${id}`, data);
+  }
+  adminDeleteHomeSlide(id: string) {
+    return this.delete<{ ok: true }>(`/admin/home-slides/${id}`);
+  }
+  /** Saves the display order: `ids` first to last. */
+  adminReorderHomeSlides(ids: string[]) {
+    return this.post<HomeSlide[]>('/admin/home-slides/reorder', { ids });
   }
 
   /* Admin bulk CSV import */

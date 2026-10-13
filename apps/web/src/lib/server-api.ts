@@ -1,6 +1,7 @@
 import type {
   BlogPost,
   City,
+  HomeSlide,
   LiveSession,
   NamedEntity,
   Product,
@@ -51,6 +52,11 @@ export function getFestivals(): Promise<NamedEntity[]> {
 
 export function getBenefits(): Promise<NamedEntity[]> {
   return get<NamedEntity[]>('/benefits');
+}
+
+/** Short cache so slider edits in the admin panel show up within seconds. */
+export function getHomeSlides(): Promise<HomeSlide[]> {
+  return get<HomeSlide[]>('/home-slides', 15);
 }
 
 export function getProducts(params?: Record<string, string | undefined>): Promise<Product[]> {

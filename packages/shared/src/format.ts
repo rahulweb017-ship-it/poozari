@@ -1,4 +1,12 @@
 import { BookingStatus } from './enums';
+import type { HomeSlide, HomeSlideLocale, HomeSlideText } from './types';
+
+/** A slide's words in `locale`, field by field, falling back to the English. */
+export function localizedSlide(slide: HomeSlide, locale: string): HomeSlideText {
+  const t = slide.translations?.[locale as HomeSlideLocale] ?? {};
+  const pick = (field: keyof HomeSlideText) => t[field]?.trim() || slide[field];
+  return { pill: pick('pill'), title: pick('title'), subtitle: pick('subtitle'), cta: pick('cta') };
+}
 
 /** Format an INR integer amount, e.g. 6100 -> "₹6,100". */
 export function formatInr(amount: number): string {
