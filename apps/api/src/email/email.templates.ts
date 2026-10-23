@@ -197,3 +197,30 @@ export function videoReady(input: {
     ].join('\n'),
   };
 }
+
+/**
+ * Login details for a pujari whose application was approved. The password is
+ * temporary and stays out of the subject, which the email service logs.
+ */
+export function panditWelcome(input: {
+  name: string;
+  email: string;
+  tempPassword: string;
+  loginUrl: string;
+}): Omit<SendEmailOptions, 'to'> {
+  return {
+    subject: 'Your poozari.com pujari account is ready',
+    text: [
+      `Namaste ${input.name},`,
+      '',
+      'Your application to join poozari.com as a pujari has been approved.',
+      '',
+      `Sign in at: ${input.loginUrl}`,
+      `Email:      ${input.email}`,
+      `Password:   ${input.tempPassword}`,
+      '',
+      'This is a temporary password. Please keep it private.',
+      SIGNOFF.trim(),
+    ].join('\n'),
+  };
+}

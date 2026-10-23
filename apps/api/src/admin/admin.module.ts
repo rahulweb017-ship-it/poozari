@@ -7,6 +7,7 @@ import { HomeSlidesModule } from '../home-slides/home-slides.module';
 import { PanditsModule } from '../pandits/pandits.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { ApplicationApprovalService } from './application-approval.service';
 import { AssignmentService } from './assignment.service';
 import { BulkImportService } from './bulk-import.service';
 
@@ -20,7 +21,7 @@ import { BulkImportService } from './bulk-import.service';
     PanditsModule,
   ],
   controllers: [AdminController],
-  providers: [AdminService, AssignmentService, BulkImportService],
+  providers: [AdminService, ApplicationApprovalService, AssignmentService, BulkImportService],
   exports: [AssignmentService],
 })
 export class AdminModule {}

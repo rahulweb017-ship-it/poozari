@@ -2,14 +2,16 @@
 
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/client';
 import { UserRole } from '@poozari/shared';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/home-slider', label: 'Home Slider', icon: '🖼️' },
   { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
+  { href: '/admin/payments', label: 'Payments', icon: '💰' },
   { href: '/admin/pandits', label: 'Pandits', icon: '👨‍🏫' },
   { href: '/admin/pujas', label: 'Pujas', icon: '🪔' },
   { href: '/admin/addons', label: 'Add-ons', icon: '🌼' },
@@ -29,11 +31,24 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const [newApplications, setNewApplications] = useState(0);
+
   useEffect(() => {
     if (ready && (!user || user.role !== UserRole.SUPER_ADMIN)) {
       router.replace('/admin/login');
     }
   }, [ready, user, router]);
+
+  useEffect(() => {
+    if (!ready || user?.role !== UserRole.SUPER_ADMIN) return;
+    api
+      .adminPendingCounts()
+      .then((c) => setNewApplications(c.newApplications))
+      .catch(() => undefined);
+  }, [ready, user, pathname]);
+
+  const badgeFor = (href: string) =>
+    href === '/admin/applications' && newApplications > 0 ? newApplications : 0;
 
   if (!ready || !user || user.role !== UserRole.SUPER_ADMIN) return null;
 
@@ -68,7 +83,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               >
                 <span className="text-base">{n.icon}</span>
                 {n.label}
-                {active && (
+                {badgeFor(n.href) ? (
+                  <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-2xs font-black text-white">
+                    {badgeFor(n.href)} new
+                  </span>
+                ) : null}
+                {active && !badgeFor(n.href) && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent" />
                 )}
               </Link>
@@ -124,6 +144,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               {n.icon} {n.label}
+              {badgeFor(n.href) ? ` (${badgeFor(n.href)})` : ''}
             </Link>
           ))}
         </div>

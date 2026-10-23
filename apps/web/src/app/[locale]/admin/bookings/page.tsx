@@ -3,7 +3,7 @@
 import { AdminShell } from '@/components/admin-shell';
 import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/client';
-import { formatInr, type Booking } from '@poozari/shared';
+import { ApiClientError, formatInr, PaymentStatus, type Booking } from '@poozari/shared';
 import { useEffect, useState } from 'react';
 
 export default function AdminBookingsPage() {
@@ -11,6 +11,7 @@ export default function AdminBookingsPage() {
   const [pandits, setPandits] = useState<any[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [selectedPandit, setSelectedPandit] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     const [b, p] = await Promise.all([api.adminListBookings(), api.adminListPandits()]);
@@ -24,9 +25,12 @@ export default function AdminBookingsPage() {
 
   async function autoAssign(id: string) {
     setBusy(id);
+    setError(null);
     try {
       await api.adminAutoAssign(id);
       await load();
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Could not assign pandit');
     } finally {
       setBusy(null);
     }
@@ -36,9 +40,12 @@ export default function AdminBookingsPage() {
     const panditId = selectedPandit[id];
     if (!panditId) return;
     setBusy(id);
+    setError(null);
     try {
       await api.adminAssign(id, panditId);
       await load();
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Could not assign pandit');
     } finally {
       setBusy(null);
     }
@@ -53,9 +60,17 @@ export default function AdminBookingsPage() {
         </p>
       </div>
 
+      {error ? (
+        <div className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
+          {error}
+        </div>
+      ) : null}
+
       <div className="space-y-4">
         {bookings.map((b) => {
-          const assignable = ['PAID', 'ASSIGNED'].includes(b.status);
+          const assignable = ['PAID', 'ASSIGNED', 'PENDING_PAYMENT'].includes(b.status);
+          const paid =
+            ['PAID', 'ASSIGNED'].includes(b.status) && b.payment?.status === PaymentStatus.PAID;
           return (
             <div key={b.id} className="card overflow-hidden bg-white">
               <div className="p-6">
@@ -92,7 +107,14 @@ export default function AdminBookingsPage() {
                       </div>
                     )}
                   </div>
-                  <StatusBadge status={b.status} />
+                  <div className="flex flex-col items-end gap-2">
+                    <StatusBadge status={b.status} />
+                    {!paid && assignable ? (
+                      <span className="badge border border-red-100 bg-red-50 text-red-700">
+                        Payment pending
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
@@ -101,13 +123,15 @@ export default function AdminBookingsPage() {
                      style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
                   <button
                     className="btn-outline py-2 text-2xs uppercase tracking-wider"
-                    disabled={busy === b.id}
+                    disabled={busy === b.id || !paid}
+                    title={paid ? undefined : 'Payment pending — cannot assign pandit'}
                     onClick={() => autoAssign(b.id)}
                   >
                     {busy === b.id ? 'Working…' : '⚡ Auto-assign'}
                   </button>
                   <select
                     className="input max-w-xs text-xs py-2 bg-white"
+                    disabled={!paid}
                     value={selectedPandit[b.id] ?? ''}
                     onChange={(e) => setSelectedPandit((s) => ({ ...s, [b.id]: e.target.value }))}
                   >
@@ -120,7 +144,7 @@ export default function AdminBookingsPage() {
                   </select>
                   <button
                     className="btn-primary py-2 text-2xs uppercase tracking-wider"
-                    disabled={busy === b.id || !selectedPandit[b.id]}
+                    disabled={busy === b.id || !paid || !selectedPandit[b.id]}
                     onClick={() => manualAssign(b.id)}
                   >
                     Assign manually

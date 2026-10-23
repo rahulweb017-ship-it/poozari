@@ -8,6 +8,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { ContentModule } from './content/content.module';
 import { CurrencyModule } from './currency/currency.module';
+import { EarningsModule } from './earnings/earnings.module';
 import { EmailModule } from './email/email.module';
 import { HomeSlidesModule } from './home-slides/home-slides.module';
 import { JwtAuthGuard } from './common/jwt-auth.guard';
@@ -36,6 +37,7 @@ import { StorageModule } from './storage/storage.module';
     ProductOrdersModule,
     RazorpayWebhookModule,
     AdminModule,
+    EarningsModule,
     PanditPortalModule,
     LiveModule,
   ],

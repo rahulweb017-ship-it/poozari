@@ -106,6 +106,18 @@ enum ApplicationStatus {
   REJECTED
 }
 
+/// A pandit's share of one completed booking.
+enum EarningStatus {
+  PENDING
+  PAID
+}
+
+/// A weekly payout to a pandit, grouping that week's earnings.
+enum SettlementStatus {
+  PENDING
+  PAID
+}
+
 enum PostStatus {
   DRAFT
   PUBLISHED
@@ -179,11 +191,67 @@ model PanditProfile {
   // Pandit controlled. Available pandits may receive new assignments.
   isAvailable     Boolean  @default(true)
   rating          Float    @default(0)
+  /// Pandit's share of a booking in percent. Null means the platform default
+  /// (PlatformSetting `pandit_commission_percent`).
+  commissionPercent Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   assignments  Assignment[]
   liveSessions LiveSession[]
+  earnings     PanditEarning[]
+  settlements  Settlement[]
+}
+
+/// Admin-tunable key/value settings, e.g. `pandit_commission_percent`.
+model PlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/// Created once, when a booking is completed. The amount and percent are
+/// snapshots: later commission changes never rewrite past earnings.
+model PanditEarning {
+  id               String        @id @default(cuid())
+  bookingId        String        @unique
+  booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  panditId         String
+  pandit           PanditProfile @relation(fields: [panditId], references: [id])
+  bookingAmountInr Int
+  percent          Int
+  earningInr       Int
+  status           EarningStatus @default(PENDING)
+  settlementId     String?
+  settlement       Settlement?   @relation(fields: [settlementId], references: [id], onDelete: SetNull)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([panditId, createdAt])
+  @@index([status])
+  @@index([settlementId])
+}
+
+/// One pandit's payout for a Monday–Sunday week.
+model Settlement {
+  id          String           @id @default(cuid())
+  panditId    String
+  pandit      PanditProfile    @relation(fields: [panditId], references: [id])
+  periodStart DateTime
+  periodEnd   DateTime
+  totalInr    Int
+  status      SettlementStatus @default(PENDING)
+  paidAt      DateTime?
+  /// Bank / UPI transaction reference recorded when marking paid.
+  reference   String           @default("")
+  notes       String           @default("")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  earnings PanditEarning[]
+
+  @@index([panditId, periodStart])
+  @@index([status])
 }
 
 model City {
@@ -564,6 +632,7 @@ model Booking {
   assignment Assignment?
   payment    Payment?
   review     Review?
+  earning    PanditEarning?
 
   @@index([customerId])
   @@index([status])

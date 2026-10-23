@@ -17,6 +17,8 @@ const EMPTY_FORM = {
   servicePincodes: '',
   serviceCityIds: [] as string[],
   isActive: true,
+  /** Blank means the platform default commission applies. */
+  commissionPercent: '',
 };
 
 export default function AdminPanditsPage() {
@@ -60,6 +62,7 @@ export default function AdminPanditsPage() {
       servicePincodes: (p.servicePincodes ?? []).join(', '),
       serviceCityIds: p.serviceCityIds ?? [],
       isActive: p.isActive ?? true,
+      commissionPercent: p.commissionPercent == null ? '' : String(p.commissionPercent),
     });
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -82,6 +85,8 @@ export default function AdminPanditsPage() {
         await api.adminUpdatePandit(editingId, {
           ...profilePayload,
           isActive: form.isActive,
+          commissionPercent:
+            form.commissionPercent.trim() === '' ? null : Number(form.commissionPercent),
           ...(form.password ? { password: form.password } : {}),
         });
         resetForm();
@@ -206,6 +211,18 @@ export default function AdminPanditsPage() {
                 ))}
               </select>
             </div>
+            {editingId ? (
+              <div>
+                <label className="label">Pujari share % (blank = platform default)</label>
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  placeholder="e.g. 75"
+                  value={form.commissionPercent}
+                  onChange={(e) => setForm({ ...form, commissionPercent: e.target.value.replace(/\D/g, '') })}
+                />
+              </div>
+            ) : null}
             {editingId ? <label className="flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
@@ -245,7 +262,8 @@ export default function AdminPanditsPage() {
                       {p.user?.email ?? '—'} · {p.phone} · {p.experienceYears} yrs
                     </div>
                     <div className="mt-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-                      Pincodes: {p.servicePincodes?.join(', ') || '—'}
+                      Pincodes: {p.servicePincodes?.join(', ') || '—'} · Share:{' '}
+                      {p.commissionPercent == null ? 'default' : `${p.commissionPercent}%`}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1.5">

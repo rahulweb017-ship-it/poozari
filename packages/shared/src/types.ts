@@ -2,12 +2,14 @@ import type {
   AssignmentMode,
   AssignmentStatus,
   BookingStatus,
+  EarningStatus,
   LiveAccessStatus,
   LiveCaptionLang,
   LiveSessionStatus,
   PaymentStatus,
   ProductOrderStatus,
   PujaLocationType,
+  SettlementStatus,
   UserRole,
 } from './enums';
 
@@ -212,6 +214,83 @@ export interface PanditProfile {
   isAvailable: boolean;
   rating?: number;
   email?: string | null;
+  /** Per-pandit share override in percent; null uses the platform default. */
+  commissionPercent?: number | null;
+}
+
+export interface PanditEarning {
+  id: string;
+  bookingId: string;
+  bookingReference: string;
+  pujaTitle: string;
+  devoteeName: string;
+  panditId: string;
+  panditName: string;
+  bookingAmountInr: number;
+  percent: number;
+  earningInr: number;
+  status: EarningStatus;
+  settlementId: string | null;
+  /** When the booking was completed. */
+  createdAt: string;
+}
+
+export interface Settlement {
+  id: string;
+  panditId: string;
+  panditName: string;
+  periodStart: string;
+  periodEnd: string;
+  totalInr: number;
+  status: SettlementStatus;
+  paidAt: string | null;
+  reference: string;
+  notes: string;
+  earningsCount: number;
+  createdAt: string;
+}
+
+/** One booking as seen from the admin payments ledger. */
+export interface PaymentLedgerRow {
+  bookingId: string;
+  reference: string;
+  pujaTitle: string;
+  devoteeName: string;
+  bookingStatus: BookingStatus;
+  paymentStatus: PaymentStatus | null;
+  amountInr: number;
+  createdAt: string;
+  paidAt: string | null;
+  panditId: string | null;
+  panditName: string | null;
+  earningInr: number | null;
+  earningPercent: number | null;
+  earningStatus: EarningStatus | null;
+  platformShareInr: number | null;
+}
+
+export interface PaymentsSummary {
+  receivedInr: number;
+  pendingCustomerInr: number;
+  pujariPayablePendingInr: number;
+  paidToPujarisInr: number;
+  platformShareInr: number;
+}
+
+export interface PanditEarningsSummary {
+  completedPujas: number;
+  totalEarningsInr: number;
+  paidInr: number;
+  pendingInr: number;
+}
+
+/** Returned once when an application is approved; the password is never stored in clear. */
+export interface ApproveApplicationResult {
+  panditId: string;
+  userId: string;
+  email: string;
+  tempPassword: string;
+  emailSent: boolean;
 }
 
 export interface Assignment {

@@ -56,6 +56,23 @@ export const PaymentStatus = {
 } as const;
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
+/** Whether a pandit's share of a completed booking has been paid out. */
+export const EarningStatus = {
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+} as const;
+export type EarningStatus = (typeof EarningStatus)[keyof typeof EarningStatus];
+
+/** A weekly pandit payout. */
+export const SettlementStatus = {
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+} as const;
+export type SettlementStatus = (typeof SettlementStatus)[keyof typeof SettlementStatus];
+
+/** Platform default for a pandit's share of a booking, in percent. */
+export const DEFAULT_PANDIT_COMMISSION_PERCENT = 70;
+
 /** Lifecycle of a live darshan session. */
 export const LiveSessionStatus = {
   SCHEDULED: 'SCHEDULED',

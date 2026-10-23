@@ -324,8 +324,36 @@ export type PanditProfileInput = z.infer<typeof panditProfileSchema>;
 export const updatePanditSchema = panditProfileSchema.partial().extend({
   isActive: z.boolean().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  /** Null clears the override so the platform default applies. */
+  commissionPercent: z.number().int().min(0).max(100).nullable().optional(),
 });
 export type UpdatePanditInput = z.infer<typeof updatePanditSchema>;
+
+/* ------------------------- Earnings / settlements ------------------------- */
+
+const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD');
+
+export const commissionSettingSchema = z.object({
+  percent: z.number().int().min(0).max(100),
+});
+export type CommissionSettingInput = z.infer<typeof commissionSettingSchema>;
+
+/** `weekStart` is the Monday (IST) of the week to settle. */
+export const generateSettlementsSchema = z.object({
+  weekStart: isoDateSchema,
+});
+export type GenerateSettlementsInput = z.infer<typeof generateSettlementsSchema>;
+
+export const paySettlementSchema = z.object({
+  reference: z.string().trim().max(200).optional().default(''),
+  notes: z.string().trim().max(2000).optional().default(''),
+});
+export type PaySettlementInput = z.infer<typeof paySettlementSchema>;
+
+export const rejectApplicationSchema = z.object({
+  reason: z.string().trim().max(2000).optional().default(''),
+});
+export type RejectApplicationInput = z.infer<typeof rejectApplicationSchema>;
 
 export const updatePanditProfileSchema = panditProfileSchema
   .omit({ isAvailable: true })

@@ -28,6 +28,7 @@ import {
   createTempleSchema,
   homeSlideSchema,
   panditProfileSchema,
+  rejectApplicationSchema,
   reorderHomeSlidesSchema,
   updateAddonSchema,
   updateBenefitSchema,
@@ -58,6 +59,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { PanditsService } from '../pandits/pandits.service';
 import { LocalDiskStorage } from '../storage/storage.service';
 import { AdminService } from './admin.service';
+import { ApplicationApprovalService } from './application-approval.service';
 import { AssignmentService } from './assignment.service';
 import { BulkImportService } from './bulk-import.service';
 
@@ -85,6 +87,7 @@ export class AdminController {
   constructor(
     private readonly addons: AddonsService,
     private readonly admin: AdminService,
+    private readonly approval: ApplicationApprovalService,
     private readonly assignment: AssignmentService,
     private readonly bulkImport: BulkImportService,
     private readonly catalog: CatalogService,
@@ -270,6 +273,25 @@ export class AdminController {
     @Body(new ZodValidationPipe(updatePanditApplicationSchema)) body: any,
   ) {
     return this.content.updateApplication(id, body);
+  }
+
+  /** Creates the pujari login. The temporary password is returned only in this response. */
+  @Post('pandit-applications/:id/approve')
+  approveApplication(@Param('id') id: string) {
+    return this.approval.approve(id);
+  }
+
+  @Post('pandit-applications/:id/reject')
+  rejectApplication(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(rejectApplicationSchema)) body: any,
+  ) {
+    return this.approval.reject(id, body.reason);
+  }
+
+  @Get('pending-counts')
+  pendingCounts() {
+    return this.content.pendingCounts();
   }
 
   /* Display currencies (FX is display-only; charges stay in INR) */

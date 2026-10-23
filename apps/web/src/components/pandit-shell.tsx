@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 
 const NAV = [
   { href: '/pandit/bookings', label: 'Bookings', icon: '📋' },
+  { href: '/pandit/earnings', label: 'Earnings', icon: '💰' },
   { href: '/pandit/live', label: 'Live Darshan', icon: '📡' },
   { href: '/pandit/profile', label: 'Profile', icon: '👤' },
 ];

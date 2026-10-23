@@ -15,6 +15,7 @@ import type {
   Addon,
   AuthResponse,
   AccountProfile,
+  ApproveApplicationResult,
   Booking,
   City,
   HomeSlide,
@@ -22,13 +23,31 @@ import type {
   LiveCaption,
   LiveSession,
   NamedEntity,
+  PanditEarning,
+  PanditEarningsSummary,
   PanditProfile,
+  PaymentLedgerRow,
+  PaymentsSummary,
   Product,
   ProductOrder,
   Puja,
   Review,
+  Settlement,
   Temple,
 } from './types';
+
+/** Date bounds are YYYY-MM-DD, inclusive, interpreted in IST. */
+export interface PaymentFilters {
+  from?: string;
+  to?: string;
+  panditId?: string;
+}
+
+function toQuery(params?: { [key: string]: string | undefined } | PaymentFilters) {
+  if (!params) return '';
+  const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
+  return entries.length ? `?${new URLSearchParams(entries).toString()}` : '';
+}
 
 export interface ClientOptions {
   baseUrl: string;
@@ -364,6 +383,43 @@ export class PoozariClient {
   adminUpdatePanditApplication(id: string, data: unknown) {
     return this.patch<PanditApplication>(`/admin/pandit-applications/${id}`, data);
   }
+  /** Creates the pujari login; the temporary password is only ever returned here. */
+  adminApprovePanditApplication(id: string) {
+    return this.post<ApproveApplicationResult>(`/admin/pandit-applications/${id}/approve`);
+  }
+  adminRejectPanditApplication(id: string, reason?: string) {
+    return this.post<PanditApplication>(`/admin/pandit-applications/${id}/reject`, { reason });
+  }
+  /** Attention badges for the admin sidebar. */
+  adminPendingCounts() {
+    return this.get<{ newInquiries: number; newApplications: number; draftPosts: number }>(
+      '/admin/pending-counts',
+    );
+  }
+
+  /* Admin: commission, payments ledger, weekly pujari settlements */
+  adminGetCommission() {
+    return this.get<{ percent: number }>('/admin/settings/commission');
+  }
+  adminSetCommission(percent: number) {
+    return this.patch<{ percent: number }>('/admin/settings/commission', { percent });
+  }
+  adminListPayments(params?: PaymentFilters & { tab?: string }) {
+    return this.get<PaymentLedgerRow[]>(`/admin/payments${toQuery(params)}`);
+  }
+  adminPaymentsSummary(params?: PaymentFilters) {
+    return this.get<PaymentsSummary>(`/admin/payments/summary${toQuery(params)}`);
+  }
+  adminListSettlements(params?: { status?: string; panditId?: string }) {
+    return this.get<Settlement[]>(`/admin/settlements${toQuery(params)}`);
+  }
+  /** Groups the week's unsettled earnings into one settlement per pandit. */
+  adminGenerateSettlements(weekStart: string) {
+    return this.post<Settlement[]>('/admin/settlements', { weekStart });
+  }
+  adminPaySettlement(id: string, data?: { reference?: string; notes?: string }) {
+    return this.post<Settlement>(`/admin/settlements/${id}/pay`, data ?? {});
+  }
 
   /**
    * Upload an image for an admin form (puja/product cover, etc).
@@ -530,6 +586,15 @@ export class PoozariClient {
   }
   panditSetAvailability(isAvailable: boolean) {
     return this.patch<PanditProfile>('/pandit/availability', { isAvailable });
+  }
+  panditEarnings(params?: { from?: string; to?: string }) {
+    return this.get<PanditEarning[]>(`/pandit/earnings${toQuery(params)}`);
+  }
+  panditEarningsSummary(params?: { from?: string; to?: string }) {
+    return this.get<PanditEarningsSummary>(`/pandit/earnings/summary${toQuery(params)}`);
+  }
+  panditSettlements() {
+    return this.get<Settlement[]>('/pandit/settlements');
   }
   panditUpdateStatus(bookingId: string, status: string) {
     return this.patch<Booking>(`/pandit/bookings/${bookingId}/status`, { status });

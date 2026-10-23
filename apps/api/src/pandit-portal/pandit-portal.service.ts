@@ -3,6 +3,7 @@ import type { UpdatePanditProfileInput, UploadVideoInput } from '@poozari/shared
 import { AssignmentStatus, BookingStatus } from '@poozari/shared';
 import { bookingInclude, serializeBooking } from '../bookings/booking.serializer';
 import { ConfigService } from '@nestjs/config';
+import { EarningsService } from '../earnings/earnings.service';
 import { EmailService } from '../email/email.service';
 import { videoReady } from '../email/email.templates';
 import { PrismaService } from '../prisma/prisma.service';
@@ -24,6 +25,7 @@ export class PanditPortalService {
     @Inject(STORAGE) private readonly storage: ObjectStorage,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly earnings: EarningsService,
   ) {}
 
   /**
@@ -135,6 +137,7 @@ export class PanditPortalService {
       where: { id: bookingId },
       data: { status: status as BookingStatus },
     });
+    if (status === BookingStatus.COMPLETED) await this.earnings.recordCompletion(bookingId);
     return this.serialized(bookingId);
   }
 
@@ -148,6 +151,7 @@ export class PanditPortalService {
         status: BookingStatus.COMPLETED,
       },
     });
+    await this.earnings.recordCompletion(bookingId);
     await this.notifyVideoReady(bookingId);
     return this.serialized(bookingId);
   }
@@ -160,6 +164,7 @@ export class PanditPortalService {
       where: { id: bookingId },
       data: { videoUrl, status: BookingStatus.COMPLETED },
     });
+    await this.earnings.recordCompletion(bookingId);
     await this.notifyVideoReady(bookingId);
     return this.serialized(bookingId);
   }

@@ -6,6 +6,7 @@ import { api } from '@/lib/client';
 import {
   APPLICATION_STATUS_LABELS,
   ApplicationStatus,
+  type ApproveApplicationResult,
   type PanditApplication,
 } from '@poozari/shared';
 import { useEffect, useState } from 'react';
@@ -28,11 +29,12 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 /** The order an application normally moves through. */
+/** Approve and Reject have their own buttons, since they do more than change status. */
 const NEXT_STEPS: Record<string, string[]> = {
-  NEW: [ApplicationStatus.REVIEWING, ApplicationStatus.REJECTED],
-  REVIEWING: [ApplicationStatus.SHORTLISTED, ApplicationStatus.REJECTED],
-  SHORTLISTED: [ApplicationStatus.APPROVED, ApplicationStatus.REJECTED],
-  APPROVED: [ApplicationStatus.REVIEWING],
+  NEW: [ApplicationStatus.REVIEWING],
+  REVIEWING: [ApplicationStatus.SHORTLISTED],
+  SHORTLISTED: [],
+  APPROVED: [],
   REJECTED: [ApplicationStatus.REVIEWING],
 };
 
@@ -42,6 +44,11 @@ export default function AdminApplicationsPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+  /** Shown once, right after approval; the API never returns it again. */
+  const [credentials, setCredentials] = useState<
+    Record<string, ApproveApplicationResult>
+  >({});
 
   async function load() {
     const list = await api.adminListPanditApplications(status || undefined);
@@ -62,6 +69,44 @@ export default function AdminApplicationsPage() {
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not update this application');
+    }
+  }
+
+  async function approve(item: PanditApplication) {
+    if (!window.confirm(`Create a pujari login for ${item.fullName} (${item.email})?`)) return;
+    setError('');
+    setMsg('');
+    setBusy(item.id);
+    try {
+      const result = await api.adminApprovePanditApplication(item.id);
+      setCredentials((c) => ({ ...c, [item.id]: result }));
+      setMsg(
+        result.emailSent
+          ? 'Pujari account created and login details emailed.'
+          : 'Pujari account created. The email could not be sent — share the password below.',
+      );
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Could not approve this application');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function reject(item: PanditApplication) {
+    const reason = window.prompt(`Reason for rejecting ${item.fullName} (optional):`);
+    if (reason === null) return;
+    setError('');
+    setMsg('');
+    setBusy(item.id);
+    try {
+      await api.adminRejectPanditApplication(item.id, reason);
+      setMsg('Application rejected.');
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Could not reject this application');
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -221,19 +266,49 @@ export default function AdminApplicationsPage() {
                     {APPLICATION_STATUS_LABELS[next as keyof typeof APPLICATION_STATUS_LABELS]}
                   </button>
                 ))}
+                {!item.panditUserId && item.status !== ApplicationStatus.REJECTED ? (
+                  <button
+                    className="btn-primary text-2xs uppercase tracking-wider"
+                    disabled={busy === item.id}
+                    onClick={() => approve(item)}
+                  >
+                    {busy === item.id ? 'Working…' : '✓ Approve & create pujari account'}
+                  </button>
+                ) : null}
+                {!item.panditUserId && item.status !== ApplicationStatus.REJECTED ? (
+                  <button
+                    className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                    disabled={busy === item.id}
+                    onClick={() => reject(item)}
+                  >
+                    ✕ Reject
+                  </button>
+                ) : null}
               </div>
 
-              {item.status === ApplicationStatus.APPROVED ? (
+              {credentials[item.id] ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900">
+                  <div className="font-bold uppercase tracking-wider">Pujari login created</div>
+                  <div className="mt-2">
+                    Email: <span className="font-mono font-bold">{credentials[item.id].email}</span>
+                  </div>
+                  <div>
+                    Temporary password:{' '}
+                    <span className="select-all font-mono font-bold">
+                      {credentials[item.id].tempPassword}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-2xs">
+                    This password is shown only once. Copy it now if you need to share it.
+                  </p>
+                </div>
+              ) : item.panditUserId ? (
                 <p className="rounded-2xl bg-emerald-50 p-3 text-2xs leading-relaxed text-emerald-800">
-                  Approving does not create a login. Add them under{' '}
+                  A pujari login exists for this application. Manage it under{' '}
                   <Link href="/admin/pandits" className="font-bold underline">
                     Pandits
-                  </Link>{' '}
-                  — or include them in a{' '}
-                  <Link href="/admin/import" className="font-bold underline">
-                    bulk CSV import
-                  </Link>{' '}
-                  — using the details above.
+                  </Link>
+                  .
                 </p>
               ) : null}
             </div>
