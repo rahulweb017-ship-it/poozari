@@ -43,6 +43,12 @@ export default function AdminPaymentsPage() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [panditId, setPanditId] = useState('');
+  // The pandit dashboard links here with ?panditId= preselected. Read after
+  // mount because this page is prerendered without search params.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('panditId');
+    if (fromUrl) setPanditId(fromUrl);
+  }, []);
   const [pandits, setPandits] = useState<any[]>([]);
   const [summary, setSummary] = useState<PaymentsSummary | null>(null);
   const [rows, setRows] = useState<PaymentLedgerRow[]>([]);

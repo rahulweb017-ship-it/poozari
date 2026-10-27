@@ -1,11 +1,23 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  Thumb,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { MultiImagePicker } from '@/components/multi-image-picker';
 import { VideoPicker } from '@/components/video-picker';
 import { api } from '@/lib/client';
 import { formatInr, type Product } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const EMPTY_FORM = {
   name: '',
@@ -25,9 +37,13 @@ function slugify(value: string) {
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [viewing, setViewing] = useState<Product | null>(null);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -36,20 +52,30 @@ export default function AdminProductsPage() {
   }
 
   useEffect(() => {
-    load().catch((e) => setError(e.message ?? 'Could not load products'));
+    load()
+      .catch((e) => setError(e.message ?? 'Could not load products'))
+      .finally(() => setLoading(false));
   }, []);
 
-  function resetForm(clearMessage = true) {
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setError('');
-    if (clearMessage) setMessage('');
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewing(null), []);
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setFormOpen(true);
   }
 
   function startEdit(product: Product) {
+    setViewing(null);
     setEditingId(product.id);
-    setMessage('');
-    setError('');
+    setFormError('');
     setForm({
       name: product.name,
       slug: product.slug,
@@ -61,12 +87,12 @@ export default function AdminProductsPage() {
       stockQuantity: String(product.stockQuantity),
       isActive: product.isActive,
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormOpen(true);
   }
 
   async function submit() {
     setBusy(true);
-    setError('');
+    setFormError('');
     setMessage('');
     try {
       const payload = {
@@ -82,16 +108,15 @@ export default function AdminProductsPage() {
       };
       if (editingId) {
         await api.adminUpdateProduct(editingId, payload);
-        resetForm(false);
         setMessage('Product updated.');
       } else {
         await api.adminCreateProduct(payload);
-        resetForm(false);
         setMessage('Product added.');
       }
+      closeForm();
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save product');
+      setFormError(e.message ?? 'Could not save product');
     } finally {
       setBusy(false);
     }
@@ -99,8 +124,10 @@ export default function AdminProductsPage() {
 
   async function toggleActive(product: Product) {
     setError('');
+    setMessage('');
     try {
       await api.adminUpdateProduct(product.id, { isActive: !product.isActive });
+      setViewing(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not update product');
@@ -110,9 +137,11 @@ export default function AdminProductsPage() {
   async function remove(product: Product) {
     if (!window.confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
     setError('');
+    setMessage('');
     try {
       await api.adminDeleteProduct(product.id);
-      if (editingId === product.id) resetForm(false);
+      setViewing(null);
+      if (editingId === product.id) closeForm();
       setMessage(`Deleted "${product.name}".`);
       await load();
     } catch (e: any) {
@@ -120,118 +149,251 @@ export default function AdminProductsPage() {
     }
   }
 
+  const categories = useMemo(
+    () => Array.from(new Set(products.map((p) => p.category).filter(Boolean))).sort(),
+    [products],
+  );
+
+  const columns: Column<Product>[] = [
+    {
+      key: 'name',
+      header: 'Product',
+      render: (p) => (
+        <div className="flex items-center gap-3">
+          <Thumb src={p.imageUrl ?? p.images?.[0]} label={p.name ?? '?'} />
+          <div className="min-w-0">
+            <div className="font-bold text-foreground">{p.name}</div>
+            <div className="text-3xs text-muted-foreground">/{p.slug}</div>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'category', header: 'Category', render: (p) => p.category || '—' },
+    {
+      key: 'price',
+      header: 'Price',
+      render: (p) => <span className="font-black text-accent">{formatInr(p.priceInr)}</span>,
+    },
+    {
+      key: 'stock',
+      header: 'Stock',
+      render: (p) =>
+        p.stockQuantity > 0 ? (
+          <span className="font-semibold text-foreground">{p.stockQuantity}</span>
+        ) : (
+          <span className="font-bold text-red-600">Out of stock</span>
+        ),
+    },
+    {
+      key: 'media',
+      header: 'Media',
+      render: (p) => `${p.images?.length ?? 0} img${p.videoUrl ? ' · video' : ''}`,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (p) => <StatusPill on={p.isActive} onLabel="Visible" offLabel="Hidden" />,
+    },
+  ];
+
+  const filters: FilterDef<Product>[] = [
+    {
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: 'active', label: 'Visible' },
+        { value: 'inactive', label: 'Hidden' },
+      ],
+      match: (p, v) => (v === 'active' ? p.isActive : !p.isActive),
+    },
+    {
+      key: 'stock',
+      label: 'Stock',
+      options: [
+        { value: 'in', label: 'In stock' },
+        { value: 'out', label: 'Out of stock' },
+      ],
+      match: (p, v) => (v === 'in') === p.stockQuantity > 0,
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      options: categories.map((c) => ({ value: c, label: c })),
+      match: (p, v) => p.category === v,
+    },
+  ];
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">Products</h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Add and manage rudraksha, havan samagri, puja kits, and other essentials.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Products"
+        subtitle="Add and manage rudraksha, havan samagri, puja kits, and other essentials."
+        actions={
+          <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+            + Add product
+          </button>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="card self-start bg-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-              {editingId ? '✏️ Edit Product' : '📦 Add Product'}
-            </h2>
-            {editingId ? <button className="text-2xs font-bold uppercase tracking-wider text-accent" onClick={() => resetForm()}>+ New</button> : null}
+      <Notice error={error} message={message} />
+
+      <DataTable
+        rows={products}
+        columns={columns}
+        getRowId={(p) => p.id}
+        loading={loading}
+        searchText={(p) => [p.name, p.slug, p.category, p.description].join(' ')}
+        searchPlaceholder="Search name, slug, category…"
+        filters={filters}
+        onRowClick={setViewing}
+        emptyText="No products added yet."
+        actions={(p) => (
+          <>
+            <ActionButton onClick={() => setViewing(p)}>View</ActionButton>
+            <ActionButton tone="accent" onClick={() => startEdit(p)}>Edit</ActionButton>
+            <ActionButton tone={p.isActive ? 'default' : 'success'} onClick={() => toggleActive(p)}>
+              {p.isActive ? 'Hide' : 'Show'}
+            </ActionButton>
+            <ActionButton tone="danger" onClick={() => remove(p)}>Delete</ActionButton>
+          </>
+        )}
+      />
+
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing?.name ?? ''}
+        onClose={closeView}
+        size="lg"
+        footer={
+          viewing ? (
+            <>
+              <button
+                className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                onClick={() => remove(viewing)}
+              >
+                Delete
+              </button>
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(viewing)}>
+                {viewing.isActive ? 'Hide from website' : 'Show on website'}
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => startEdit(viewing)}>
+                Edit
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-5">
+            {viewing.images?.length ? (
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {viewing.images.map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={`${src}-${i}`}
+                    src={src}
+                    alt=""
+                    className="h-32 w-32 shrink-0 rounded-2xl bg-accent-soft object-cover"
+                  />
+                ))}
+              </div>
+            ) : viewing.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewing.imageUrl} alt="" className="h-32 w-32 rounded-2xl bg-accent-soft object-cover" />
+            ) : null}
+            <DetailList
+              items={[
+                { label: 'Slug', value: `/${viewing.slug}` },
+                { label: 'Category', value: viewing.category },
+                { label: 'Price', value: formatInr(viewing.priceInr) },
+                { label: 'Stock', value: viewing.stockQuantity > 0 ? `${viewing.stockQuantity} in stock` : 'Out of stock' },
+                { label: 'Status', value: viewing.isActive ? 'Visible on website' : 'Hidden' },
+                { label: 'Images', value: String(viewing.images?.length ?? 0) },
+                {
+                  label: 'Video',
+                  value: viewing.videoUrl ? (
+                    <a href={viewing.videoUrl} target="_blank" rel="noreferrer" className="text-accent underline">
+                      Open video
+                    </a>
+                  ) : null,
+                },
+                { label: 'Description', value: viewing.description },
+              ]}
+            />
           </div>
-          {error ? <p className="mt-4 rounded-2xl bg-red-50 p-3 text-xs text-red-700">{error}</p> : null}
-          {message ? <p className="mt-4 rounded-2xl bg-green-50 p-3 text-xs text-green-700">{message}</p> : null}
+        ) : null}
+      </Modal>
 
-          <div className="mt-5 space-y-4">
-            <div>
-              <label className="label">Product name *</label>
-              <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: editingId ? form.slug : slugify(e.target.value) })} placeholder="e.g. Panchmukhi Rudraksha" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Slug *</label>
-                <input className="input" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              </div>
-              <div>
-                <label className="label">Category *</label>
-                <input className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Rudraksha" />
-              </div>
-            </div>
-            <div>
-              <label className="label">Description</label>
-              <textarea className="input" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-            <MultiImagePicker
-              label="Product images"
-              hint="The first image is the cover in the store listing · up to 10"
-              value={form.images}
-              onChange={(images) => setForm({ ...form, images })}
-            />
-            <VideoPicker
-              label="Product video (optional)"
-              hint="MP4, WebM or MOV up to 50 MB, or a YouTube link"
-              value={form.videoUrl}
-              onChange={(videoUrl) => setForm({ ...form, videoUrl })}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Price (₹) *</label>
-                <input className="input" type="number" min="1" value={form.priceInr} onChange={(e) => setForm({ ...form, priceInr: e.target.value })} />
-              </div>
-              <div>
-                <label className="label">Stock quantity</label>
-                <input className="input" type="number" min="0" value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })} />
-              </div>
-            </div>
-            <label className="flex cursor-pointer items-center gap-2.5">
-              <input type="checkbox" className="h-4 w-4 accent-accent" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground">Visible on website</span>
-            </label>
-            <button className="btn-primary w-full" onClick={submit} disabled={busy || !form.name || !form.slug || !form.category || Number(form.priceInr) <= 0}>
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingId ? 'Edit product' : 'Add product'}
+        onClose={closeForm}
+        size="lg"
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm}>
+              Cancel
+            </button>
+            <button
+              className="btn-primary text-2xs uppercase tracking-wider"
+              onClick={submit}
+              disabled={busy || !form.name || !form.slug || !form.category || Number(form.priceInr) <= 0}
+            >
               {busy ? 'Saving…' : editingId ? 'Update product' : 'Add product'}
             </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <div className="space-y-4">
+          <div>
+            <label className="label">Product name *</label>
+            <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: editingId ? form.slug : slugify(e.target.value) })} placeholder="e.g. Panchmukhi Rudraksha" />
           </div>
-        </section>
-
-        <section>
-          <h2 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            Product Catalog ({products.length})
-          </h2>
-          <div className="mt-5 space-y-3">
-            {products.map((product) => (
-              <article key={product.id} className="card bg-white p-4">
-                <div className="flex gap-4">
-                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-accent-soft">
-                    {product.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />
-                    ) : <div className="flex h-full items-center justify-center text-3xl">🪔</div>}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold text-sm text-foreground">{product.name}</h3>
-                        <p className="mt-0.5 text-2xs font-semibold text-muted-foreground">{product.category} · /{product.slug}</p>
-                      </div>
-                      <span className={`badge ${product.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {product.isActive ? 'Visible' : 'Hidden'}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex gap-4 text-xs">
-                      <span className="font-black text-accent">{formatInr(product.priceInr)}</span>
-                      <span className="font-semibold text-muted-foreground">{product.stockQuantity} in stock</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.4)' }}>
-                  <button className="btn-outline text-2xs" onClick={() => startEdit(product)}>✏️ Edit</button>
-                  <button className="btn-outline text-2xs" onClick={() => toggleActive(product)}>{product.isActive ? 'Hide' : 'Show'}</button>
-                  <button className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase text-red-600 hover:bg-red-50" onClick={() => remove(product)}>🗑 Delete</button>
-                </div>
-              </article>
-            ))}
-            {!products.length ? <div className="card bg-white p-10 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">No products added yet.</div> : null}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Slug *</label>
+              <input className="input" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">Category *</label>
+              <input className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Rudraksha" />
+            </div>
           </div>
-        </section>
-      </div>
+          <div>
+            <label className="label">Description</label>
+            <textarea className="input" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+          <MultiImagePicker
+            label="Product images"
+            hint="The first image is the cover in the store listing · up to 10"
+            value={form.images}
+            onChange={(images) => setForm({ ...form, images })}
+          />
+          <VideoPicker
+            label="Product video (optional)"
+            hint="MP4, WebM or MOV up to 50 MB, or a YouTube link"
+            value={form.videoUrl}
+            onChange={(videoUrl) => setForm({ ...form, videoUrl })}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Price (₹) *</label>
+              <input className="input" type="number" min="1" value={form.priceInr} onChange={(e) => setForm({ ...form, priceInr: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">Stock quantity</label>
+              <input className="input" type="number" min="0" value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })} />
+            </div>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2.5">
+            <input type="checkbox" className="h-4 w-4 accent-accent" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Visible on website</span>
+          </label>
+        </div>
+      </Modal>
     </AdminShell>
   );
 }

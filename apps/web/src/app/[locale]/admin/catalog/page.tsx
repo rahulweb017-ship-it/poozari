@@ -1,10 +1,21 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  Thumb,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
 import type { City } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 function slugify(v: string) {
   return v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -22,8 +33,6 @@ interface EntityConfig {
   create: (d: any) => Promise<any>;
   update: (id: string, d: any) => Promise<any>;
   remove: (id: string) => Promise<any>;
-  /** Extra context shown under each list item's name. */
-  subline?: (item: any) => string;
 }
 
 const EMPTY_FORM = { name: '', slug: '', state: '', description: '', imageUrl: '', cityId: '' };
@@ -39,7 +48,6 @@ const ENTITIES: EntityConfig[] = [
     create: (d) => api.adminCreateCity(d),
     update: (id, d) => api.adminUpdateCity(id, d),
     remove: (id) => api.adminDeleteCity(id),
-    subline: (c) => [c.state, typeof c.templeCount === 'number' ? `${c.templeCount} temples` : ''].filter(Boolean).join(' · '),
   },
   {
     key: 'temples',
@@ -52,7 +60,6 @@ const ENTITIES: EntityConfig[] = [
     create: (d) => api.adminCreateTemple(d),
     update: (id, d) => api.adminUpdateTemple(id, d),
     remove: (id) => api.adminDeleteTemple(id),
-    subline: (t) => [t.city?.name, t.state].filter(Boolean).join(' · '),
   },
   {
     key: 'deities',
@@ -96,67 +103,96 @@ export default function AdminCatalogPage() {
 
   const config = ENTITIES.find((e) => e.key === active)!;
 
+  const tabs = (
+    <div className="mb-6 flex flex-wrap gap-2">
+      {ENTITIES.map((e) => (
+        <button
+          key={e.key}
+          onClick={() => setActive(e.key)}
+          className={`rounded-2xl px-4 py-2.5 text-2xs font-bold uppercase tracking-wider transition-all ${
+            active === e.key
+              ? 'bg-accent text-white shadow-md'
+              : 'bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          }`}
+          style={active === e.key ? {} : { border: '1px solid hsl(var(--border) / 0.5)' }}
+        >
+          {e.icon} {e.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">Catalog</h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Manage cities, temples, deities, festivals and benefits.
-        </p>
-      </div>
-
-      {/* Entity tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {ENTITIES.map((e) => (
-          <button
-            key={e.key}
-            onClick={() => setActive(e.key)}
-            className={`rounded-2xl px-4 py-2.5 text-2xs font-bold uppercase tracking-wider transition-all ${
-              active === e.key
-                ? 'bg-accent text-white shadow-md'
-                : 'bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            }`}
-            style={active === e.key ? {} : { border: '1px solid hsl(var(--border) / 0.5)' }}
-          >
-            {e.icon} {e.label}
-          </button>
-        ))}
-      </div>
-
       {/* Remount per tab so each section loads fresh and resets its form. */}
-      <CrudSection key={config.key} config={config} cities={cities} />
+      <CrudSection
+        key={config.key}
+        config={config}
+        cities={cities}
+        tabs={tabs}
+        onCitiesChanged={setCities}
+      />
     </AdminShell>
   );
 }
 
-function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] }) {
+function CrudSection({
+  config,
+  cities,
+  tabs,
+  onCitiesChanged,
+}: {
+  config: EntityConfig;
+  cities: City[];
+  tabs: ReactNode;
+  onCitiesChanged: (cities: City[]) => void;
+}) {
   const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [viewing, setViewing] = useState<any | null>(null);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function load() {
-    setItems(await config.list());
+    const rows = await config.list();
+    setItems(rows);
+    // Keep the temple city picker and filters in sync after city edits.
+    if (config.key === 'cities') onCitiesChanged(rows);
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.key]);
 
-  function resetForm() {
+  const cityName = useMemo(() => new Map(cities.map((c) => [c.id, c.name])), [cities]);
+
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setError('');
-    setMsg('');
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewing(null), []);
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setFormOpen(true);
   }
 
   function startEdit(item: any) {
+    setViewing(null);
     setEditingId(item.id);
-    setError('');
-    setMsg('');
+    setFormError('');
     setForm({
       name: item.name ?? '',
       slug: item.slug ?? '',
@@ -165,11 +201,11 @@ function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] 
       imageUrl: item.imageUrl ?? '',
       cityId: item.cityId ?? '',
     });
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormOpen(true);
   }
 
   async function submit() {
-    setError('');
+    setFormError('');
     setMsg('');
     setBusy(true);
     try {
@@ -182,7 +218,7 @@ function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] 
       if (config.hasState) payload.state = form.state;
       if (config.hasCity) {
         if (!form.cityId) {
-          setError('Please choose a city for this temple.');
+          setFormError('Please choose a city for this temple.');
           setBusy(false);
           return;
         }
@@ -195,10 +231,10 @@ function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] 
         await config.create(payload);
         setMsg(`${config.singular} created.`);
       }
-      resetForm();
+      closeForm();
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save');
+      setFormError(e.message ?? 'Could not save');
     } finally {
       setBusy(false);
     }
@@ -211,30 +247,189 @@ function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] 
     try {
       await config.remove(item.id);
       setMsg(`Deleted "${item.name}".`);
-      if (editingId === item.id) resetForm();
+      setViewing(null);
+      if (editingId === item.id) closeForm();
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not delete');
     }
   }
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      {/* Create / edit form */}
-      <div className="card self-start p-6">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            {editingId ? `✏️ Edit ${config.singular}` : `${config.icon} Add ${config.singular}`}
-          </h3>
-          {editingId ? (
-            <button className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline" onClick={resetForm}>
-              + New
-            </button>
-          ) : null}
+  const itemCity = (item: any) => item.city?.name ?? (item.cityId ? cityName.get(item.cityId) : undefined);
+
+  const columns: Column<any>[] = [
+    {
+      key: 'name',
+      header: config.singular,
+      render: (item) => (
+        <div className="flex items-center gap-3">
+          <Thumb src={item.imageUrl} label={item.name ?? '?'} />
+          <div className="min-w-0">
+            <div className="font-bold text-foreground">{item.name}</div>
+            <div className="text-3xs text-muted-foreground">/{item.slug}</div>
+          </div>
         </div>
-        {error ? <p className="mt-3 rounded-2xl bg-red-50 p-3 text-xs text-red-700">{error}</p> : null}
-        {msg ? <p className="mt-3 rounded-2xl bg-green-50 p-3 text-xs text-green-700">{msg}</p> : null}
-        <div className="mt-5 space-y-4">
+      ),
+    },
+    ...(config.hasCity
+      ? [{ key: 'city', header: 'City', render: (item: any) => itemCity(item) || '—' }]
+      : []),
+    ...(config.hasState
+      ? [{ key: 'state', header: 'State', render: (item: any) => item.state || '—' }]
+      : []),
+    ...(config.key === 'cities'
+      ? [
+          {
+            key: 'temples',
+            header: 'Temples',
+            render: (item: any) => (typeof item.templeCount === 'number' ? item.templeCount : '—'),
+          },
+        ]
+      : []),
+    {
+      key: 'description',
+      header: 'Description',
+      className: 'max-w-[280px] truncate',
+      render: (item) => item.description || '—',
+    },
+  ];
+
+  const states = useMemo(
+    () => Array.from(new Set(items.map((i) => i.state).filter(Boolean) as string[])).sort(),
+    [items],
+  );
+
+  const filters: FilterDef<any>[] = [
+    ...(config.hasCity
+      ? [
+          {
+            key: 'city',
+            label: 'City',
+            options: cities.map((c) => ({ value: c.id, label: c.name })),
+            match: (item: any, v: string) => (item.cityId ?? item.city?.id) === v,
+          },
+        ]
+      : []),
+    ...(config.hasState && states.length
+      ? [
+          {
+            key: 'state',
+            label: 'State',
+            options: states.map((s) => ({ value: s, label: s })),
+            match: (item: any, v: string) => item.state === v,
+          },
+        ]
+      : []),
+    {
+      key: 'image',
+      label: 'Image',
+      options: [
+        { value: 'with', label: 'With image' },
+        { value: 'without', label: 'No image' },
+      ],
+      match: (item, v) => (v === 'with') === Boolean(item.imageUrl),
+    },
+  ];
+
+  const singularLower = config.singular.toLowerCase();
+
+  return (
+    <>
+      <AdminPageHeader
+        title="Catalog"
+        subtitle="Manage cities, temples, deities, festivals and benefits."
+        actions={
+          <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+            + Add {singularLower}
+          </button>
+        }
+      />
+
+      {tabs}
+
+      <Notice error={error} message={msg} />
+
+      <DataTable
+        rows={items}
+        columns={columns}
+        getRowId={(item) => item.id}
+        loading={loading}
+        searchText={(item) => [item.name, item.slug, item.state, itemCity(item), item.description].join(' ')}
+        searchPlaceholder={`Search ${config.label.toLowerCase()}…`}
+        filters={filters}
+        onRowClick={setViewing}
+        emptyText={`No ${config.label.toLowerCase()} yet.`}
+        actions={(item) => (
+          <>
+            <ActionButton onClick={() => setViewing(item)}>View</ActionButton>
+            <ActionButton tone="accent" onClick={() => startEdit(item)}>Edit</ActionButton>
+            <ActionButton tone="danger" onClick={() => remove(item)}>Delete</ActionButton>
+          </>
+        )}
+      />
+
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing ? `${config.icon} ${viewing.name}` : ''}
+        onClose={closeView}
+        footer={
+          viewing ? (
+            <>
+              <button
+                className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                onClick={() => remove(viewing)}
+              >
+                Delete
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => startEdit(viewing)}>
+                Edit
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-5">
+            {viewing.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewing.imageUrl} alt="" className="max-h-64 w-full rounded-2xl bg-accent-soft object-contain" />
+            ) : null}
+            <DetailList
+              items={[
+                { label: 'Name', value: viewing.name },
+                { label: 'Slug', value: viewing.slug ? `/${viewing.slug}` : null },
+                ...(config.hasCity ? [{ label: 'City', value: itemCity(viewing) }] : []),
+                ...(config.hasState ? [{ label: 'State', value: viewing.state }] : []),
+                ...(config.key === 'cities'
+                  ? [{ label: 'Temples', value: typeof viewing.templeCount === 'number' ? viewing.templeCount : null }]
+                  : []),
+                { label: 'Description', value: viewing.description },
+              ]}
+            />
+          </div>
+        ) : null}
+      </Modal>
+
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingId ? `Edit ${singularLower}` : `Add ${singularLower}`}
+        onClose={closeForm}
+        size="lg"
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm}>
+              Cancel
+            </button>
+            <button className="btn-primary text-2xs uppercase tracking-wider" onClick={submit} disabled={busy || !form.name}>
+              {busy ? 'Saving…' : editingId ? 'Update' : 'Create'}
+            </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <div className="space-y-4">
           <div>
             <label className="label">Name *</label>
             <input
@@ -276,49 +471,8 @@ function CrudSection({ config, cities }: { config: EntityConfig; cities: City[] 
             onChange={(imageUrl) => setForm({ ...form, imageUrl })}
             aspect="1/1"
           />
-          <button className="btn-primary w-full text-2xs uppercase tracking-widest" onClick={submit} disabled={busy || !form.name}>
-            {busy ? 'Saving…' : editingId ? 'Update' : 'Create'}
-          </button>
         </div>
-      </div>
-
-      {/* List */}
-      <div>
-        <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-          {config.label} ({items.length})
-        </h3>
-        <div className="mt-5 space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="card bg-white p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-sm text-foreground">{item.name}</div>
-                  <div className="mt-1 text-2xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    /{item.slug}
-                    {config.subline?.(item) ? ` · ${config.subline(item)}` : ''}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-                <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => startEdit(item)}>
-                  ✏️ Edit
-                </button>
-                <button
-                  className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                  onClick={() => remove(item)}
-                >
-                  🗑 Delete
-                </button>
-              </div>
-            </div>
-          ))}
-          {items.length === 0 ? (
-            <div className="card p-10 text-center">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">No {config.label.toLowerCase()} yet.</p>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
+      </Modal>
+    </>
   );
 }

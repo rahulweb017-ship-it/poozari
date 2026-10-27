@@ -1,5 +1,15 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { api } from '@/lib/client';
 import {
@@ -8,10 +18,9 @@ import {
   InquiryStatus,
   type Inquiry,
 } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const KIND_TABS = [
-  { value: '', label: 'All' },
+const KIND_OPTIONS = [
   { value: InquiryKind.CONTACT, label: '✉️ Contact Us' },
   { value: InquiryKind.ENQUIRY, label: '🪔 Puja enquiries' },
   { value: InquiryKind.WHATSAPP, label: '💬 WhatsApp' },
@@ -24,8 +33,7 @@ const KIND_BADGES: Record<string, { label: string; className: string }> = {
   WHATSAPP: { label: '💬 WhatsApp', className: 'bg-[#25D366]/10 text-[#128C4A]' },
 };
 
-const STATUS_TABS = [
-  { value: '', label: 'All' },
+const STATUS_OPTIONS = [
   { value: InquiryStatus.NEW, label: 'New' },
   { value: InquiryStatus.IN_PROGRESS, label: 'In progress' },
   { value: InquiryStatus.RESOLVED, label: 'Resolved' },
@@ -37,24 +45,48 @@ const STATUS_STYLES: Record<string, string> = {
   RESOLVED: 'bg-emerald-50 text-emerald-700',
 };
 
+function whatsappLink(phone: string) {
+  return `https://wa.me/${phone.replace(/\D/g, '').slice(-10).padStart(12, '91')}`;
+}
+
+function KindBadge({ kind }: { kind: string }) {
+  return (
+    <span className={`badge ${KIND_BADGES[kind]?.className ?? 'bg-gray-100 text-gray-700'}`}>
+      {KIND_BADGES[kind]?.label ?? kind}
+    </span>
+  );
+}
+
+function StatusBadge({ status }: { status: Inquiry['status'] }) {
+  return <span className={`badge ${STATUS_STYLES[status]}`}>{INQUIRY_STATUS_LABELS[status]}</span>;
+}
+
 export default function AdminInboxPage() {
   const [items, setItems] = useState<Inquiry[]>([]);
-  const [kind, setKind] = useState('');
-  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
+  // Kind and status are filtered client-side in the table, so the full list is loaded once.
   async function load() {
-    const list = await api.adminListInquiries({ kind: kind || undefined, status: status || undefined });
+    const list = await api.adminListInquiries({ kind: undefined, status: undefined });
     setItems(list);
     setNotes(Object.fromEntries(list.map((i) => [i.id, i.adminNotes])));
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, status]);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const viewing = useMemo(
+    () => items.find((i) => i.id === viewingId) ?? null,
+    [items, viewingId],
+  );
+  const closeView = useCallback(() => setViewingId(null), []);
 
   async function setInquiryStatus(item: Inquiry, next: string) {
     setError('');
@@ -81,203 +113,246 @@ export default function AdminInboxPage() {
 
   const newCount = items.filter((i) => i.status === InquiryStatus.NEW).length;
 
+  const columns: Column<Inquiry>[] = [
+    {
+      key: 'from',
+      header: 'From',
+      render: (i) => (
+        <div className="min-w-0">
+          <div className="font-bold text-foreground">{i.name}</div>
+          <div className="text-3xs text-muted-foreground">
+            {[i.phone, i.email].filter(Boolean).join(' · ') || '—'}
+          </div>
+        </div>
+      ),
+    },
+    { key: 'kind', header: 'Type', render: (i) => <KindBadge kind={i.kind} /> },
+    {
+      key: 'message',
+      header: 'Message',
+      className: 'max-w-[280px]',
+      render: (i) => (
+        <div className="min-w-0">
+          {i.subject ? <div className="truncate font-semibold text-foreground">{i.subject}</div> : null}
+          <div className="truncate text-muted-foreground">{i.message}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'puja',
+      header: 'Puja / City',
+      render: (i) =>
+        i.pujaTitle || i.city ? (
+          <div className="min-w-0">
+            {i.pujaTitle ? <div className="font-semibold text-foreground">{i.pujaTitle}</div> : null}
+            {i.city ? <div className="text-3xs text-muted-foreground">📍 {i.city}</div> : null}
+          </div>
+        ) : (
+          '—'
+        ),
+    },
+    {
+      key: 'received',
+      header: 'Received',
+      className: 'whitespace-nowrap',
+      render: (i) => new Date(i.createdAt).toLocaleString('en-IN'),
+    },
+    { key: 'status', header: 'Status', render: (i) => <StatusBadge status={i.status} /> },
+  ];
+
+  const filters: FilterDef<Inquiry>[] = [
+    { key: 'kind', label: 'Type', options: KIND_OPTIONS, match: (i, v) => i.kind === v },
+    { key: 'status', label: 'Status', options: STATUS_OPTIONS, match: (i, v) => i.status === v },
+  ];
+
+  function statusButtons(item: Inquiry) {
+    return (
+      <>
+        {item.status !== InquiryStatus.IN_PROGRESS ? (
+          <ActionButton onClick={() => setInquiryStatus(item, InquiryStatus.IN_PROGRESS)}>
+            In progress
+          </ActionButton>
+        ) : null}
+        {item.status !== InquiryStatus.RESOLVED ? (
+          <ActionButton tone="success" onClick={() => setInquiryStatus(item, InquiryStatus.RESOLVED)}>
+            ✓ Resolve
+          </ActionButton>
+        ) : (
+          <ActionButton onClick={() => setInquiryStatus(item, InquiryStatus.NEW)}>Reopen</ActionButton>
+        )}
+      </>
+    );
+  }
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-          Inbox
-        </h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Contact Us messages, puja enquiries and WhatsApp booking intents.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Inbox"
+        subtitle="Contact Us messages, puja enquiries and WhatsApp booking intents."
+      />
 
-      {/* Filters */}
-      <div className="mb-6 space-y-3">
-        <FilterRow label="Type" tabs={KIND_TABS} value={kind} onChange={setKind} />
-        <FilterRow label="Status" tabs={STATUS_TABS} value={status} onChange={setStatus} />
-      </div>
+      <Notice error={error} message={msg} />
 
-      {error ? (
-        <p className="mb-4 rounded-2xl bg-red-50 p-3 text-xs font-semibold text-red-700">{error}</p>
-      ) : null}
-      {msg ? (
-        <p className="mb-4 rounded-2xl bg-green-50 p-3 text-xs font-semibold text-green-700">
-          {msg}
-        </p>
-      ) : null}
+      <DataTable
+        rows={items}
+        columns={columns}
+        getRowId={(i) => i.id}
+        loading={loading}
+        searchText={(i) =>
+          [i.name, i.phone, i.email, i.subject, i.message, i.pujaTitle, i.city].filter(Boolean).join(' ')
+        }
+        searchPlaceholder="Search name, phone, email, message, puja, city…"
+        filters={filters}
+        emptyText="Nothing here."
+        toolbar={
+          newCount ? (
+            <span className="badge bg-amber-50 text-amber-700">{newCount} new</span>
+          ) : null
+        }
+        onRowClick={(i) => setViewingId(i.id)}
+        actions={(i) => (
+          <>
+            <ActionButton onClick={() => setViewingId(i.id)}>View</ActionButton>
+            {statusButtons(i)}
+          </>
+        )}
+      />
 
-      <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-        {items.length} message{items.length === 1 ? '' : 's'}
-        {newCount ? <span className="ml-2 text-accent">· {newCount} new</span> : null}
-      </h3>
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing ? viewing.subject || `Message from ${viewing.name}` : ''}
+        onClose={closeView}
+        size="lg"
+        footer={
+          viewing ? (
+            <>
+              {viewing.phone ? (
+                <a
+                  href={whatsappLink(viewing.phone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-outline text-2xs uppercase tracking-wider text-[#128C4A]"
+                >
+                  💬 Reply on WhatsApp
+                </a>
+              ) : null}
+              {viewing.email ? (
+                <a href={`mailto:${viewing.email}`} className="btn-outline text-2xs uppercase tracking-wider">
+                  ✉️ Reply by email
+                </a>
+              ) : null}
+              {viewing.status !== InquiryStatus.IN_PROGRESS ? (
+                <button
+                  className="btn-outline text-2xs uppercase tracking-wider"
+                  onClick={() => setInquiryStatus(viewing, InquiryStatus.IN_PROGRESS)}
+                >
+                  Mark in progress
+                </button>
+              ) : null}
+              {viewing.status !== InquiryStatus.RESOLVED ? (
+                <button
+                  className="btn-primary text-2xs uppercase tracking-wider"
+                  onClick={() => setInquiryStatus(viewing, InquiryStatus.RESOLVED)}
+                >
+                  ✓ Resolve
+                </button>
+              ) : (
+                <button
+                  className="btn-outline text-2xs uppercase tracking-wider"
+                  onClick={() => setInquiryStatus(viewing, InquiryStatus.NEW)}
+                >
+                  Reopen
+                </button>
+              )}
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-6">
+            <Notice error={error} message={msg} />
 
-      <div className="mt-5 space-y-4">
-        {items.map((item) => (
-          <div key={item.id} className="card bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold text-sm text-foreground">{item.name}</span>
-                  <span
-                    className={`badge ${KIND_BADGES[item.kind]?.className ?? 'bg-gray-100 text-gray-700'}`}
-                  >
-                    {KIND_BADGES[item.kind]?.label ?? item.kind}
-                  </span>
-                  <span className={`badge ${STATUS_STYLES[item.status]}`}>
-                    {INQUIRY_STATUS_LABELS[item.status]}
-                  </span>
-                </div>
-                <div className="mt-1 text-2xs text-muted-foreground">
-                  <a href={`tel:${item.phone}`} className="font-semibold hover:text-accent">
-                    {item.phone}
-                  </a>
-                  {item.phone ? (
-                    <>
+            <div className="flex flex-wrap items-center gap-2">
+              <KindBadge kind={viewing.kind} />
+              <StatusBadge status={viewing.status} />
+            </div>
+
+            <DetailList
+              items={[
+                { label: 'Name', value: viewing.name },
+                {
+                  label: 'Phone',
+                  value: viewing.phone ? (
+                    <span>
+                      <a href={`tel:${viewing.phone}`} className="font-semibold hover:text-accent">
+                        {viewing.phone}
+                      </a>
                       {' · '}
                       <a
-                        href={`https://wa.me/${item.phone.replace(/\D/g, '').slice(-10).padStart(12, '91')}`}
+                        href={whatsappLink(viewing.phone)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-semibold text-[#128C4A] hover:underline"
                       >
                         Reply on WhatsApp
                       </a>
-                    </>
-                  ) : null}
-                  {item.email ? (
-                    <>
-                      {' · '}
-                      <a href={`mailto:${item.email}`} className="font-semibold hover:text-accent">
-                        {item.email}
-                      </a>
-                    </>
-                  ) : null}
-                </div>
+                    </span>
+                  ) : null,
+                },
+                {
+                  label: 'Email',
+                  value: viewing.email ? (
+                    <a href={`mailto:${viewing.email}`} className="font-semibold hover:text-accent">
+                      {viewing.email}
+                    </a>
+                  ) : null,
+                },
+                { label: 'Received', value: new Date(viewing.createdAt).toLocaleString('en-IN') },
+                ...(viewing.kind === InquiryKind.ENQUIRY || viewing.pujaTitle || viewing.city || viewing.preferredDate
+                  ? [
+                      { label: 'Puja', value: viewing.pujaTitle },
+                      { label: 'City', value: viewing.city },
+                      {
+                        label: 'Preferred date',
+                        value: viewing.preferredDate
+                          ? new Date(viewing.preferredDate).toLocaleDateString('en-IN')
+                          : null,
+                      },
+                    ]
+                  : []),
+                { label: 'Subject', value: viewing.subject },
+              ]}
+            />
+
+            <div>
+              <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">
+                Message
               </div>
-              <span className="shrink-0 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-                {new Date(item.createdAt).toLocaleString('en-IN')}
-              </span>
+              <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {viewing.message}
+              </p>
             </div>
 
-            {item.subject ? (
-              <p className="mt-3 text-xs font-bold text-foreground">{item.subject}</p>
-            ) : null}
-            <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
-              {item.message}
-            </p>
-
-            {/* Enquiry-specific context */}
-            {item.kind === InquiryKind.ENQUIRY &&
-            (item.pujaTitle || item.city || item.preferredDate) ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {item.pujaTitle ? (
-                  <span className="badge bg-accent-soft text-accent">{item.pujaTitle}</span>
-                ) : null}
-                {item.city ? (
-                  <span className="badge bg-gray-100 text-gray-700">📍 {item.city}</span>
-                ) : null}
-                {item.preferredDate ? (
-                  <span className="badge bg-gray-100 text-gray-700">
-                    📅 {new Date(item.preferredDate).toLocaleDateString('en-IN')}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* Working notes + status */}
-            <div
-              className="mt-4 space-y-3 border-t pt-4"
-              style={{ borderColor: 'hsl(var(--border) / 0.3)' }}
-            >
-              <div>
-                <label className="label">Internal note</label>
-                <textarea
-                  className="input py-2 text-xs"
-                  rows={2}
-                  placeholder="What was done, who called, what was agreed…"
-                  value={notes[item.id] ?? ''}
-                  onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  className="btn-outline text-2xs uppercase tracking-wider"
-                  onClick={() => saveNote(item)}
-                  disabled={(notes[item.id] ?? '') === item.adminNotes}
-                >
-                  Save note
-                </button>
-                {item.status !== InquiryStatus.IN_PROGRESS ? (
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => setInquiryStatus(item, InquiryStatus.IN_PROGRESS)}
-                  >
-                    Mark in progress
-                  </button>
-                ) : null}
-                {item.status !== InquiryStatus.RESOLVED ? (
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => setInquiryStatus(item, InquiryStatus.RESOLVED)}
-                  >
-                    ✓ Resolve
-                  </button>
-                ) : (
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => setInquiryStatus(item, InquiryStatus.NEW)}
-                  >
-                    Reopen
-                  </button>
-                )}
-              </div>
+            <div>
+              <label className="label">Internal note</label>
+              <textarea
+                className="input py-2 text-xs"
+                rows={3}
+                placeholder="What was done, who called, what was agreed…"
+                value={notes[viewing.id] ?? ''}
+                onChange={(e) => setNotes({ ...notes, [viewing.id]: e.target.value })}
+              />
+              <button
+                className="btn-outline mt-2 text-2xs uppercase tracking-wider"
+                onClick={() => saveNote(viewing)}
+                disabled={(notes[viewing.id] ?? '') === viewing.adminNotes}
+              >
+                Save note
+              </button>
             </div>
-          </div>
-        ))}
-
-        {items.length === 0 ? (
-          <div className="card p-10 text-center">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Nothing here.
-            </p>
           </div>
         ) : null}
-      </div>
+      </Modal>
     </AdminShell>
-  );
-}
-
-function FilterRow({
-  label,
-  tabs,
-  value,
-  onChange,
-}: {
-  label: string;
-  tabs: { value: string; label: string }[];
-  value: string;
-  onChange: (next: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="w-14 text-3xs font-extrabold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
-      {tabs.map((tab) => (
-        <button
-          key={tab.value}
-          onClick={() => onChange(tab.value)}
-          className={`rounded-full border px-3 py-1.5 text-2xs font-bold uppercase tracking-wider transition-colors ${
-            value === tab.value
-              ? 'border-transparent bg-accent text-white'
-              : 'bg-white text-muted-foreground hover:text-foreground'
-          }`}
-          style={value === tab.value ? {} : { borderColor: 'hsl(var(--border) / 0.6)' }}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
   );
 }

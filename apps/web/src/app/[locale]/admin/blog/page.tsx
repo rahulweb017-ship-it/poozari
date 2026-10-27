@@ -1,10 +1,22 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  Thumb,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
 import { PostStatus, readingMinutes, slugify, type BlogPost } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const EMPTY = {
   title: '',
@@ -18,11 +30,19 @@ const EMPTY = {
   status: PostStatus.DRAFT as string,
 };
 
+function formatDate(value?: string | null) {
+  return value ? new Date(value).toLocaleDateString('en-IN') : null;
+}
+
 export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [viewing, setViewing] = useState<BlogPost | null>(null);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -31,20 +51,30 @@ export default function AdminBlogPage() {
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
 
-  function resetForm() {
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
     setEditingId(null);
     setForm(EMPTY);
-    setError('');
-    setMsg('');
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewing(null), []);
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY);
+    setFormError('');
+    setFormOpen(true);
   }
 
   function startEdit(post: BlogPost) {
+    setViewing(null);
     setEditingId(post.id);
-    setError('');
-    setMsg('');
+    setFormError('');
     setForm({
       title: post.title,
       slug: post.slug,
@@ -56,12 +86,12 @@ export default function AdminBlogPage() {
       tags: post.tags.join(', '),
       status: post.status,
     });
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormOpen(true);
   }
 
   async function save(status?: string) {
     setBusy(true);
-    setError('');
+    setFormError('');
     setMsg('');
     try {
       const payload = {
@@ -85,10 +115,10 @@ export default function AdminBlogPage() {
         await api.adminCreateBlogPost(payload);
         setMsg(payload.status === PostStatus.PUBLISHED ? 'Post published.' : 'Draft saved.');
       }
-      resetForm();
+      closeForm();
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save the post');
+      setFormError(e.message ?? 'Could not save the post');
     } finally {
       setBusy(false);
     }
@@ -96,10 +126,12 @@ export default function AdminBlogPage() {
 
   async function togglePublish(post: BlogPost) {
     setError('');
+    setMsg('');
     try {
       await api.adminUpdateBlogPost(post.id, {
         status: post.status === PostStatus.PUBLISHED ? PostStatus.DRAFT : PostStatus.PUBLISHED,
       });
+      setViewing(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not change the post status');
@@ -109,232 +141,301 @@ export default function AdminBlogPage() {
   async function remove(post: BlogPost) {
     if (!window.confirm(`Delete “${post.title}”? This cannot be undone.`)) return;
     setError('');
+    setMsg('');
     try {
       await api.adminDeleteBlogPost(post.id);
       setMsg(`Deleted “${post.title}”.`);
-      if (editingId === post.id) resetForm();
+      setViewing(null);
+      if (editingId === post.id) closeForm();
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not delete the post');
     }
   }
 
+  function openPublic(post: BlogPost) {
+    window.open(`/blog/${post.slug}`, '_blank', 'noopener,noreferrer');
+  }
+
+  const categories = useMemo(
+    () => Array.from(new Set(posts.map((p) => p.category).filter(Boolean))).sort(),
+    [posts],
+  );
+
+  const columns: Column<BlogPost>[] = [
+    {
+      key: 'title',
+      header: 'Post',
+      render: (post) => (
+        <div className="flex items-center gap-3">
+          <Thumb src={post.coverImageUrl} label={post.title} />
+          <div className="min-w-0">
+            <div className="max-w-[280px] truncate font-bold text-foreground">{post.title}</div>
+            <div className="max-w-[280px] truncate text-3xs text-muted-foreground">/blog/{post.slug}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (post) => <span className="badge bg-accent-soft text-accent">{post.category}</span>,
+    },
+    { key: 'author', header: 'Author', render: (post) => post.authorName || '—' },
+    { key: 'read', header: 'Read', render: (post) => `${readingMinutes(post.body)} min` },
+    {
+      key: 'date',
+      header: 'Published',
+      render: (post) => formatDate(post.publishedAt) ?? '—',
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (post) => (
+        <StatusPill on={post.status === PostStatus.PUBLISHED} onLabel="Published" offLabel="Draft" />
+      ),
+    },
+  ];
+
+  const filters: FilterDef<BlogPost>[] = [
+    {
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: PostStatus.PUBLISHED, label: 'Published' },
+        { value: PostStatus.DRAFT, label: 'Draft' },
+      ],
+      match: (post, v) => post.status === v,
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      options: categories.map((c) => ({ value: c, label: c })),
+      match: (post, v) => post.category === v,
+    },
+  ];
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-          Blog
-        </h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Write, save as draft, and publish — no deploy needed.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Blog"
+        subtitle="Write, save as draft, and publish — no deploy needed."
+        actions={
+          <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+            + Add post
+          </button>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Editor */}
-        <div className="card self-start p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-              {editingId ? '✏️ Edit post' : '📝 New post'}
-            </h3>
-            {editingId ? (
+      <Notice error={error} message={msg} />
+
+      <DataTable
+        rows={posts}
+        columns={columns}
+        getRowId={(post) => post.id}
+        loading={loading}
+        searchText={(post) =>
+          [post.title, post.slug, post.excerpt, post.category, post.authorName, ...post.tags].join(' ')
+        }
+        searchPlaceholder="Search title, slug, category, tag…"
+        filters={filters}
+        emptyText="No posts yet."
+        onRowClick={setViewing}
+        actions={(post) => (
+          <>
+            <ActionButton onClick={() => setViewing(post)}>View</ActionButton>
+            <ActionButton tone="accent" onClick={() => startEdit(post)}>Edit</ActionButton>
+            <ActionButton
+              tone={post.status === PostStatus.PUBLISHED ? 'default' : 'success'}
+              onClick={() => togglePublish(post)}
+            >
+              {post.status === PostStatus.PUBLISHED ? 'Unpublish' : 'Publish'}
+            </ActionButton>
+            <ActionButton tone="danger" onClick={() => remove(post)}>Delete</ActionButton>
+          </>
+        )}
+      />
+
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing?.title ?? ''}
+        onClose={closeView}
+        size="lg"
+        footer={
+          viewing ? (
+            <>
               <button
-                className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
-                onClick={resetForm}
+                className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                onClick={() => remove(viewing)}
               >
-                + New post
+                Delete
               </button>
+              {viewing.status === PostStatus.PUBLISHED ? (
+                <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => openPublic(viewing)}>
+                  ↗ View on site
+                </button>
+              ) : null}
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => togglePublish(viewing)}>
+                {viewing.status === PostStatus.PUBLISHED ? 'Unpublish' : 'Publish'}
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => startEdit(viewing)}>
+                Edit
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-5">
+            {viewing.coverImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={viewing.coverImageUrl}
+                alt=""
+                className="aspect-video w-full rounded-2xl object-cover"
+              />
             ) : null}
-          </div>
-
-          {error ? (
-            <p className="mt-3 rounded-2xl bg-red-50 p-3 text-xs text-red-700">{error}</p>
-          ) : null}
-          {msg ? (
-            <p className="mt-3 rounded-2xl bg-green-50 p-3 text-xs text-green-700">{msg}</p>
-          ) : null}
-
-          <div className="mt-5 space-y-4">
-            <div>
-              <label className="label">Title *</label>
-              <input
-                className="input"
-                placeholder="Narayan Nag Bali, explained"
-                value={form.title}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    title: e.target.value,
-                    slug: editingId ? form.slug : slugify(e.target.value),
-                  })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Slug</label>
-                <input
-                  className="input"
-                  value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Category</label>
-                <input
-                  className="input"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="label">Excerpt</label>
-              <textarea
-                className="input"
-                rows={2}
-                placeholder="One or two lines shown on the blog index and in search results."
-                value={form.excerpt}
-                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-              />
-            </div>
-            <ImagePicker
-              label="Cover image"
-              hint="Shown on the blog listing and at the top of the post"
-              value={form.coverImageUrl}
-              onChange={(coverImageUrl) => setForm({ ...form, coverImageUrl })}
-              aspect="16/9"
+            <DetailList
+              items={[
+                { label: 'Status', value: viewing.status === PostStatus.PUBLISHED ? 'Published' : 'Draft' },
+                { label: 'URL', value: `/blog/${viewing.slug}` },
+                { label: 'Category', value: viewing.category },
+                { label: 'Author', value: viewing.authorName },
+                { label: 'Tags', value: viewing.tags.join(', ') },
+                { label: 'Reading time', value: `${readingMinutes(viewing.body)} min` },
+                { label: 'Published', value: formatDate(viewing.publishedAt) },
+                { label: 'Last updated', value: formatDate(viewing.updatedAt) },
+                { label: 'Excerpt', value: viewing.excerpt },
+              ]}
             />
             <div>
-              <label className="label">Body (Markdown)</label>
-              <textarea
-                className="input font-mono text-xs"
-                rows={16}
-                placeholder={'## A heading\n\nA paragraph with **bold** and a [link](/puja).\n\n- a point\n- another point\n\n> A line worth pulling out.'}
-                value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
+              <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">
+                Body (Markdown)
+              </div>
+              <pre className="mt-1 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-gray-50 p-4 font-mono text-xs text-foreground">
+                {viewing.body || '—'}
+              </pre>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingId ? 'Edit post' : 'Add post'}
+        onClose={closeForm}
+        size="lg"
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm} disabled={busy}>
+              Cancel
+            </button>
+            <button
+              className="btn-outline text-2xs uppercase tracking-wider"
+              onClick={() => save(PostStatus.DRAFT)}
+              disabled={busy || !form.title}
+            >
+              {busy ? 'Saving…' : 'Save draft'}
+            </button>
+            <button
+              className="btn-primary text-2xs uppercase tracking-widest"
+              onClick={() => save(PostStatus.PUBLISHED)}
+              disabled={busy || !form.title}
+            >
+              {busy ? 'Saving…' : 'Publish'}
+            </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <div className="space-y-4">
+          <div>
+            <label className="label">Title *</label>
+            <input
+              className="input"
+              placeholder="Narayan Nag Bali, explained"
+              value={form.title}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  title: e.target.value,
+                  slug: editingId ? form.slug : slugify(e.target.value),
+                })
+              }
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label">Slug</label>
+              <input
+                className="input"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
               />
-              <p className="mt-1.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Supports ## headings, **bold**, *italic*, lists, &gt; quotes, `code`, [links](/puja)
-                · {readingMinutes(form.body)} min read
-              </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Author</label>
-                <input
-                  className="input"
-                  value={form.authorName}
-                  onChange={(e) => setForm({ ...form, authorName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Tags (comma separated)</label>
-                <input
-                  className="input"
-                  placeholder="nag-bali, teerth"
-                  value={form.tags}
-                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                />
-              </div>
+            <div>
+              <label className="label">Category</label>
+              <input
+                className="input"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+              />
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                className="btn-outline flex-1 text-2xs uppercase tracking-wider"
-                onClick={() => save(PostStatus.DRAFT)}
-                disabled={busy || !form.title}
-              >
-                {busy ? 'Saving…' : 'Save draft'}
-              </button>
-              <button
-                className="btn-primary flex-1 text-2xs uppercase tracking-widest"
-                onClick={() => save(PostStatus.PUBLISHED)}
-                disabled={busy || !form.title}
-              >
-                {busy ? 'Saving…' : 'Publish'}
-              </button>
+          </div>
+          <div>
+            <label className="label">Excerpt</label>
+            <textarea
+              className="input"
+              rows={2}
+              placeholder="One or two lines shown on the blog index and in search results."
+              value={form.excerpt}
+              onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+            />
+          </div>
+          <ImagePicker
+            label="Cover image"
+            hint="Shown on the blog listing and at the top of the post"
+            value={form.coverImageUrl}
+            onChange={(coverImageUrl) => setForm({ ...form, coverImageUrl })}
+            aspect="16/9"
+          />
+          <div>
+            <label className="label">Body (Markdown)</label>
+            <textarea
+              className="input font-mono text-xs"
+              rows={16}
+              placeholder={'## A heading\n\nA paragraph with **bold** and a [link](/puja).\n\n- a point\n- another point\n\n> A line worth pulling out.'}
+              value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
+            />
+            <p className="mt-1.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Supports ## headings, **bold**, *italic*, lists, &gt; quotes, `code`, [links](/puja)
+              · {readingMinutes(form.body)} min read
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label">Author</label>
+              <input
+                className="input"
+                value={form.authorName}
+                onChange={(e) => setForm({ ...form, authorName: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label">Tags (comma separated)</label>
+              <input
+                className="input"
+                placeholder="nag-bali, teerth"
+                value={form.tags}
+                onChange={(e) => setForm({ ...form, tags: e.target.value })}
+              />
             </div>
           </div>
         </div>
-
-        {/* List */}
-        <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            All posts ({posts.length})
-          </h3>
-          <div className="mt-5 space-y-3">
-            {posts.map((post) => (
-              <div key={post.id} className="card bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-bold text-sm text-foreground">{post.title}</span>
-                      <span
-                        className={`badge ${
-                          post.status === PostStatus.PUBLISHED
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-gray-200 text-gray-600'
-                        }`}
-                      >
-                        {post.status === PostStatus.PUBLISHED ? 'Published' : 'Draft'}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-2xs text-muted-foreground">
-                      <span className="badge bg-accent-soft text-accent">{post.category}</span>
-                      <span className="font-semibold">/blog/{post.slug}</span>
-                      <span>{readingMinutes(post.body)} min</span>
-                      {post.publishedAt ? (
-                        <span>{new Date(post.publishedAt).toLocaleDateString('en-IN')}</span>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="mt-3 flex flex-wrap gap-2 border-t pt-3"
-                  style={{ borderColor: 'hsl(var(--border) / 0.3)' }}
-                >
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => startEdit(post)}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => togglePublish(post)}
-                  >
-                    {post.status === PostStatus.PUBLISHED ? '⊘ Unpublish' : '✓ Publish'}
-                  </button>
-                  {post.status === PostStatus.PUBLISHED ? (
-                    <a
-                      href={`/blog/${post.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-outline text-2xs uppercase tracking-wider"
-                    >
-                      ↗ View
-                    </a>
-                  ) : null}
-                  <button
-                    className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                    onClick={() => remove(post)}
-                  >
-                    🗑 Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-            {posts.length === 0 ? (
-              <div className="card p-10 text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  No posts yet.
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      </Modal>
     </AdminShell>
   );
 }

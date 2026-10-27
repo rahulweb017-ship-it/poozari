@@ -1,6 +1,18 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  Thumb,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
@@ -13,7 +25,7 @@ import {
   type Puja,
   type Temple,
 } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface PackageDraft {
   name: string;
@@ -48,8 +60,15 @@ const EMPTY_FORM = {
   cityId: '',
   isActive: true,
   deityIds: [] as string[],
-  festivalIds: [] as string[] ,
+  festivalIds: [] as string[],
   benefitIds: [] as string[],
+};
+
+const LOCATION_LABELS: Record<string, string> = {
+  HOME: '🏠 Home',
+  TEERTH: '🛕 Teerth',
+  TEMPLE: '⛩️ Temple',
+  DIGITAL: '📿 Digital',
 };
 
 function slugify(v: string) {
@@ -72,12 +91,16 @@ export default function AdminPujasPage() {
   const [deities, setDeities] = useState<NamedEntity[]>([]);
   const [festivals, setFestivals] = useState<NamedEntity[]>([]);
   const [benefits, setBenefits] = useState<NamedEntity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [formError, setFormError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [packages, setPackages] = useState<PackageDraft[]>([EMPTY_PACKAGE]);
+  const [viewing, setViewing] = useState<Puja | null>(null);
 
   async function load() {
     const [p, c, t, d, f, b] = await Promise.all([
@@ -97,21 +120,32 @@ export default function AdminPujasPage() {
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
 
-  function resetForm() {
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
     setPackages([EMPTY_PACKAGE]);
-    setError('');
-    setMsg('');
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewing(null), []);
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setPackages([EMPTY_PACKAGE]);
+    setFormError('');
+    setFormOpen(true);
   }
 
   function startEdit(p: Puja) {
+    setViewing(null);
     setEditingId(p.id);
-    setError('');
-    setMsg('');
+    setFormError('');
     setForm({
       title: p.title,
       slug: p.slug,
@@ -141,11 +175,11 @@ export default function AdminPujasPage() {
           }))
         : [EMPTY_PACKAGE],
     );
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormOpen(true);
   }
 
   async function submit() {
-    setError('');
+    setFormError('');
     setMsg('');
     setBusy(true);
     try {
@@ -159,7 +193,7 @@ export default function AdminPujasPage() {
           inclusions: p.inclusions.split(',').map((s) => s.trim()).filter(Boolean),
         }));
       if (pkgs.length === 0) {
-        setError('Add at least one package with a name and price.');
+        setFormError('Add at least one package with a name and price.');
         setBusy(false);
         return;
       }
@@ -190,10 +224,10 @@ export default function AdminPujasPage() {
         await api.adminCreatePuja(payload);
         setMsg('Puja created.');
       }
-      resetForm();
+      closeForm();
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save puja');
+      setFormError(e.message ?? 'Could not save puja');
     } finally {
       setBusy(false);
     }
@@ -206,7 +240,8 @@ export default function AdminPujasPage() {
     try {
       await api.adminDeletePuja(p.id);
       setMsg(`Deleted "${p.title}".`);
-      if (editingId === p.id) resetForm();
+      setViewing(null);
+      if (editingId === p.id) closeForm();
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not delete puja');
@@ -215,52 +250,253 @@ export default function AdminPujasPage() {
 
   async function toggleActive(p: Puja) {
     setError('');
+    setMsg('');
     try {
       await api.adminUpdatePuja(p.id, { isActive: !p.isActive });
+      setViewing(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not update puja');
     }
   }
 
-  const LOCATION_LABELS: Record<string, string> = {
-    HOME: '🏠 Home',
-    TEERTH: '🛕 Teerth',
-    TEMPLE: '⛩️ Temple',
-    DIGITAL: '📿 Digital',
-  };
+  const columns: Column<Puja>[] = [
+    {
+      key: 'title',
+      header: 'Puja',
+      render: (p) => (
+        <div className="flex items-center gap-3">
+          <Thumb src={p.imageUrl} label={p.title} />
+          <div className="min-w-0">
+            <div className="font-bold text-foreground">{p.title}</div>
+            <div className="text-3xs text-muted-foreground">/{p.slug}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      render: (p) => (
+        <span className="badge bg-gray-100 text-gray-700">{LOCATION_LABELS[p.locationType] || p.locationType}</span>
+      ),
+    },
+    {
+      key: 'place',
+      header: 'Temple / City',
+      className: 'max-w-[180px] truncate',
+      render: (p) => [p.temple?.name, p.city?.name].filter(Boolean).join(' · ') || '—',
+    },
+    {
+      key: 'deities',
+      header: 'Deities',
+      className: 'max-w-[160px] truncate',
+      render: (p) => p.deities.map((d) => d.name).join(', ') || '—',
+    },
+    { key: 'packages', header: 'Packages', render: (p) => p.packages.length },
+    {
+      key: 'price',
+      header: 'From',
+      render: (p) => <span className="font-bold text-accent">{formatInr(p.startingPriceInr)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (p) => <StatusPill on={p.isActive} onLabel="Active" offLabel="Hidden" />,
+    },
+  ];
+
+  const filters: FilterDef<Puja>[] = [
+    {
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Hidden' },
+      ],
+      match: (p, v) => (v === 'active' ? p.isActive : !p.isActive),
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      options: Object.entries(LOCATION_LABELS).map(([value, label]) => ({ value, label })),
+      match: (p, v) => p.locationType === v,
+    },
+    {
+      key: 'city',
+      label: 'City',
+      options: cities.map((c) => ({ value: c.id, label: c.name })),
+      match: (p, v) => p.city?.id === v,
+    },
+    {
+      key: 'temple',
+      label: 'Temple',
+      options: temples.map((t) => ({ value: t.id, label: t.name })),
+      match: (p, v) => p.temple?.id === v,
+    },
+    {
+      key: 'deity',
+      label: 'Deity',
+      options: deities.map((d) => ({ value: d.id, label: d.name })),
+      match: (p, v) => p.deities.some((d) => d.id === v),
+    },
+    {
+      key: 'festival',
+      label: 'Festival',
+      options: festivals.map((f) => ({ value: f.id, label: f.name })),
+      match: (p, v) => p.festivals.some((f) => f.id === v),
+    },
+  ];
 
   return (
     <AdminShell>
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <div>
-          <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">Pujas</h1>
-          <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Create, edit and manage ritual listings.
-          </p>
-        </div>
-        <Link href="/admin/import" className="btn-outline text-2xs uppercase tracking-wider">
-          📥 Bulk import CSV
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Pujas"
+        subtitle="Create, edit and manage ritual listings."
+        actions={
+          <>
+            <Link href="/admin/import" className="btn-outline text-2xs uppercase tracking-wider">
+              📥 Bulk import CSV
+            </Link>
+            <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+              + Add puja
+            </button>
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Create / edit form */}
-        <div className="card self-start p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-              {editingId ? '✏️ Edit Puja' : '🪔 Create Puja Listing'}
-            </h3>
-            {editingId ? (
-              <button className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline" onClick={resetForm}>
-                + New puja
+      <Notice error={error} message={msg} />
+
+      <DataTable
+        rows={pujas}
+        columns={columns}
+        getRowId={(p) => p.id}
+        loading={loading}
+        searchText={(p) =>
+          [
+            p.title,
+            p.titleHi,
+            p.slug,
+            p.summary,
+            p.temple?.name,
+            p.city?.name,
+            ...p.deities.map((d) => d.name),
+            ...p.festivals.map((f) => f.name),
+            ...p.packages.map((pk) => pk.name),
+          ]
+            .filter(Boolean)
+            .join(' ')
+        }
+        searchPlaceholder="Search title, slug, temple, deity, package…"
+        filters={filters}
+        onRowClick={setViewing}
+        emptyText="No listings yet."
+        actions={(p) => (
+          <>
+            <ActionButton onClick={() => setViewing(p)}>View</ActionButton>
+            <ActionButton tone="accent" onClick={() => startEdit(p)}>Edit</ActionButton>
+            <ActionButton tone={p.isActive ? 'default' : 'success'} onClick={() => toggleActive(p)}>
+              {p.isActive ? 'Deactivate' : 'Activate'}
+            </ActionButton>
+            <ActionButton tone="danger" onClick={() => remove(p)}>Delete</ActionButton>
+          </>
+        )}
+      />
+
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing?.title ?? ''}
+        onClose={closeView}
+        size="lg"
+        footer={
+          viewing ? (
+            <>
+              <button
+                className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                onClick={() => remove(viewing)}
+              >
+                Delete
               </button>
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(viewing)}>
+                {viewing.isActive ? 'Deactivate' : 'Activate'}
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => startEdit(viewing)}>
+                Edit
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-5">
+            {viewing.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewing.imageUrl} alt="" className="max-h-56 w-full rounded-2xl object-cover" />
             ) : null}
+            <DetailList
+              items={[
+                { label: 'Hindi title', value: viewing.titleHi },
+                { label: 'Slug', value: `/${viewing.slug}` },
+                { label: 'Location type', value: LOCATION_LABELS[viewing.locationType] || viewing.locationType },
+                { label: 'Status', value: viewing.isActive ? 'Active (visible on site)' : 'Hidden' },
+                { label: 'Temple', value: viewing.temple?.name },
+                { label: 'City', value: viewing.city?.name },
+                { label: 'Starting price', value: formatInr(viewing.startingPriceInr) },
+                { label: 'Deities', value: viewing.deities.map((d) => d.name).join(', ') },
+                { label: 'Festivals', value: viewing.festivals.map((f) => f.name).join(', ') },
+                { label: 'Benefits', value: viewing.benefits.map((b) => b.name).join(', ') },
+                { label: 'Summary', value: viewing.summary },
+                { label: 'Hindi summary', value: viewing.summaryHi },
+                { label: 'Features', value: (viewing.features ?? []).join(' · ') },
+                { label: 'Description', value: viewing.description },
+              ]}
+            />
+            <div>
+              <div className="text-3xs font-extrabold uppercase tracking-widest text-muted-foreground">
+                Packages ({viewing.packages.length})
+              </div>
+              <div className="mt-2 space-y-2">
+                {viewing.packages.map((pk, i) => (
+                  <div key={i} className="rounded-xl border p-3 text-xs" style={{ borderColor: 'hsl(var(--border) / 0.4)' }}>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-bold text-foreground">
+                        {pk.name}
+                        {pk.nameHi ? <span className="ml-2 font-normal text-muted-foreground">{pk.nameHi}</span> : null}
+                      </span>
+                      <span className="font-bold text-accent">{formatInr(pk.priceInr)}</span>
+                    </div>
+                    {pk.inclusions.length ? (
+                      <div className="mt-1 text-2xs text-muted-foreground">{pk.inclusions.join(', ')}</div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          {error ? <p className="mt-3 rounded-2xl bg-red-50 p-3 text-xs text-red-700">{error}</p> : null}
-          {msg ? <p className="mt-3 rounded-2xl bg-green-50 p-3 text-xs text-green-700">{msg}</p> : null}
+        ) : null}
+      </Modal>
 
-          <div className="mt-5 space-y-4">
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingId ? '✏️ Edit Puja' : '🪔 Create Puja Listing'}
+        onClose={closeForm}
+        size="lg"
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm}>
+              Cancel
+            </button>
+            <button className="btn-primary text-2xs uppercase tracking-wider" onClick={submit} disabled={busy || !form.title}>
+              {busy ? 'Saving…' : editingId ? 'Update puja' : 'Create puja'}
+            </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Title (English) *</label>
               <input
@@ -281,21 +517,23 @@ export default function AdminPujasPage() {
                 onChange={(e) => setForm({ ...form, titleHi: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Slug</label>
-                <input className="input" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              </div>
-              <div>
-                <label className="label">Location type</label>
-                <select className="input" value={form.locationType} onChange={(e) => setForm({ ...form, locationType: e.target.value })}>
-                  <option value="HOME">🏠 Home</option>
-                  <option value="TEERTH">🛕 Teerth</option>
-                  <option value="TEMPLE">⛩️ Temple</option>
-                  <option value="DIGITAL">📿 Digital</option>
-                </select>
-              </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Slug</label>
+              <input className="input" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
             </div>
+            <div>
+              <label className="label">Location type</label>
+              <select className="input" value={form.locationType} onChange={(e) => setForm({ ...form, locationType: e.target.value })}>
+                <option value="HOME">🏠 Home</option>
+                <option value="TEERTH">🛕 Teerth</option>
+                <option value="TEMPLE">⛩️ Temple</option>
+                <option value="DIGITAL">📿 Digital</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Summary (English)</label>
               <input className="input" placeholder="One-line summary for cards" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
@@ -304,6 +542,8 @@ export default function AdminPujasPage() {
               <label className="label">सारांश (Hindi)</label>
               <input className="input" placeholder="कार्ड पर दिखने वाला एक-पंक्ति सारांश" value={form.summaryHi} onChange={(e) => setForm({ ...form, summaryHi: e.target.value })} />
             </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Description (English)</label>
               <textarea className="input" rows={3} placeholder="Detailed scriptural background..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
@@ -312,6 +552,8 @@ export default function AdminPujasPage() {
               <label className="label">विवरण (Hindi)</label>
               <textarea className="input" rows={3} placeholder="विस्तृत शास्त्रीय पृष्ठभूमि..." value={form.descriptionHi} onChange={(e) => setForm({ ...form, descriptionHi: e.target.value })} />
             </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Features list (English, one per line)</label>
               <textarea className="input" rows={4} placeholder="Verified pandit trained in scriptural procedures" value={form.features} onChange={(e) => setForm({ ...form, features: e.target.value })} />
@@ -321,162 +563,112 @@ export default function AdminPujasPage() {
               <label className="label">विशेषताएँ (Hindi, one per line)</label>
               <textarea className="input" rows={4} placeholder="शास्त्रीय विधि में प्रशिक्षित सत्यापित पंडित" value={form.featuresHi} onChange={(e) => setForm({ ...form, featuresHi: e.target.value })} />
             </div>
-            <p className="rounded-2xl bg-amber-50 p-3 text-3xs leading-relaxed text-amber-800">
-              Hindi is optional. A blank Hindi field means Hindi readers see the English text
-              instead of an empty heading.
-            </p>
-            <ImagePicker
-              label="Cover image"
-              hint="Shown on puja cards and at the top of the listing"
-              value={form.imageUrl}
-              onChange={(imageUrl) => setForm({ ...form, imageUrl })}
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Temple (optional)</label>
-                <select className="input" value={form.templeId} onChange={(e) => setForm({ ...form, templeId: e.target.value })}>
-                  <option value="">— None —</option>
-                  {temples.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}{t.city ? ` · ${t.city.name}` : ''}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="label">City (optional)</label>
-                <select className="input" value={form.cityId} onChange={(e) => setForm({ ...form, cityId: e.target.value })}>
-                  <option value="">— None —</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Relation pickers */}
-            <RelationChips label="Deities" options={deities} selected={form.deityIds} onToggle={(id) => setForm({ ...form, deityIds: toggleId(form.deityIds, id) })} />
-            <RelationChips label="Festivals" options={festivals} selected={form.festivalIds} onToggle={(id) => setForm({ ...form, festivalIds: toggleId(form.festivalIds, id) })} />
-            <RelationChips label="Benefits" options={benefits} selected={form.benefitIds} onToggle={(id) => setForm({ ...form, benefitIds: toggleId(form.benefitIds, id) })} />
-
-            {/* Packages editor */}
-            <div className="rounded-2xl border bg-gray-50/50 p-4" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="text-3xs font-extrabold uppercase tracking-wider text-muted-foreground">
-                  Packages *
-                </label>
-                <button
-                  type="button"
-                  className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
-                  onClick={() => setPackages([...packages, { name: '', nameHi: '', priceInr: '', inclusions: '' }])}
-                >
-                  + Add package
-                </button>
-              </div>
-              <div className="space-y-3">
-                {packages.map((pk, i) => (
-                  <div key={i} className="rounded-xl border bg-white p-3" style={{ borderColor: 'hsl(var(--border) / 0.4)' }}>
-                    <div className="flex items-center gap-2">
-                      <input
-                        className="input flex-1 py-1.5 text-xs"
-                        placeholder="Package name (English)"
-                        value={pk.name}
-                        onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)))}
-                      />
-                      <input
-                        className="input w-24 py-1.5 text-xs"
-                        placeholder="₹ Price"
-                        value={pk.priceInr}
-                        onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, priceInr: e.target.value } : x)))}
-                      />
-                      {packages.length > 1 ? (
-                        <button
-                          type="button"
-                          className="text-xs font-bold text-red-600 hover:underline"
-                          onClick={() => setPackages(packages.filter((_, xi) => xi !== i))}
-                          title="Remove package"
-                        >
-                          ✕
-                        </button>
-                      ) : null}
-                    </div>
-                    <input
-                      className="input mt-2 py-1.5 text-xs"
-                      placeholder="पैकेज का नाम (Hindi, optional)"
-                      value={pk.nameHi}
-                      onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, nameHi: e.target.value } : x)))}
-                    />
-                    <input
-                      className="input mt-2 py-1.5 text-xs"
-                      placeholder="Inclusions (comma separated)"
-                      value={pk.inclusions}
-                      onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, inclusions: e.target.value } : x)))}
-                    />
-                  </div>
+          </div>
+          <p className="rounded-2xl bg-amber-50 p-3 text-3xs leading-relaxed text-amber-800">
+            Hindi is optional. A blank Hindi field means Hindi readers see the English text
+            instead of an empty heading.
+          </p>
+          <ImagePicker
+            label="Cover image"
+            hint="Shown on puja cards and at the top of the listing"
+            value={form.imageUrl}
+            onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Temple (optional)</label>
+              <select className="input" value={form.templeId} onChange={(e) => setForm({ ...form, templeId: e.target.value })}>
+                <option value="">— None —</option>
+                {temples.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}{t.city ? ` · ${t.city.name}` : ''}</option>
                 ))}
-              </div>
+              </select>
             </div>
-
-            <label className="flex cursor-pointer items-center gap-2.5">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-[hsl(var(--accent))]"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              />
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground">Active (visible on site)</span>
-            </label>
-
-            <button className="btn-primary w-full text-2xs uppercase tracking-widest" onClick={submit} disabled={busy || !form.title}>
-              {busy ? 'Saving…' : editingId ? 'Update puja' : 'Create puja'}
-            </button>
+            <div>
+              <label className="label">City (optional)</label>
+              <select className="input" value={form.cityId} onChange={(e) => setForm({ ...form, cityId: e.target.value })}>
+                <option value="">— None —</option>
+                {cities.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
 
-        {/* List */}
-        <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            All Listings ({pujas.length})
-          </h3>
-          <div className="mt-5 space-y-3">
-            {pujas.map((p) => (
-              <div key={p.id} className="card bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-foreground">{p.title}</span>
-                      {!p.isActive ? <span className="badge bg-gray-200 text-gray-500">Hidden</span> : null}
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-2xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                      <span className="badge bg-gray-100 text-gray-700">{LOCATION_LABELS[p.locationType] || p.locationType}</span>
-                      <span className="font-semibold">/{p.slug}</span>
-                      <span>{p.packages.length} package{p.packages.length === 1 ? '' : 's'}</span>
-                    </div>
+          {/* Relation pickers */}
+          <RelationChips label="Deities" options={deities} selected={form.deityIds} onToggle={(id) => setForm({ ...form, deityIds: toggleId(form.deityIds, id) })} />
+          <RelationChips label="Festivals" options={festivals} selected={form.festivalIds} onToggle={(id) => setForm({ ...form, festivalIds: toggleId(form.festivalIds, id) })} />
+          <RelationChips label="Benefits" options={benefits} selected={form.benefitIds} onToggle={(id) => setForm({ ...form, benefitIds: toggleId(form.benefitIds, id) })} />
+
+          {/* Packages editor */}
+          <div className="rounded-2xl border bg-gray-50/50 p-4" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-3xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                Packages *
+              </label>
+              <button
+                type="button"
+                className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
+                onClick={() => setPackages([...packages, { name: '', nameHi: '', priceInr: '', inclusions: '' }])}
+              >
+                + Add package
+              </button>
+            </div>
+            <div className="space-y-3">
+              {packages.map((pk, i) => (
+                <div key={i} className="rounded-xl border bg-white p-3" style={{ borderColor: 'hsl(var(--border) / 0.4)' }}>
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="input flex-1 py-1.5 text-xs"
+                      placeholder="Package name (English)"
+                      value={pk.name}
+                      onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)))}
+                    />
+                    <input
+                      className="input w-24 py-1.5 text-xs"
+                      placeholder="₹ Price"
+                      value={pk.priceInr}
+                      onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, priceInr: e.target.value } : x)))}
+                    />
+                    {packages.length > 1 ? (
+                      <button
+                        type="button"
+                        className="text-xs font-bold text-red-600 hover:underline"
+                        onClick={() => setPackages(packages.filter((_, xi) => xi !== i))}
+                        title="Remove package"
+                      >
+                        ✕
+                      </button>
+                    ) : null}
                   </div>
-                  <span className="shrink-0 text-sm font-black text-accent">{formatInr(p.startingPriceInr)}</span>
+                  <input
+                    className="input mt-2 py-1.5 text-xs"
+                    placeholder="पैकेज का नाम (Hindi, optional)"
+                    value={pk.nameHi}
+                    onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, nameHi: e.target.value } : x)))}
+                  />
+                  <input
+                    className="input mt-2 py-1.5 text-xs"
+                    placeholder="Inclusions (comma separated)"
+                    value={pk.inclusions}
+                    onChange={(e) => setPackages(packages.map((x, xi) => (xi === i ? { ...x, inclusions: e.target.value } : x)))}
+                  />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-                  <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => startEdit(p)}>
-                    ✏️ Edit
-                  </button>
-                  <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(p)}>
-                    {p.isActive ? '⊘ Deactivate' : '✓ Activate'}
-                  </button>
-                  <button
-                    className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                    onClick={() => remove(p)}
-                  >
-                    🗑 Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-            {pujas.length === 0 ? (
-              <div className="card p-10 text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">No listings yet.</p>
-              </div>
-            ) : null}
+              ))}
+            </div>
           </div>
+
+          <label className="flex cursor-pointer items-center gap-2.5">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[hsl(var(--accent))]"
+              checked={form.isActive}
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">Active (visible on site)</span>
+          </label>
         </div>
-      </div>
+      </Modal>
     </AdminShell>
   );
 }

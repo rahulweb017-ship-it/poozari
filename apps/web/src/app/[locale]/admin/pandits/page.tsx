@@ -1,10 +1,22 @@
 'use client';
 
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  Thumb,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { api } from '@/lib/client';
 import type { City } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const EMPTY_FORM = {
   displayName: '',
@@ -22,13 +34,19 @@ const EMPTY_FORM = {
 };
 
 export default function AdminPanditsPage() {
+  const router = useRouter();
+  const openDashboard = (p: any) => router.push(`/admin/pandits/${p.id}`);
   const [pandits, setPandits] = useState<any[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [formError, setFormError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [viewing, setViewing] = useState<any | null>(null);
 
   async function load() {
     const [p, c] = await Promise.all([api.adminListPandits(), api.listCities()]);
@@ -37,20 +55,32 @@ export default function AdminPanditsPage() {
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
 
-  function resetForm() {
+  const cityName = useMemo(() => new Map(cities.map((c) => [c.id, c.name])), [cities]);
+
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setError('');
-    setMsg('');
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewing(null), []);
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setFormOpen(true);
   }
 
   function startEdit(p: any) {
+    setViewing(null);
     setEditingId(p.id);
-    setError('');
-    setMsg('');
+    setFormError('');
     setForm({
       displayName: p.displayName ?? '',
       email: p.user?.email ?? '',
@@ -64,11 +94,11 @@ export default function AdminPanditsPage() {
       isActive: p.isActive ?? true,
       commissionPercent: p.commissionPercent == null ? '' : String(p.commissionPercent),
     });
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormOpen(true);
   }
 
   async function submit() {
-    setError('');
+    setFormError('');
     setMsg('');
     setBusy(true);
     try {
@@ -89,7 +119,6 @@ export default function AdminPanditsPage() {
             form.commissionPercent.trim() === '' ? null : Number(form.commissionPercent),
           ...(form.password ? { password: form.password } : {}),
         });
-        resetForm();
         setMsg('Pandit updated.');
       } else {
         await api.adminCreatePandit({
@@ -97,12 +126,12 @@ export default function AdminPanditsPage() {
           email: form.email,
           password: form.password,
         });
-        resetForm();
         setMsg('Pandit created.');
       }
+      closeForm();
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save pandit');
+      setFormError(e.message ?? 'Could not save pandit');
     } finally {
       setBusy(false);
     }
@@ -115,7 +144,7 @@ export default function AdminPanditsPage() {
     try {
       await api.adminDeletePandit(p.id);
       setMsg(`Deleted "${p.displayName}".`);
-      if (editingId === p.id) resetForm();
+      setViewing(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not delete pandit');
@@ -124,94 +153,241 @@ export default function AdminPanditsPage() {
 
   async function toggleActive(p: any) {
     setError('');
+    setMsg('');
     try {
       await api.adminUpdatePandit(p.id, { isActive: !p.isActive });
+      setViewing(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not update pandit account');
     }
   }
 
+  const columns: Column<any>[] = [
+    {
+      key: 'name',
+      header: 'Pandit',
+      render: (p) => (
+        <div className="flex items-center gap-3">
+          <Thumb label={p.displayName ?? '?'} />
+          <div className="min-w-0">
+            <div className="font-bold text-foreground">{p.displayName}</div>
+            <div className="text-3xs text-muted-foreground">{p.user?.email ?? '—'}</div>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'phone', header: 'Phone', render: (p) => p.phone || '—' },
+    { key: 'exp', header: 'Experience', render: (p) => `${p.experienceYears ?? 0} yrs` },
+    {
+      key: 'pincodes',
+      header: 'Pincodes',
+      className: 'max-w-[160px] truncate',
+      render: (p) => p.servicePincodes?.join(', ') || '—',
+    },
+    {
+      key: 'share',
+      header: 'Share',
+      render: (p) => (p.commissionPercent == null ? 'Default' : `${p.commissionPercent}%`),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (p) => (
+        <div className="flex flex-col items-start gap-1">
+          <StatusPill on={p.isActive} onLabel="Active" offLabel="Deactivated" />
+          <span className={`text-3xs font-bold uppercase tracking-wider ${p.isActive && p.isAvailable ? 'text-blue-600' : 'text-gray-400'}`}>
+            {p.isActive && p.isAvailable ? '● Online' : '○ Offline'}
+          </span>
+        </div>
+      ),
+    },
+  ];
+
+  const filters: FilterDef<any>[] = [
+    {
+      key: 'account',
+      label: 'Account',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Deactivated' },
+      ],
+      match: (p, v) => (v === 'active' ? p.isActive : !p.isActive),
+    },
+    {
+      key: 'availability',
+      label: 'Availability',
+      options: [
+        { value: 'online', label: 'Online' },
+        { value: 'offline', label: 'Offline' },
+      ],
+      match: (p, v) => (v === 'online') === Boolean(p.isActive && p.isAvailable),
+    },
+    {
+      key: 'city',
+      label: 'City',
+      options: cities.map((c) => ({ value: c.id, label: c.name })),
+      match: (p, v) => (p.serviceCityIds ?? []).includes(v),
+    },
+  ];
+
   return (
     <AdminShell>
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <div>
-          <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">Pandits</h1>
-          <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Register, edit and coordinate platform pandits.
-          </p>
-        </div>
-        <Link href="/admin/import" className="btn-outline text-2xs uppercase tracking-wider">
-          📥 Bulk import CSV
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Pandits"
+        subtitle="Register, edit and coordinate platform pandits."
+        actions={
+          <>
+            <Link href="/admin/import" className="btn-outline text-2xs uppercase tracking-wider">
+              📥 Bulk import CSV
+            </Link>
+            <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+              + Add pujari
+            </button>
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Create / edit form */}
-        <div className="card self-start p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-              {editingId ? '✏️ Edit Pandit' : '👨‍🏫 Register Pandit'}
-            </h3>
-            {editingId ? (
-              <button className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline" onClick={resetForm}>
-                + New pandit
+      <Notice error={error} message={msg} />
+
+      <DataTable
+        rows={pandits}
+        columns={columns}
+        getRowId={(p) => p.id}
+        loading={loading}
+        searchText={(p) =>
+          [p.displayName, p.user?.email, p.phone, ...(p.servicePincodes ?? []), ...(p.specializations ?? [])].join(' ')
+        }
+        searchPlaceholder="Search name, email, phone, pincode…"
+        filters={filters}
+        onRowClick={openDashboard}
+        actions={(p) => (
+          <>
+            <ActionButton onClick={() => openDashboard(p)}>Dashboard</ActionButton>
+            <ActionButton onClick={() => setViewing(p)}>Quick view</ActionButton>
+            <ActionButton tone="accent" onClick={() => startEdit(p)}>Edit</ActionButton>
+            <ActionButton tone={p.isActive ? 'default' : 'success'} onClick={() => toggleActive(p)}>
+              {p.isActive ? 'Deactivate' : 'Activate'}
+            </ActionButton>
+            <ActionButton tone="danger" onClick={() => remove(p)}>Delete</ActionButton>
+          </>
+        )}
+      />
+
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing?.displayName ?? ''}
+        onClose={closeView}
+        footer={
+          viewing ? (
+            <>
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(viewing)}>
+                {viewing.isActive ? 'Deactivate account' : 'Activate account'}
               </button>
-            ) : null}
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => startEdit(viewing)}>
+                Edit
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => openDashboard(viewing)}>
+                Open dashboard
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <DetailList
+            items={[
+              { label: 'Login email', value: viewing.user?.email },
+              { label: 'Phone', value: viewing.phone },
+              { label: 'Experience', value: `${viewing.experienceYears ?? 0} years` },
+              { label: 'Pujari share', value: viewing.commissionPercent == null ? 'Platform default' : `${viewing.commissionPercent}%` },
+              { label: 'Account', value: viewing.isActive ? 'Active' : 'Deactivated' },
+              { label: 'Availability', value: viewing.isActive && viewing.isAvailable ? 'Online' : 'Offline' },
+              { label: 'Rating', value: viewing.rating ? Number(viewing.rating).toFixed(1) : null },
+              { label: 'Service cities', value: (viewing.serviceCityIds ?? []).map((id: string) => cityName.get(id) ?? id).join(', ') },
+              { label: 'Service pincodes', value: viewing.servicePincodes?.join(', ') },
+              { label: 'Specializations', value: viewing.specializations?.join(', ') },
+              { label: 'Bio', value: viewing.bio },
+              { label: 'Joined', value: viewing.createdAt ? new Date(viewing.createdAt).toLocaleDateString('en-IN') : null },
+            ]}
+          />
+        ) : null}
+      </Modal>
+
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingId ? 'Edit pujari' : 'Add pujari'}
+        onClose={closeForm}
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm}>
+              Cancel
+            </button>
+            <button
+              className="btn-primary text-2xs uppercase tracking-wider"
+              onClick={submit}
+              disabled={busy || !form.displayName || !form.phone || (!editingId && (!form.email || !form.password))}
+            >
+              {busy ? 'Saving…' : editingId ? 'Update pandit' : 'Create pandit'}
+            </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <div className="space-y-4">
+          <div>
+            <label className="label">Display name *</label>
+            <input className="input" placeholder="e.g. Shastri ji" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} />
           </div>
-          {error ? <p className="mt-3 rounded-2xl bg-red-50 p-3 text-xs text-red-700">{error}</p> : null}
-          {msg ? <p className="mt-3 rounded-2xl bg-green-50 p-3 text-xs text-green-700">{msg}</p> : null}
-          <div className="mt-5 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="label">Display name *</label>
-              <input className="input" placeholder="e.g. Shastri ji" value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Login email {editingId ? '' : '*'}</label>
-                <input className="input" placeholder="email@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={Boolean(editingId)} />
-              </div>
-              <div>
-                <label className="label">{editingId ? 'Reset password (optional)' : 'Password *'}</label>
-                <input className="input" placeholder={editingId ? 'Leave blank to keep current' : 'Temporary password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Phone *</label>
-                <input className="input" placeholder="+91..." value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </div>
-              <div>
-                <label className="label">Experience (years)</label>
-                <input className="input" value={form.experienceYears} onChange={(e) => setForm({ ...form, experienceYears: e.target.value })} />
-              </div>
+              <label className="label">Login email {editingId ? '' : '*'}</label>
+              <input className="input" placeholder="email@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={Boolean(editingId)} />
             </div>
             <div>
-              <label className="label">Bio</label>
-              <textarea className="input" rows={2} placeholder="Lineage, training, languages…" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
+              <label className="label">{editingId ? 'Reset password (optional)' : 'Password *'}</label>
+              <input className="input" placeholder={editingId ? 'Leave blank to keep current' : 'Temporary password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label">Phone *</label>
+              <input className="input" placeholder="+91..." value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </div>
             <div>
-              <label className="label">Specializations (comma separated)</label>
-              <input className="input" placeholder="Rudrabhishek, Vivah..." value={form.specializations} onChange={(e) => setForm({ ...form, specializations: e.target.value })} />
+              <label className="label">Experience (years)</label>
+              <input className="input" value={form.experienceYears} onChange={(e) => setForm({ ...form, experienceYears: e.target.value })} />
             </div>
-            <div>
-              <label className="label">Service pincodes (comma separated)</label>
-              <input className="input" placeholder="221001, 221002..." value={form.servicePincodes} onChange={(e) => setForm({ ...form, servicePincodes: e.target.value })} />
-            </div>
-            <div>
-              <label className="label">Service cities</label>
-              <select
-                multiple
-                className="input h-28"
-                value={form.serviceCityIds}
-                onChange={(e) => setForm({ ...form, serviceCityIds: Array.from(e.target.selectedOptions, (o) => o.value) })}
-              >
-                {cities.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            {editingId ? (
+          </div>
+          <div>
+            <label className="label">Bio</label>
+            <textarea className="input" rows={2} placeholder="Lineage, training, languages…" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Specializations (comma separated)</label>
+            <input className="input" placeholder="Rudrabhishek, Vivah..." value={form.specializations} onChange={(e) => setForm({ ...form, specializations: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Service pincodes (comma separated)</label>
+            <input className="input" placeholder="221001, 221002..." value={form.servicePincodes} onChange={(e) => setForm({ ...form, servicePincodes: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Service cities</label>
+            <select
+              multiple
+              className="input h-28"
+              value={form.serviceCityIds}
+              onChange={(e) => setForm({ ...form, serviceCityIds: Array.from(e.target.selectedOptions, (o) => o.value) })}
+            >
+              {cities.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          {editingId ? (
+            <>
               <div>
                 <label className="label">Pujari share % (blank = platform default)</label>
                 <input
@@ -222,83 +398,21 @@ export default function AdminPanditsPage() {
                   onChange={(e) => setForm({ ...form, commissionPercent: e.target.value.replace(/\D/g, '') })}
                 />
               </div>
-            ) : null}
-            {editingId ? <label className="flex cursor-pointer items-center gap-2.5">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-[hsl(var(--accent))]"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              />
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                Account active (admin controlled)
-              </span>
-            </label> : null}
-            <button
-              className="btn-primary w-full text-2xs uppercase tracking-widest"
-              onClick={submit}
-              disabled={busy || !form.displayName || !form.phone || (!editingId && (!form.email || !form.password))}
-            >
-              {busy ? 'Saving…' : editingId ? 'Update pandit' : 'Create pandit'}
-            </button>
-          </div>
+              <label className="flex cursor-pointer items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-[hsl(var(--accent))]"
+                  checked={form.isActive}
+                  onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                />
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Account active (admin controlled)
+                </span>
+              </label>
+            </>
+          ) : null}
         </div>
-
-        {/* Directory List */}
-        <div>
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            Pandit Directory ({pandits.length})
-          </h3>
-          <div className="mt-5 space-y-3">
-            {pandits.map((p) => (
-              <div key={p.id} className="card bg-white p-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-bold text-accent shadow-sm">
-                    {p.displayName?.charAt(0)?.toUpperCase() || '?'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-sm text-foreground">{p.displayName}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {p.user?.email ?? '—'} · {p.phone} · {p.experienceYears} yrs
-                    </div>
-                    <div className="mt-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-                      Pincodes: {p.servicePincodes?.join(', ') || '—'} · Share:{' '}
-                      {p.commissionPercent == null ? 'default' : `${p.commissionPercent}%`}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    <span className={`badge ${p.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                      {p.isActive ? '✓ Account active' : '⊘ Deactivated'}
-                    </span>
-                    <span className={`badge ${p.isActive && p.isAvailable ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {p.isActive && p.isAvailable ? '● Online' : '○ Offline'}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2 border-t pt-3" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-                  <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => startEdit(p)}>
-                    ✏️ Edit
-                  </button>
-                  <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(p)}>
-                    {p.isActive ? '⊘ Deactivate account' : '✓ Activate account'}
-                  </button>
-                  <button
-                    className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                    onClick={() => remove(p)}
-                  >
-                    🗑 Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-            {pandits.length === 0 ? (
-              <div className="card p-10 text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">No records found.</p>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      </Modal>
     </AdminShell>
   );
 }

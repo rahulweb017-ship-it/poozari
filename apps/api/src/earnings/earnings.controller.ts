@@ -26,6 +26,11 @@ export class AdminEarningsController {
     return this.earnings.setCommissionPercent(body.percent);
   }
 
+  @Get('pandits/:id/overview')
+  panditOverview(@Param('id') id: string) {
+    return this.earnings.adminPanditOverview(id);
+  }
+
   @Get('payments')
   listPayments(
     @Query('tab') tab?: string,

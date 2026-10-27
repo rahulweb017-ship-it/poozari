@@ -1,9 +1,20 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { api } from '@/lib/client';
 import { formatMoney, type Currency } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const EMPTY = {
   code: '',
@@ -21,9 +32,14 @@ const SAMPLE_INR = 5100;
 
 export default function AdminCurrenciesPage() {
   const [rates, setRates] = useState<Currency[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY);
+  const [editingCode, setEditingCode] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [viewingCode, setViewingCode] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -34,8 +50,44 @@ export default function AdminCurrenciesPage() {
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
+
+  const viewing = viewingCode ? rates.find((r) => r.code === viewingCode) ?? null : null;
+
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
+    setEditingCode(null);
+    setForm(EMPTY);
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewingCode(null), []);
+
+  function openCreate() {
+    setEditingCode(null);
+    setForm(EMPTY);
+    setFormError('');
+    setFormOpen(true);
+  }
+
+  function startEdit(rate: Currency) {
+    setViewingCode(null);
+    setEditingCode(rate.code);
+    setFormError('');
+    setForm({
+      code: rate.code,
+      label: rate.label,
+      symbol: rate.symbol,
+      ratePerInr: String(rate.ratePerInr),
+      locale: rate.locale,
+      decimals: String(rate.decimals),
+      sortOrder: String(rate.sortOrder),
+      isActive: rate.isActive,
+    });
+    setFormOpen(true);
+  }
 
   async function saveRate(code: string) {
     setError('');
@@ -56,6 +108,7 @@ export default function AdminCurrenciesPage() {
 
   async function toggleActive(rate: Currency) {
     setError('');
+    setMsg('');
     try {
       await api.adminUpdateCurrency(rate.code, { isActive: !rate.isActive });
       await load();
@@ -67,9 +120,11 @@ export default function AdminCurrenciesPage() {
   async function remove(rate: Currency) {
     if (!window.confirm(`Remove ${rate.code}? Visitors will no longer be able to pick it.`)) return;
     setError('');
+    setMsg('');
     try {
       await api.adminDeleteCurrency(rate.code);
       setMsg(`Removed ${rate.code}.`);
+      setViewingCode(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not remove the currency');
@@ -78,7 +133,7 @@ export default function AdminCurrenciesPage() {
 
   async function add() {
     setBusy(true);
-    setError('');
+    setFormError('');
     setMsg('');
     try {
       await api.adminUpsertCurrency({
@@ -91,26 +146,102 @@ export default function AdminCurrenciesPage() {
         sortOrder: Number(form.sortOrder) || 0,
         isActive: form.isActive,
       });
-      setForm(EMPTY);
+      closeForm();
       setMsg('Currency saved.');
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save the currency');
+      setFormError(e.message ?? 'Could not save the currency');
     } finally {
       setBusy(false);
     }
   }
 
+  // A plain render function, not a component: a component declared here would remount
+  // on every keystroke and drop input focus. It sits in a clickable row, so clicks stop here.
+  function renderRateEditor(rate: Currency) {
+    const isBase = rate.code === 'INR';
+    return (
+      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <input
+          aria-label={`Units of ${rate.code} per ₹1`}
+          className="input w-28 py-1.5 text-xs"
+          value={drafts[rate.code] ?? ''}
+          disabled={isBase}
+          onChange={(e) => setDrafts({ ...drafts, [rate.code]: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isBase && drafts[rate.code] !== String(rate.ratePerInr)) saveRate(rate.code);
+          }}
+        />
+        {!isBase ? (
+          <ActionButton
+            tone="accent"
+            onClick={() => saveRate(rate.code)}
+            disabled={drafts[rate.code] === String(rate.ratePerInr)}
+          >
+            Save rate
+          </ActionButton>
+        ) : null}
+      </div>
+    );
+  }
+
+  const columns: Column<Currency>[] = [
+    {
+      key: 'code',
+      header: 'Currency',
+      render: (rate) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-sm font-bold text-accent">
+            {rate.symbol}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 font-bold text-foreground">
+              {rate.code}
+              {rate.code === 'INR' ? <span className="badge bg-accent-soft text-accent">Base</span> : null}
+            </div>
+            <div className="text-3xs text-muted-foreground">{rate.label}</div>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'rate', header: 'Units per ₹1', render: renderRateEditor },
+    {
+      key: 'preview',
+      header: `₹${SAMPLE_INR.toLocaleString('en-IN')} shows as`,
+      render: (rate) => <span className="font-bold text-accent">{formatMoney(SAMPLE_INR, rate)}</span>,
+    },
+    { key: 'format', header: 'Format', render: (rate) => `${rate.locale} · ${rate.decimals} dp` },
+    { key: 'order', header: 'Order', render: (rate) => rate.sortOrder },
+    {
+      key: 'status',
+      header: 'Switcher',
+      render: (rate) => <StatusPill on={rate.isActive} onLabel="Shown" offLabel="Hidden" />,
+    },
+  ];
+
+  const filters: FilterDef<Currency>[] = [
+    {
+      key: 'status',
+      label: 'Switcher',
+      options: [
+        { value: 'shown', label: 'Shown' },
+        { value: 'hidden', label: 'Hidden' },
+      ],
+      match: (rate, v) => (v === 'shown' ? rate.isActive : !rate.isActive),
+    },
+  ];
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-          Currencies
-        </h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Display rates for the currency switcher.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Currencies"
+        subtitle="Display rates for the currency switcher."
+        actions={
+          <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+            + Add currency
+          </button>
+        }
+      />
 
       {/* The single most important thing to understand on this page. */}
       <div className="card mb-6 border-amber-200 bg-amber-50 p-5">
@@ -123,195 +254,194 @@ export default function AdminCurrenciesPage() {
         </p>
       </div>
 
-      {error ? (
-        <p className="mb-4 rounded-2xl bg-red-50 p-3 text-xs font-semibold text-red-700">{error}</p>
-      ) : null}
-      {msg ? (
-        <p className="mb-4 rounded-2xl bg-green-50 p-3 text-xs font-semibold text-green-700">
-          {msg}
-        </p>
-      ) : null}
+      <Notice error={error} message={msg} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Rates table */}
-        <div className="lg:col-span-2">
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            Rates ({rates.length})
-          </h3>
-          <div className="mt-5 space-y-3">
-            {rates.map((rate) => {
-              const isBase = rate.code === 'INR';
-              return (
-                <div key={rate.code} className="card bg-white p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-display text-base font-black text-foreground">
-                          {rate.symbol} {rate.code}
-                        </span>
-                        {isBase ? (
-                          <span className="badge bg-accent-soft text-accent">Base</span>
-                        ) : null}
-                        {!rate.isActive ? (
-                          <span className="badge bg-gray-200 text-gray-500">Hidden</span>
-                        ) : null}
-                      </div>
-                      <div className="mt-0.5 text-2xs text-muted-foreground">
-                        {rate.label} · {rate.locale} · {rate.decimals} dp
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xs font-extrabold uppercase tracking-wider text-muted-foreground">
-                        ₹{SAMPLE_INR.toLocaleString('en-IN')} shows as
-                      </div>
-                      <div className="font-bold text-sm text-accent">
-                        {formatMoney(SAMPLE_INR, rate)}
-                      </div>
-                    </div>
-                  </div>
+      <DataTable
+        rows={rates}
+        columns={columns}
+        getRowId={(rate) => rate.code}
+        loading={loading}
+        searchText={(rate) => [rate.code, rate.label, rate.symbol, rate.locale].join(' ')}
+        searchPlaceholder="Search code, name, symbol, locale…"
+        filters={filters}
+        emptyText="No currencies yet."
+        onRowClick={(rate) => setViewingCode(rate.code)}
+        actions={(rate) => (
+          <>
+            <ActionButton onClick={() => setViewingCode(rate.code)}>View</ActionButton>
+            <ActionButton tone="accent" onClick={() => startEdit(rate)} disabled={rate.code === 'INR'}>
+              Edit
+            </ActionButton>
+            {rate.code !== 'INR' ? (
+              <>
+                <ActionButton tone={rate.isActive ? 'default' : 'success'} onClick={() => toggleActive(rate)}>
+                  {rate.isActive ? 'Hide' : 'Show'}
+                </ActionButton>
+                <ActionButton tone="danger" onClick={() => remove(rate)}>Remove</ActionButton>
+              </>
+            ) : null}
+          </>
+        )}
+      />
 
-                  <div
-                    className="mt-3 flex flex-wrap items-end gap-2 border-t pt-3"
-                    style={{ borderColor: 'hsl(var(--border) / 0.3)' }}
-                  >
-                    <div>
-                      <label className="label">Units per ₹1</label>
-                      <input
-                        className="input w-36 py-1.5 text-xs"
-                        value={drafts[rate.code] ?? ''}
-                        disabled={isBase}
-                        onChange={(e) => setDrafts({ ...drafts, [rate.code]: e.target.value })}
-                      />
-                    </div>
-                    {!isBase ? (
-                      <>
-                        <button
-                          className="btn-outline text-2xs uppercase tracking-wider"
-                          onClick={() => saveRate(rate.code)}
-                          disabled={drafts[rate.code] === String(rate.ratePerInr)}
-                        >
-                          Save rate
-                        </button>
-                        <button
-                          className="btn-outline text-2xs uppercase tracking-wider"
-                          onClick={() => toggleActive(rate)}
-                        >
-                          {rate.isActive ? '⊘ Hide' : '✓ Show'}
-                        </button>
-                        <button
-                          className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                          onClick={() => remove(rate)}
-                        >
-                          🗑 Remove
-                        </button>
-                      </>
-                    ) : (
-                      <p className="pb-2 text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        The base currency is fixed at 1 and cannot be hidden.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing ? `${viewing.symbol} ${viewing.code}` : ''}
+        onClose={closeView}
+        footer={
+          viewing && viewing.code !== 'INR' ? (
+            <>
+              <button
+                className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                onClick={() => remove(viewing)}
+              >
+                Remove
+              </button>
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(viewing)}>
+                {viewing.isActive ? 'Hide' : 'Show'}
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => startEdit(viewing)}>
+                Edit
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-accent-soft p-4 text-center">
+              <div className="text-3xs font-extrabold uppercase tracking-wider text-muted-foreground">
+                ₹{SAMPLE_INR.toLocaleString('en-IN')} shows as
+              </div>
+              <div className="mt-1 font-display text-2xl font-black text-accent">
+                {formatMoney(SAMPLE_INR, viewing)}
+              </div>
+            </div>
+            <DetailList
+              items={[
+                { label: 'Code', value: viewing.code },
+                { label: 'Name', value: viewing.label },
+                { label: 'Symbol', value: viewing.symbol },
+                { label: 'Units per ₹1', value: String(viewing.ratePerInr) },
+                { label: 'Locale', value: viewing.locale },
+                { label: 'Decimals', value: String(viewing.decimals) },
+                { label: 'Order', value: String(viewing.sortOrder) },
+                { label: 'Switcher', value: viewing.isActive ? 'Shown' : 'Hidden' },
+              ]}
+            />
+            {viewing.code === 'INR' ? (
+              <p className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
+                The base currency is fixed at 1 and cannot be hidden.
+              </p>
+            ) : null}
           </div>
-        </div>
+        ) : null}
+      </Modal>
 
-        {/* Add / replace */}
-        <div className="card self-start p-6">
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            Add a currency
-          </h3>
-          <p className="mt-1.5 text-2xs text-muted-foreground">
-            Saving an existing code replaces its settings.
-          </p>
-          <div className="mt-5 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">ISO code *</label>
-                <input
-                  className="input"
-                  placeholder="AED"
-                  maxLength={3}
-                  value={form.code}
-                  onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                />
-              </div>
-              <div>
-                <label className="label">Symbol *</label>
-                <input
-                  className="input"
-                  placeholder="د.إ"
-                  value={form.symbol}
-                  onChange={(e) => setForm({ ...form, symbol: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="label">Name *</label>
-              <input
-                className="input"
-                placeholder="UAE Dirham"
-                value={form.label}
-                onChange={(e) => setForm({ ...form, label: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="label">Units per ₹1 *</label>
-              <input
-                className="input"
-                placeholder="0.044"
-                value={form.ratePerInr}
-                onChange={(e) => setForm({ ...form, ratePerInr: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="label">Locale</label>
-                <input
-                  className="input"
-                  value={form.locale}
-                  onChange={(e) => setForm({ ...form, locale: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Decimals</label>
-                <input
-                  className="input"
-                  value={form.decimals}
-                  onChange={(e) => setForm({ ...form, decimals: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Order</label>
-                <input
-                  className="input"
-                  value={form.sortOrder}
-                  onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
-                />
-              </div>
-            </div>
-            <label className="flex cursor-pointer items-center gap-2.5">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-[hsl(var(--accent))]"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              />
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                Offer it in the switcher
-              </span>
-            </label>
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingCode ? `Edit ${editingCode}` : 'Add currency'}
+        onClose={closeForm}
+        size="sm"
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm} disabled={busy}>
+              Cancel
+            </button>
             <button
-              className="btn-primary w-full text-2xs uppercase tracking-widest"
+              className="btn-primary text-2xs uppercase tracking-widest"
               onClick={add}
               disabled={busy || !form.code || !form.label || !form.symbol || !form.ratePerInr}
             >
               {busy ? 'Saving…' : 'Save currency'}
             </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <p className="mb-4 text-2xs text-muted-foreground">Saving an existing code replaces its settings.</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">ISO code *</label>
+              <input
+                className="input"
+                placeholder="AED"
+                maxLength={3}
+                value={form.code}
+                disabled={Boolean(editingCode)}
+                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+              />
+            </div>
+            <div>
+              <label className="label">Symbol *</label>
+              <input
+                className="input"
+                placeholder="د.إ"
+                value={form.symbol}
+                onChange={(e) => setForm({ ...form, symbol: e.target.value })}
+              />
+            </div>
           </div>
+          <div>
+            <label className="label">Name *</label>
+            <input
+              className="input"
+              placeholder="UAE Dirham"
+              value={form.label}
+              onChange={(e) => setForm({ ...form, label: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Units per ₹1 *</label>
+            <input
+              className="input"
+              placeholder="0.044"
+              value={form.ratePerInr}
+              onChange={(e) => setForm({ ...form, ratePerInr: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="label">Locale</label>
+              <input
+                className="input"
+                value={form.locale}
+                onChange={(e) => setForm({ ...form, locale: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label">Decimals</label>
+              <input
+                className="input"
+                value={form.decimals}
+                onChange={(e) => setForm({ ...form, decimals: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label">Order</label>
+              <input
+                className="input"
+                value={form.sortOrder}
+                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
+              />
+            </div>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2.5">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[hsl(var(--accent))]"
+              checked={form.isActive}
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Offer it in the switcher
+            </span>
+          </label>
         </div>
-      </div>
+      </Modal>
     </AdminShell>
   );
 }

@@ -6,6 +6,7 @@ import {
   EarningStatus,
   PaymentStatus,
   SettlementStatus,
+  type AdminPanditOverview,
   type PanditEarning,
   type PanditEarningsSummary,
   type PaymentFilters,
@@ -359,7 +360,14 @@ export class EarningsService {
   }
 
   async panditSummary(userId: string, from?: string, to?: string): Promise<PanditEarningsSummary> {
-    const panditId = await this.panditIdFor(userId);
+    return this.summaryForPandit(await this.panditIdFor(userId), from, to);
+  }
+
+  private async summaryForPandit(
+    panditId: string,
+    from?: string,
+    to?: string,
+  ): Promise<PanditEarningsSummary> {
     const groups = await this.prisma.panditEarning.groupBy({
       by: ['status'],
       _sum: { earningInr: true },
@@ -385,5 +393,98 @@ export class EarningsService {
   async panditSettlements(userId: string): Promise<Settlement[]> {
     const panditId = await this.panditIdFor(userId);
     return this.listSettlements({ panditId });
+  }
+
+  /* ------------------------------------------------ Admin: pandit overview */
+
+  async adminPanditOverview(panditId: string): Promise<AdminPanditOverview> {
+    const profile = await this.prisma.panditProfile.findUnique({
+      where: { id: panditId },
+      include: { user: { select: { email: true } } },
+    });
+    if (!profile) throw new NotFoundException('Pandit not found');
+
+    const assignedTo = { assignment: { panditId } };
+    const [statusGroups, completedValue, reviewStats, liveSessions, cities, recent, earnings, settlements, defaultPercent] =
+      await Promise.all([
+        this.prisma.booking.groupBy({ by: ['status'], _count: true, where: assignedTo }),
+        this.prisma.booking.aggregate({
+          _sum: { amountInr: true },
+          where: { ...assignedTo, status: BookingStatus.COMPLETED },
+        }),
+        this.prisma.review.aggregate({
+          _count: true,
+          _avg: { rating: true },
+          where: { booking: assignedTo },
+        }),
+        this.prisma.liveSession.count({ where: { panditId } }),
+        this.prisma.city.findMany({
+          where: { id: { in: profile.serviceCityIds } },
+          select: { name: true },
+        }),
+        this.prisma.booking.findMany({
+          where: assignedTo,
+          include: {
+            puja: { select: { title: true } },
+            assignment: { select: { createdAt: true } },
+            earning: { select: { earningInr: true, status: true } },
+          },
+          orderBy: { preferredDate: 'desc' },
+          take: 50,
+        }),
+        this.summaryForPandit(panditId),
+        this.listSettlements({ panditId }),
+        this.getCommissionPercent(),
+      ]);
+
+    const byStatus: Partial<Record<BookingStatus, number>> = {};
+    for (const g of statusGroups) byStatus[g.status as BookingStatus] = g._count;
+    const count = (...statuses: BookingStatus[]) =>
+      statuses.reduce((sum, s) => sum + (byStatus[s] ?? 0), 0);
+    const total = Object.values(byStatus).reduce((sum, n) => sum + (n ?? 0), 0);
+    const completed = count(BookingStatus.COMPLETED);
+    const cancelled = count(BookingStatus.CANCELLED, BookingStatus.REFUNDED);
+
+    return {
+      pandit: {
+        id: profile.id,
+        displayName: profile.displayName,
+        email: profile.user?.email ?? null,
+        phone: profile.phone,
+        bio: profile.bio,
+        experienceYears: profile.experienceYears,
+        specializations: profile.specializations,
+        servicePincodes: profile.servicePincodes,
+        serviceCities: cities.map((c) => c.name),
+        isActive: profile.isActive,
+        isAvailable: profile.isAvailable,
+        rating: profile.rating,
+        commissionPercent: profile.commissionPercent,
+        effectiveCommissionPercent: profile.commissionPercent ?? defaultPercent,
+        createdAt: profile.createdAt.toISOString(),
+      },
+      bookings: { total, active: total - completed - cancelled, completed, cancelled, byStatus },
+      earnings,
+      completedBookingValueInr: completedValue._sum.amountInr ?? 0,
+      reviews: {
+        count: reviewStats._count,
+        averageRating: reviewStats._avg.rating ?? null,
+      },
+      liveSessions,
+      recentBookings: recent.map((b) => ({
+        bookingId: b.id,
+        reference: b.reference,
+        pujaTitle: b.puja?.title ?? '',
+        devoteeName: b.devoteeName,
+        city: b.city,
+        preferredDate: b.preferredDate.toISOString(),
+        amountInr: b.amountInr,
+        status: b.status as BookingStatus,
+        assignedAt: (b.assignment?.createdAt ?? b.createdAt).toISOString(),
+        earningInr: b.earning?.earningInr ?? null,
+        earningStatus: (b.earning?.status as EarningStatus | undefined) ?? null,
+      })),
+      settlements,
+    };
   }
 }

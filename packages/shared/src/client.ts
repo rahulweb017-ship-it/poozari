@@ -13,6 +13,7 @@ import type {
 } from './validation';
 import type {
   Addon,
+  AdminPanditOverview,
   AuthResponse,
   AccountProfile,
   ApproveApplicationResult,
@@ -323,6 +324,9 @@ export class PoozariClient {
   }
   adminListPandits() {
     return this.get<any[]>('/admin/pandits');
+  }
+  adminPanditOverview(id: string) {
+    return this.get<AdminPanditOverview>(`/admin/pandits/${id}/overview`);
   }
   adminCreatePandit(data: unknown) {
     return this.post<any>('/admin/pandits', data);

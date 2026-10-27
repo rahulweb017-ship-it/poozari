@@ -1,5 +1,16 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/client';
@@ -9,10 +20,9 @@ import {
   type ApproveApplicationResult,
   type PanditApplication,
 } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const STATUS_TABS = [
-  { value: '', label: 'All' },
+const STATUS_OPTIONS = [
   { value: ApplicationStatus.NEW, label: 'New' },
   { value: ApplicationStatus.REVIEWING, label: 'Reviewing' },
   { value: ApplicationStatus.SHORTLISTED, label: 'Shortlisted' },
@@ -38,34 +48,52 @@ const NEXT_STEPS: Record<string, string[]> = {
   REJECTED: [ApplicationStatus.REVIEWING],
 };
 
+function canDecide(item: PanditApplication) {
+  return !item.panditUserId && item.status !== ApplicationStatus.REJECTED;
+}
+
+function statusLabel(status: string) {
+  return APPLICATION_STATUS_LABELS[status as keyof typeof APPLICATION_STATUS_LABELS] ?? status;
+}
+
 export default function AdminApplicationsPage() {
   const [items, setItems] = useState<PanditApplication[]>([]);
-  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
   /** Shown once, right after approval; the API never returns it again. */
   const [credentials, setCredentials] = useState<
     Record<string, ApproveApplicationResult>
   >({});
 
+  // Status is filtered client-side in the table, so the full list is loaded once.
   async function load() {
-    const list = await api.adminListPanditApplications(status || undefined);
+    const list = await api.adminListPanditApplications(undefined);
     setItems(list);
     setNotes(Object.fromEntries(list.map((a) => [a.id, a.adminNotes])));
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const viewing = useMemo(
+    () => items.find((a) => a.id === viewingId) ?? null,
+    [items, viewingId],
+  );
+  const closeView = useCallback(() => setViewingId(null), []);
 
   async function move(item: PanditApplication, next: string) {
     setError('');
     setMsg('');
     try {
       await api.adminUpdatePanditApplication(item.id, { status: next });
+      setMsg(`Moved ${item.fullName} to ${statusLabel(next)}.`);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not update this application');
@@ -85,6 +113,8 @@ export default function AdminApplicationsPage() {
           ? 'Pujari account created and login details emailed.'
           : 'Pujari account created. The email could not be sent — share the password below.',
       );
+      // The temporary password is only visible in the details popup, so open it.
+      setViewingId(item.id);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not approve this application');
@@ -122,207 +152,297 @@ export default function AdminApplicationsPage() {
     }
   }
 
+  const newCount = items.filter((a) => a.status === ApplicationStatus.NEW).length;
+
+  const columns: Column<PanditApplication>[] = [
+    {
+      key: 'applicant',
+      header: 'Applicant',
+      render: (a) => (
+        <div className="min-w-0">
+          <div className="font-bold text-foreground">{a.fullName}</div>
+          <div className="text-3xs text-muted-foreground">{a.email}</div>
+        </div>
+      ),
+    },
+    { key: 'phone', header: 'Phone', className: 'whitespace-nowrap', render: (a) => a.phone || '—' },
+    {
+      key: 'location',
+      header: 'Location',
+      render: (a) => [a.city, a.state, a.pincode].filter(Boolean).join(', ') || '—',
+    },
+    { key: 'exp', header: 'Experience', className: 'whitespace-nowrap', render: (a) => `${a.experienceYears} yrs` },
+    {
+      key: 'specializations',
+      header: 'Specializations',
+      className: 'max-w-[180px] truncate',
+      render: (a) => a.specializations.join(', ') || '—',
+    },
+    {
+      key: 'applied',
+      header: 'Applied',
+      className: 'whitespace-nowrap',
+      render: (a) => new Date(a.createdAt).toLocaleDateString('en-IN'),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (a) => (
+        <div className="flex flex-col items-start gap-1">
+          <span className={`badge ${STATUS_STYLES[a.status]}`}>{statusLabel(a.status)}</span>
+          {a.panditUserId ? <StatusPill on onLabel="Login created" offLabel="" /> : null}
+        </div>
+      ),
+    },
+  ];
+
+  const cityOptions = useMemo(
+    () =>
+      Array.from(new Set(items.map((a) => a.city).filter(Boolean)))
+        .sort((x, y) => x.localeCompare(y))
+        .map((c) => ({ value: c, label: c })),
+    [items],
+  );
+
+  const filters: FilterDef<PanditApplication>[] = [
+    {
+      key: 'status',
+      label: 'Status',
+      options: STATUS_OPTIONS,
+      match: (a, v) => a.status === v,
+    },
+    {
+      key: 'account',
+      label: 'Login',
+      options: [
+        { value: 'created', label: 'Login created' },
+        { value: 'none', label: 'No login yet' },
+      ],
+      match: (a, v) => (v === 'created') === Boolean(a.panditUserId),
+    },
+    {
+      key: 'city',
+      label: 'City',
+      options: cityOptions,
+      match: (a, v) => a.city === v,
+    },
+  ];
+
+  function stepButtons(item: PanditApplication) {
+    return (NEXT_STEPS[item.status] ?? []).map((next) => (
+      <ActionButton
+        key={next}
+        tone={next === ApplicationStatus.REJECTED ? 'danger' : 'default'}
+        onClick={() => move(item, next)}
+      >
+        → {statusLabel(next)}
+      </ActionButton>
+    ));
+  }
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-          Pujari Applications
-        </h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Pandits who applied through “Become a Pujari”.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Pujari Applications"
+        subtitle={`Pandits who applied through “Become a Pujari”.${newCount ? ` ${newCount} new.` : ''}`}
+        actions={
+          <Link href="/admin/pandits" className="btn-outline text-2xs uppercase tracking-wider">
+            Manage pandits
+          </Link>
+        }
+      />
 
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setStatus(tab.value)}
-            className={`rounded-full border px-3.5 py-1.5 text-2xs font-bold uppercase tracking-wider transition-colors ${
-              status === tab.value
-                ? 'border-transparent bg-accent text-white'
-                : 'bg-white text-muted-foreground hover:text-foreground'
-            }`}
-            style={status === tab.value ? {} : { borderColor: 'hsl(var(--border) / 0.6)' }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Notice error={error} message={msg} />
 
-      {error ? (
-        <p className="mb-4 rounded-2xl bg-red-50 p-3 text-xs font-semibold text-red-700">{error}</p>
-      ) : null}
-      {msg ? (
-        <p className="mb-4 rounded-2xl bg-green-50 p-3 text-xs font-semibold text-green-700">
-          {msg}
-        </p>
-      ) : null}
-
-      <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-        {items.length} application{items.length === 1 ? '' : 's'}
-      </h3>
-
-      <div className="mt-5 space-y-4">
-        {items.map((item) => (
-          <div key={item.id} className="card bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold text-sm text-foreground">{item.fullName}</span>
-                  <span className={`badge ${STATUS_STYLES[item.status]}`}>
-                    {APPLICATION_STATUS_LABELS[item.status]}
-                  </span>
-                </div>
-                <div className="mt-1 text-2xs text-muted-foreground">
-                  <a href={`tel:${item.phone}`} className="font-semibold hover:text-accent">
-                    {item.phone}
-                  </a>
-                  {' · '}
-                  <a href={`mailto:${item.email}`} className="font-semibold hover:text-accent">
-                    {item.email}
-                  </a>
-                </div>
-                <div className="mt-1 text-2xs text-muted-foreground">
-                  📍 {[item.city, item.state, item.pincode].filter(Boolean).join(', ')} ·{' '}
-                  {item.experienceYears} yrs
-                </div>
-              </div>
-              <span className="shrink-0 text-3xs font-bold uppercase tracking-wider text-muted-foreground">
-                {new Date(item.createdAt).toLocaleDateString('en-IN')}
-              </span>
-            </div>
-
-            {item.lineage ? (
-              <p className="mt-3 text-xs text-foreground">
-                <span className="font-bold">Trained: </span>
-                {item.lineage}
-              </p>
+      <DataTable
+        rows={items}
+        columns={columns}
+        getRowId={(a) => a.id}
+        loading={loading}
+        searchText={(a) =>
+          [a.fullName, a.email, a.phone, a.city, a.state, a.pincode, ...a.specializations, ...a.languages].join(' ')
+        }
+        searchPlaceholder="Search name, email, phone, city, pincode…"
+        filters={filters}
+        emptyText="No applications yet."
+        onRowClick={(a) => setViewingId(a.id)}
+        actions={(a) => (
+          <>
+            <ActionButton onClick={() => setViewingId(a.id)}>View</ActionButton>
+            {stepButtons(a)}
+            {canDecide(a) ? (
+              <>
+                <ActionButton tone="success" disabled={busy === a.id} onClick={() => approve(a)}>
+                  {busy === a.id ? 'Working…' : '✓ Approve'}
+                </ActionButton>
+                <ActionButton tone="danger" disabled={busy === a.id} onClick={() => reject(a)}>
+                  ✕ Reject
+                </ActionButton>
+              </>
             ) : null}
-            {item.about ? (
-              <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
-                {item.about}
-              </p>
-            ) : null}
+          </>
+        )}
+      />
 
-            {item.specializations.length || item.languages.length ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {item.specializations.map((s) => (
-                  <span key={s} className="badge bg-accent-soft text-accent">
-                    {s}
-                  </span>
-                ))}
-                {item.languages.map((l) => (
-                  <span key={l} className="badge bg-gray-100 text-gray-700">
-                    🗣 {l}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-
-            {item.documentUrl ? (
-              <a
-                href={item.documentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
-              >
-                📎 View document
-              </a>
-            ) : null}
-
-            <div
-              className="mt-4 space-y-3 border-t pt-4"
-              style={{ borderColor: 'hsl(var(--border) / 0.3)' }}
-            >
-              <div>
-                <label className="label">Verification notes</label>
-                <textarea
-                  className="input py-2 text-xs"
-                  rows={2}
-                  placeholder="Who verified the lineage, what the reference said…"
-                  value={notes[item.id] ?? ''}
-                  onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing?.fullName ?? ''}
+        onClose={closeView}
+        size="lg"
+        footer={
+          viewing ? (
+            <>
+              {(NEXT_STEPS[viewing.status] ?? []).map((next) => (
                 <button
-                  className="btn-outline text-2xs uppercase tracking-wider"
-                  onClick={() => saveNote(item)}
-                  disabled={(notes[item.id] ?? '') === item.adminNotes}
+                  key={next}
+                  className={
+                    next === ApplicationStatus.REJECTED
+                      ? 'rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50'
+                      : 'btn-outline text-2xs uppercase tracking-wider'
+                  }
+                  onClick={() => move(viewing, next)}
                 >
-                  Save note
+                  {statusLabel(next)}
                 </button>
-                {(NEXT_STEPS[item.status] ?? []).map((next) => (
-                  <button
-                    key={next}
-                    className={
-                      next === ApplicationStatus.REJECTED
-                        ? 'rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50'
-                        : 'btn-outline text-2xs uppercase tracking-wider'
-                    }
-                    onClick={() => move(item, next)}
-                  >
-                    {APPLICATION_STATUS_LABELS[next as keyof typeof APPLICATION_STATUS_LABELS]}
-                  </button>
-                ))}
-                {!item.panditUserId && item.status !== ApplicationStatus.REJECTED ? (
-                  <button
-                    className="btn-primary text-2xs uppercase tracking-wider"
-                    disabled={busy === item.id}
-                    onClick={() => approve(item)}
-                  >
-                    {busy === item.id ? 'Working…' : '✓ Approve & create pujari account'}
-                  </button>
-                ) : null}
-                {!item.panditUserId && item.status !== ApplicationStatus.REJECTED ? (
-                  <button
-                    className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                    disabled={busy === item.id}
-                    onClick={() => reject(item)}
-                  >
-                    ✕ Reject
-                  </button>
-                ) : null}
-              </div>
-
-              {credentials[item.id] ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900">
-                  <div className="font-bold uppercase tracking-wider">Pujari login created</div>
-                  <div className="mt-2">
-                    Email: <span className="font-mono font-bold">{credentials[item.id].email}</span>
-                  </div>
-                  <div>
-                    Temporary password:{' '}
-                    <span className="select-all font-mono font-bold">
-                      {credentials[item.id].tempPassword}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-2xs">
-                    This password is shown only once. Copy it now if you need to share it.
-                  </p>
-                </div>
-              ) : item.panditUserId ? (
-                <p className="rounded-2xl bg-emerald-50 p-3 text-2xs leading-relaxed text-emerald-800">
-                  A pujari login exists for this application. Manage it under{' '}
-                  <Link href="/admin/pandits" className="font-bold underline">
-                    Pandits
-                  </Link>
-                  .
-                </p>
+              ))}
+              {canDecide(viewing) ? (
+                <button
+                  className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                  disabled={busy === viewing.id}
+                  onClick={() => reject(viewing)}
+                >
+                  ✕ Reject
+                </button>
               ) : null}
-            </div>
-          </div>
-        ))}
+              {canDecide(viewing) ? (
+                <button
+                  className="btn-primary text-2xs uppercase tracking-wider"
+                  disabled={busy === viewing.id}
+                  onClick={() => approve(viewing)}
+                >
+                  {busy === viewing.id ? 'Working…' : '✓ Approve & create pujari account'}
+                </button>
+              ) : null}
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-6">
+            <Notice error={error} message={msg} />
 
-        {items.length === 0 ? (
-          <div className="card p-10 text-center">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              No applications yet.
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`badge ${STATUS_STYLES[viewing.status]}`}>{statusLabel(viewing.status)}</span>
+              {viewing.panditUserId ? <StatusPill on onLabel="Login created" offLabel="" /> : null}
+            </div>
+
+            <DetailList
+              items={[
+                {
+                  label: 'Phone',
+                  value: viewing.phone ? (
+                    <a href={`tel:${viewing.phone}`} className="font-semibold hover:text-accent">
+                      {viewing.phone}
+                    </a>
+                  ) : null,
+                },
+                {
+                  label: 'Email',
+                  value: viewing.email ? (
+                    <a href={`mailto:${viewing.email}`} className="font-semibold hover:text-accent">
+                      {viewing.email}
+                    </a>
+                  ) : null,
+                },
+                { label: 'City', value: viewing.city },
+                { label: 'State', value: viewing.state },
+                { label: 'Pincode', value: viewing.pincode },
+                { label: 'Experience', value: `${viewing.experienceYears} years` },
+                { label: 'Trained', value: viewing.lineage },
+                {
+                  label: 'Specializations',
+                  value: viewing.specializations.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewing.specializations.map((s) => (
+                        <span key={s} className="badge bg-accent-soft text-accent">{s}</span>
+                      ))}
+                    </div>
+                  ) : null,
+                },
+                {
+                  label: 'Languages',
+                  value: viewing.languages.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewing.languages.map((l) => (
+                        <span key={l} className="badge bg-gray-100 text-gray-700">🗣 {l}</span>
+                      ))}
+                    </div>
+                  ) : null,
+                },
+                {
+                  label: 'Document',
+                  value: viewing.documentUrl ? (
+                    <a
+                      href={viewing.documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
+                    >
+                      📎 View document
+                    </a>
+                  ) : null,
+                },
+                { label: 'Applied', value: new Date(viewing.createdAt).toLocaleString('en-IN') },
+                { label: 'About', value: viewing.about ? <span className="whitespace-pre-wrap">{viewing.about}</span> : null },
+              ]}
+            />
+
+            <div>
+              <label className="label">Verification notes</label>
+              <textarea
+                className="input py-2 text-xs"
+                rows={3}
+                placeholder="Who verified the lineage, what the reference said…"
+                value={notes[viewing.id] ?? ''}
+                onChange={(e) => setNotes({ ...notes, [viewing.id]: e.target.value })}
+              />
+              <button
+                className="btn-outline mt-2 text-2xs uppercase tracking-wider"
+                onClick={() => saveNote(viewing)}
+                disabled={(notes[viewing.id] ?? '') === viewing.adminNotes}
+              >
+                Save note
+              </button>
+            </div>
+
+            {credentials[viewing.id] ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900">
+                <div className="font-bold uppercase tracking-wider">Pujari login created</div>
+                <div className="mt-2">
+                  Email: <span className="font-mono font-bold">{credentials[viewing.id].email}</span>
+                </div>
+                <div>
+                  Temporary password:{' '}
+                  <span className="select-all font-mono font-bold">
+                    {credentials[viewing.id].tempPassword}
+                  </span>
+                </div>
+                <p className="mt-2 text-2xs">
+                  This password is shown only once. Copy it now if you need to share it.
+                </p>
+              </div>
+            ) : viewing.panditUserId ? (
+              <p className="rounded-2xl bg-emerald-50 p-3 text-2xs leading-relaxed text-emerald-800">
+                A pujari login exists for this application. Manage it under{' '}
+                <Link href="/admin/pandits" className="font-bold underline">
+                  Pandits
+                </Link>
+                .
+              </p>
+            ) : null}
           </div>
         ) : null}
-      </div>
+      </Modal>
     </AdminShell>
   );
 }

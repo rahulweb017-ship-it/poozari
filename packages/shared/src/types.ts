@@ -284,6 +284,56 @@ export interface PanditEarningsSummary {
   pendingInr: number;
 }
 
+export interface AdminPanditBookingRow {
+  bookingId: string;
+  reference: string;
+  pujaTitle: string;
+  devoteeName: string;
+  city: string;
+  preferredDate: string;
+  amountInr: number;
+  status: BookingStatus;
+  assignedAt: string;
+  earningInr: number | null;
+  earningStatus: EarningStatus | null;
+}
+
+/** Everything the admin's per-pandit dashboard shows, in one response. */
+export interface AdminPanditOverview {
+  pandit: {
+    id: string;
+    displayName: string;
+    email: string | null;
+    phone: string;
+    bio: string;
+    experienceYears: number;
+    specializations: string[];
+    servicePincodes: string[];
+    serviceCities: string[];
+    isActive: boolean;
+    isAvailable: boolean;
+    rating: number;
+    commissionPercent: number | null;
+    effectiveCommissionPercent: number;
+    createdAt: string;
+  };
+  bookings: {
+    total: number;
+    /** Assigned but not yet completed, cancelled or refunded. */
+    active: number;
+    completed: number;
+    cancelled: number;
+    byStatus: Partial<Record<BookingStatus, number>>;
+  };
+  earnings: PanditEarningsSummary;
+  /** Sum of booking amounts for this pandit's completed pujas. */
+  completedBookingValueInr: number;
+  reviews: { count: number; averageRating: number | null };
+  liveSessions: number;
+  recentBookings: AdminPanditBookingRow[];
+  settlements: Settlement[];
+}
+
 /** Returned once when an application is approved; the password is never stored in clear. */
 export interface ApproveApplicationResult {
   panditId: string;

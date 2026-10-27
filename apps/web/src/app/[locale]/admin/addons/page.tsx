@@ -1,10 +1,22 @@
 'use client';
 
+import {
+  ActionButton,
+  AdminPageHeader,
+  DataTable,
+  DetailList,
+  Modal,
+  Notice,
+  StatusPill,
+  Thumb,
+  type Column,
+  type FilterDef,
+} from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { ImagePicker } from '@/components/image-picker';
 import { api } from '@/lib/client';
 import { formatInr, slugify, type Addon } from '@poozari/shared';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const EMPTY = {
   name: '',
@@ -22,10 +34,14 @@ type FormState = typeof EMPTY;
 
 export default function AdminAddonsPage() {
   const [addons, setAddons] = useState<Addon[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<Addon | null>(null);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [formError, setFormError] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -33,11 +49,30 @@ export default function AdminAddonsPage() {
   }
 
   useEffect(() => {
-    load().catch(() => undefined);
+    load()
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
 
+  const closeForm = useCallback(() => {
+    setFormOpen(false);
+    setEditingId(null);
+    setForm(EMPTY);
+    setFormError('');
+  }, []);
+  const closeView = useCallback(() => setViewing(null), []);
+
+  function openCreate() {
+    setEditingId(null);
+    setForm(EMPTY);
+    setFormError('');
+    setFormOpen(true);
+  }
+
   function edit(addon: Addon) {
+    setViewing(null);
     setEditingId(addon.id);
+    setFormError('');
     setForm({
       name: addon.name,
       nameHi: addon.nameHi,
@@ -49,17 +84,12 @@ export default function AdminAddonsPage() {
       sortOrder: String(addon.sortOrder),
       isActive: addon.isActive,
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setForm(EMPTY);
+    setFormOpen(true);
   }
 
   async function save() {
     setBusy(true);
-    setError('');
+    setFormError('');
     setMsg('');
     try {
       const payload = {
@@ -82,10 +112,10 @@ export default function AdminAddonsPage() {
         await api.adminCreateAddon(payload);
         setMsg(`Added ${payload.name}.`);
       }
-      cancelEdit();
+      closeForm();
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Could not save the add-on');
+      setFormError(e.message ?? 'Could not save the add-on');
     } finally {
       setBusy(false);
     }
@@ -93,8 +123,10 @@ export default function AdminAddonsPage() {
 
   async function toggleActive(addon: Addon) {
     setError('');
+    setMsg('');
     try {
       await api.adminUpdateAddon(addon.id, { isActive: !addon.isActive });
+      setViewing(null);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not update the add-on');
@@ -110,26 +142,88 @@ export default function AdminAddonsPage() {
       return;
     }
     setError('');
+    setMsg('');
     try {
       await api.adminDeleteAddon(addon.id);
       setMsg(`Removed ${addon.name}.`);
-      if (editingId === addon.id) cancelEdit();
+      setViewing(null);
+      if (editingId === addon.id) closeForm();
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Could not remove the add-on');
     }
   }
 
+  const columns: Column<Addon>[] = [
+    {
+      key: 'name',
+      header: 'Add-on',
+      render: (a) => (
+        <div className="flex items-center gap-3">
+          <Thumb src={a.imageUrl} label={a.name} />
+          <div className="min-w-0">
+            <div className="font-bold text-foreground">{a.name}</div>
+            <div className="text-3xs text-muted-foreground">{a.nameHi || '—'}</div>
+          </div>
+        </div>
+      ),
+    },
+    { key: 'slug', header: 'Slug', render: (a) => a.slug },
+    {
+      key: 'price',
+      header: 'Price',
+      render: (a) => <span className="font-bold text-accent">{formatInr(a.priceInr)}</span>,
+    },
+    { key: 'position', header: 'Position', render: (a) => a.sortOrder },
+    {
+      key: 'hindi',
+      header: 'Hindi',
+      render: (a) =>
+        a.nameHi ? (
+          <span className="badge bg-emerald-50 text-emerald-700">Yes</span>
+        ) : (
+          <span className="badge bg-amber-100 text-amber-700">No Hindi</span>
+        ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (a) => <StatusPill on={a.isActive} onLabel="Offered" offLabel="Hidden" />,
+    },
+  ];
+
+  const filters: FilterDef<Addon>[] = [
+    {
+      key: 'status',
+      label: 'Status',
+      options: [
+        { value: 'active', label: 'Offered' },
+        { value: 'inactive', label: 'Hidden' },
+      ],
+      match: (a, v) => (v === 'active' ? a.isActive : !a.isActive),
+    },
+    {
+      key: 'hindi',
+      label: 'Hindi',
+      options: [
+        { value: 'yes', label: 'Has Hindi' },
+        { value: 'no', label: 'Missing Hindi' },
+      ],
+      match: (a, v) => (v === 'yes') === Boolean(a.nameHi),
+    },
+  ];
+
   return (
     <AdminShell>
-      <div className="mb-8 border-b pb-6" style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>
-        <h1 className="font-display text-2xl font-black uppercase tracking-wider text-accent">
-          Add-ons
-        </h1>
-        <p className="mt-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Paid extras offered on every puja booking.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Add-ons"
+        subtitle="Paid extras offered on every puja booking."
+        actions={
+          <button className="btn-primary text-2xs uppercase tracking-wider" onClick={openCreate}>
+            + Add add-on
+          </button>
+        }
+      />
 
       <div className="card mb-6 border-amber-200 bg-amber-50 p-5">
         <p className="text-xs font-bold text-amber-900">Changing a price does not change past bookings</p>
@@ -141,89 +235,101 @@ export default function AdminAddonsPage() {
         </p>
       </div>
 
-      {error ? (
-        <p className="mb-4 rounded-2xl bg-red-50 p-3 text-xs font-semibold text-red-700">{error}</p>
-      ) : null}
-      {msg ? (
-        <p className="mb-4 rounded-2xl bg-green-50 p-3 text-xs font-semibold text-green-700">{msg}</p>
-      ) : null}
+      <Notice error={error} message={msg} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Listing */}
-        <div className="lg:col-span-2">
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            Add-ons ({addons.length})
-          </h3>
-          <div className="mt-5 space-y-3">
-            {addons.length === 0 ? (
-              <p className="card bg-white p-6 text-center text-xs text-muted-foreground">
-                No add-ons yet. Create one on the right and it appears on every booking form.
-              </p>
+      <DataTable
+        rows={addons}
+        columns={columns}
+        getRowId={(a) => a.id}
+        loading={loading}
+        searchText={(a) => [a.name, a.nameHi, a.slug, a.description, a.descriptionHi].filter(Boolean).join(' ')}
+        searchPlaceholder="Search name, slug, description…"
+        filters={filters}
+        onRowClick={setViewing}
+        emptyText="No add-ons yet. Add one and it appears on every booking form."
+        actions={(a) => (
+          <>
+            <ActionButton onClick={() => setViewing(a)}>View</ActionButton>
+            <ActionButton tone="accent" onClick={() => edit(a)}>Edit</ActionButton>
+            <ActionButton tone={a.isActive ? 'default' : 'success'} onClick={() => toggleActive(a)}>
+              {a.isActive ? 'Hide' : 'Show'}
+            </ActionButton>
+            <ActionButton tone="danger" onClick={() => remove(a)}>Remove</ActionButton>
+          </>
+        )}
+      />
+
+      {/* Details popup */}
+      <Modal
+        open={Boolean(viewing)}
+        title={viewing?.name ?? ''}
+        onClose={closeView}
+        footer={
+          viewing ? (
+            <>
+              <button
+                className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
+                onClick={() => remove(viewing)}
+              >
+                Remove
+              </button>
+              <button className="btn-outline text-2xs uppercase tracking-wider" onClick={() => toggleActive(viewing)}>
+                {viewing.isActive ? 'Hide' : 'Show'}
+              </button>
+              <button className="btn-primary text-2xs uppercase tracking-wider" onClick={() => edit(viewing)}>
+                Edit
+              </button>
+            </>
+          ) : null
+        }
+      >
+        {viewing ? (
+          <div className="space-y-5">
+            {viewing.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewing.imageUrl} alt="" className="h-32 w-32 rounded-2xl object-cover" />
             ) : null}
-
-            {addons.map((addon) => (
-              <div key={addon.id} className="card bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-display text-base font-black text-foreground">
-                        {addon.name}
-                      </span>
-                      {!addon.isActive ? (
-                        <span className="badge bg-gray-200 text-gray-500">Hidden</span>
-                      ) : null}
-                      {!addon.nameHi ? (
-                        <span className="badge bg-amber-100 text-amber-700">No Hindi</span>
-                      ) : null}
-                    </div>
-                    <div className="mt-0.5 text-2xs text-muted-foreground">
-                      {addon.nameHi ? `${addon.nameHi} · ` : ''}
-                      {addon.slug} · position {addon.sortOrder}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-sm text-accent">{formatInr(addon.priceInr)}</div>
-                  </div>
-                </div>
-
-                <div
-                  className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3"
-                  style={{ borderColor: 'hsl(var(--border) / 0.3)' }}
-                >
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => edit(addon)}
-                  >
-                    ✎ Edit
-                  </button>
-                  <button
-                    className="btn-outline text-2xs uppercase tracking-wider"
-                    onClick={() => toggleActive(addon)}
-                  >
-                    {addon.isActive ? '⊘ Hide' : '✓ Show'}
-                  </button>
-                  <button
-                    className="rounded-xl border border-red-200 px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-red-600 transition-colors hover:bg-red-50"
-                    onClick={() => remove(addon)}
-                  >
-                    🗑 Remove
-                  </button>
-                </div>
-              </div>
-            ))}
+            <DetailList
+              items={[
+                { label: 'Hindi name', value: viewing.nameHi },
+                { label: 'Slug', value: viewing.slug },
+                { label: 'Price', value: formatInr(viewing.priceInr) },
+                { label: 'Position', value: String(viewing.sortOrder) },
+                { label: 'Status', value: viewing.isActive ? 'Offered on the booking form' : 'Hidden' },
+                { label: 'Description', value: viewing.description },
+                { label: 'Hindi description', value: viewing.descriptionHi },
+              ]}
+            />
           </div>
-        </div>
+        ) : null}
+      </Modal>
 
-        {/* Create / edit */}
-        <div className="card self-start p-6">
-          <h3 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">
-            {editingId ? 'Edit add-on' : 'Add an add-on'}
-          </h3>
-          <p className="mt-1.5 text-2xs text-muted-foreground">
-            Hindi is optional — leave it blank and Hindi readers see the English.
-          </p>
-
-          <div className="mt-5 space-y-4">
+      {/* Create / edit popup */}
+      <Modal
+        open={formOpen}
+        title={editingId ? 'Edit add-on' : 'Add an add-on'}
+        onClose={closeForm}
+        footer={
+          <>
+            <button className="btn-outline text-2xs uppercase tracking-wider" onClick={closeForm} disabled={busy}>
+              Cancel
+            </button>
+            <button
+              className="btn-primary text-2xs uppercase tracking-wider"
+              disabled={busy || !form.name.trim() || !form.priceInr}
+              onClick={save}
+            >
+              {busy ? 'Saving…' : editingId ? 'Save changes' : 'Add add-on'}
+            </button>
+          </>
+        }
+      >
+        <Notice error={formError} />
+        <p className="mb-4 text-2xs text-muted-foreground">
+          Hindi is optional — leave it blank and Hindi readers see the English.
+        </p>
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Name (English) *</label>
               <input
@@ -250,15 +356,17 @@ export default function AdminAddonsPage() {
                 onChange={(e) => setForm({ ...form, nameHi: e.target.value })}
               />
             </div>
-            <div>
-              <label className="label">Slug *</label>
-              <input
-                className="input"
-                placeholder="fruits-and-sweets"
-                value={form.slug}
-                onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
-              />
-            </div>
+          </div>
+          <div>
+            <label className="label">Slug *</label>
+            <input
+              className="input"
+              placeholder="fruits-and-sweets"
+              value={form.slug}
+              onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label">Description (English)</label>
               <textarea
@@ -277,63 +385,44 @@ export default function AdminAddonsPage() {
                 onChange={(e) => setForm({ ...form, descriptionHi: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Price ₹ *</label>
-                <input
-                  className="input"
-                  placeholder="999"
-                  value={form.priceInr}
-                  onChange={(e) => setForm({ ...form, priceInr: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">Position</label>
-                <input
-                  className="input"
-                  value={form.sortOrder}
-                  onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
-                />
-              </div>
-            </div>
-            <ImagePicker
-              label="Image"
-              aspect="1/1"
-              hint="Optional. Shown beside the add-on if your theme uses it."
-              value={form.imageUrl}
-              onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
-            />
-            <label className="flex items-center gap-2 text-xs font-semibold text-foreground">
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Price ₹ *</label>
               <input
-                type="checkbox"
-                className="h-4 w-4 accent-[hsl(var(--accent))]"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="input"
+                placeholder="999"
+                value={form.priceInr}
+                onChange={(e) => setForm({ ...form, priceInr: e.target.value })}
               />
-              Offer this on the booking form
-            </label>
-
-            <div className="flex gap-2">
-              <button
-                className="btn-primary flex-1 text-2xs uppercase tracking-widest"
-                disabled={busy || !form.name.trim() || !form.priceInr}
-                onClick={save}
-              >
-                {busy ? 'Saving…' : editingId ? 'Save changes' : 'Add add-on'}
-              </button>
-              {editingId ? (
-                <button
-                  className="btn-outline text-2xs uppercase tracking-widest"
-                  onClick={cancelEdit}
-                  disabled={busy}
-                >
-                  Cancel
-                </button>
-              ) : null}
+            </div>
+            <div>
+              <label className="label">Position</label>
+              <input
+                className="input"
+                value={form.sortOrder}
+                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
+              />
             </div>
           </div>
+          <ImagePicker
+            label="Image"
+            aspect="1/1"
+            hint="Optional. Shown beside the add-on if your theme uses it."
+            value={form.imageUrl}
+            onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+          />
+          <label className="flex items-center gap-2 text-xs font-semibold text-foreground">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[hsl(var(--accent))]"
+              checked={form.isActive}
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            />
+            Offer this on the booking form
+          </label>
         </div>
-      </div>
+      </Modal>
     </AdminShell>
   );
 }
