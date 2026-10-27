@@ -6,7 +6,9 @@ import {
   DetailList,
   Notice,
   StatusPill,
+  csvDate,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -14,6 +16,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Link } from '@/i18n/navigation';
 import { api } from '@/lib/client';
 import {
+  BOOKING_STATUS_LABELS,
   BookingStatus,
   EarningStatus,
   formatInr,
@@ -43,6 +46,46 @@ function EarningBadge({ status }: { status: EarningStatus | null }) {
       {status === EarningStatus.PAID ? 'Paid' : 'Pending'}
     </span>
   );
+}
+
+const EARNING_STATUS_LABELS: Record<string, string> = {
+  [EarningStatus.PENDING]: 'Pending',
+  [EarningStatus.PAID]: 'Paid',
+};
+
+const BOOKING_CSV_COLUMNS: CsvExportDef<AdminPanditBookingRow>['columns'] = [
+  { header: 'Reference', value: (b) => b.reference },
+  { header: 'Booking ID', value: (b) => b.bookingId },
+  { header: 'Puja', value: (b) => b.pujaTitle },
+  { header: 'Devotee', value: (b) => b.devoteeName },
+  { header: 'City', value: (b) => b.city },
+  { header: 'Puja date', value: (b) => csvDate(b.preferredDate) },
+  { header: 'Assigned on', value: (b) => csvDate(b.assignedAt, true) },
+  { header: 'Amount (INR)', value: (b) => b.amountInr },
+  { header: 'Pujari earning (INR)', value: (b) => b.earningInr },
+  { header: 'Payout', value: (b) => (b.earningStatus ? EARNING_STATUS_LABELS[b.earningStatus] : '') },
+  { header: 'Status', value: (b) => BOOKING_STATUS_LABELS[b.status] ?? b.status },
+];
+
+const SETTLEMENT_CSV_COLUMNS: CsvExportDef<Settlement>['columns'] = [
+  { header: 'Settlement ID', value: (s) => s.id },
+  { header: 'Week start', value: (s) => csvDate(s.periodStart) },
+  { header: 'Week end', value: (s) => csvDate(s.periodEnd) },
+  { header: 'Pujas', value: (s) => s.earningsCount },
+  { header: 'Amount (INR)', value: (s) => s.totalInr },
+  { header: 'Status', value: (s) => (s.status === 'PAID' ? 'Paid' : 'Pending') },
+  { header: 'Paid on', value: (s) => csvDate(s.paidAt) },
+  { header: 'Reference', value: (s) => s.reference },
+  { header: 'Notes', value: (s) => s.notes },
+  { header: 'Created', value: (s) => csvDate(s.createdAt, true) },
+];
+
+/** Lowercase letters, digits and hyphens only, so it is safe in a file name. */
+function fileSlug(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 const STATUS_ORDER: BookingStatus[] = [
@@ -136,6 +179,11 @@ export default function AdminPanditDashboardPage() {
   ];
 
   const p = data?.pandit;
+  // Display names usually start with "Pandit", which the stem already says.
+  const nameSlug = p ? fileSlug(p.displayName).replace(/^pandit-/, '') : '';
+  const csvStem = `pandit-${nameSlug || fileSlug(id ?? '') || 'unknown'}`;
+  const bookingsCsv: CsvExportDef<AdminPanditBookingRow> = { name: `${csvStem}-bookings`, columns: BOOKING_CSV_COLUMNS };
+  const settlementsCsv: CsvExportDef<Settlement> = { name: `${csvStem}-settlements`, columns: SETTLEMENT_CSV_COLUMNS };
 
   return (
     <AdminShell>
@@ -209,6 +257,7 @@ export default function AdminPanditDashboardPage() {
               filters={bookingFilters}
               pageSize={10}
               emptyText="No bookings assigned to this pandit yet."
+              csvExport={bookingsCsv}
             />
             {data.bookings.total > data.recentBookings.length ? (
               <p className="mt-2 text-3xs font-semibold text-muted-foreground">
@@ -225,6 +274,7 @@ export default function AdminPanditDashboardPage() {
               getRowId={(s) => s.id}
               pageSize={10}
               emptyText="No settlements generated for this pandit yet."
+              csvExport={settlementsCsv}
             />
           </section>
 

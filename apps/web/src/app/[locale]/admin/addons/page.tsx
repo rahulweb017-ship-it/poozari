@@ -9,7 +9,9 @@ import {
   Notice,
   StatusPill,
   Thumb,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -31,6 +33,22 @@ const EMPTY = {
 };
 
 type FormState = typeof EMPTY;
+
+const ADDONS_CSV: CsvExportDef<Addon> = {
+  name: 'addons',
+  columns: [
+    { header: 'ID', value: (a) => a.id },
+    { header: 'Name', value: (a) => a.name },
+    { header: 'Hindi name', value: (a) => a.nameHi },
+    { header: 'Slug', value: (a) => a.slug },
+    { header: 'Price (INR)', value: (a) => a.priceInr },
+    { header: 'Position', value: (a) => a.sortOrder },
+    { header: 'Offered', value: (a) => csvYesNo(a.isActive) },
+    { header: 'Description', value: (a) => a.description },
+    { header: 'Hindi description', value: (a) => a.descriptionHi },
+    { header: 'Image URL', value: (a) => a.imageUrl },
+  ],
+};
 
 export default function AdminAddonsPage() {
   const [addons, setAddons] = useState<Addon[]>([]);
@@ -247,6 +265,7 @@ export default function AdminAddonsPage() {
         filters={filters}
         onRowClick={setViewing}
         emptyText="No add-ons yet. Add one and it appears on every booking form."
+        csvExport={ADDONS_CSV}
         actions={(a) => (
           <>
             <ActionButton onClick={() => setViewing(a)}>View</ActionButton>

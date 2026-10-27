@@ -7,7 +7,9 @@ import {
   DetailList,
   Modal,
   Notice,
+  csvDate,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -43,6 +45,30 @@ const STATUS_STYLES: Record<string, string> = {
   NEW: 'bg-amber-50 text-amber-700',
   IN_PROGRESS: 'bg-blue-50 text-blue-700',
   RESOLVED: 'bg-emerald-50 text-emerald-700',
+};
+
+const KIND_CSV_LABELS: Record<string, string> = {
+  CONTACT: 'Contact Us',
+  ENQUIRY: 'Puja enquiry',
+  WHATSAPP: 'WhatsApp',
+};
+
+const INBOX_CSV: CsvExportDef<Inquiry> = {
+  name: 'inbox',
+  columns: [
+    { header: 'Received', value: (i) => csvDate(i.createdAt, true) },
+    { header: 'Type', value: (i) => KIND_CSV_LABELS[i.kind] ?? i.kind },
+    { header: 'Status', value: (i) => INQUIRY_STATUS_LABELS[i.status] },
+    { header: 'Name', value: (i) => i.name },
+    { header: 'Phone', value: (i) => i.phone },
+    { header: 'Email', value: (i) => i.email },
+    { header: 'Subject', value: (i) => i.subject },
+    { header: 'Message', value: (i) => i.message },
+    { header: 'Puja', value: (i) => i.pujaTitle },
+    { header: 'City', value: (i) => i.city },
+    { header: 'Preferred date', value: (i) => csvDate(i.preferredDate) },
+    { header: 'Internal note', value: (i) => i.adminNotes },
+  ],
 };
 
 function whatsappLink(phone: string) {
@@ -210,6 +236,7 @@ export default function AdminInboxPage() {
           ) : null
         }
         onRowClick={(i) => setViewingId(i.id)}
+        csvExport={INBOX_CSV}
         actions={(i) => (
           <>
             <ActionButton onClick={() => setViewingId(i.id)}>View</ActionButton>

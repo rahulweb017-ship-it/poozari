@@ -8,7 +8,9 @@ import {
   Modal,
   Notice,
   StatusPill,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -265,6 +267,34 @@ export default function AdminHomeSliderPage() {
     },
   ];
 
+  // Defined here because the position comes from the current slide order.
+  const csvExport: CsvExportDef<HomeSlide> = {
+    name: 'home-slider',
+    columns: [
+      { header: 'Position', value: (slide) => positionOf(slide) + 1 },
+      { header: 'ID', value: (slide) => slide.id },
+      { header: 'Shown', value: (slide) => csvYesNo(slide.isActive) },
+      { header: 'Small label', value: (slide) => slide.pill },
+      { header: 'Heading', value: (slide) => slide.title },
+      { header: 'Text', value: (slide) => slide.subtitle },
+      { header: 'Button text', value: (slide) => slide.cta },
+      { header: 'Button link', value: (slide) => slide.linkUrl },
+      { header: 'Banner image URL', value: (slide) => slide.imageUrl },
+      { header: 'Phone image URL', value: (slide) => slide.mobileImageUrl ?? '' },
+      {
+        header: 'Translated languages',
+        value: (slide) =>
+          HOME_SLIDE_LOCALES.filter((code) => hasText(slide.translations?.[code]))
+            .map((code) => code.toUpperCase())
+            .join('; '),
+      },
+      {
+        header: 'Missing languages',
+        value: (slide) => missingLocales(slide).map((code) => code.toUpperCase()).join('; '),
+      },
+    ],
+  };
+
   const filters: FilterDef<HomeSlide>[] = [
     {
       key: 'status',
@@ -318,6 +348,7 @@ export default function AdminHomeSliderPage() {
         searchPlaceholder="Search heading, label, button, link…"
         filters={filters}
         emptyText="No slides yet, so the home page has no banner. Add one with + Add slide."
+        csvExport={csvExport}
         onRowClick={(slide) => setViewingId(slide.id)}
         actions={(slide) => {
           const index = positionOf(slide);

@@ -9,7 +9,9 @@ import {
   Notice,
   StatusPill,
   Thumb,
+  csvDate,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -28,6 +30,26 @@ const EMPTY = {
   category: 'Guides',
   tags: '',
   status: PostStatus.DRAFT as string,
+};
+
+const BLOG_CSV: CsvExportDef<BlogPost> = {
+  name: 'blog',
+  columns: [
+    { header: 'ID', value: (post) => post.id },
+    { header: 'Title', value: (post) => post.title },
+    { header: 'Slug', value: (post) => post.slug },
+    { header: 'URL', value: (post) => `/blog/${post.slug}` },
+    { header: 'Status', value: (post) => (post.status === PostStatus.PUBLISHED ? 'Published' : 'Draft') },
+    { header: 'Category', value: (post) => post.category },
+    { header: 'Author', value: (post) => post.authorName },
+    { header: 'Tags', value: (post) => post.tags.join('; ') },
+    { header: 'Excerpt', value: (post) => post.excerpt },
+    { header: 'Reading time (min)', value: (post) => readingMinutes(post.body) },
+    { header: 'Cover image URL', value: (post) => post.coverImageUrl ?? '' },
+    { header: 'Published', value: (post) => csvDate(post.publishedAt, true) },
+    { header: 'Created', value: (post) => csvDate(post.createdAt, true) },
+    { header: 'Last updated', value: (post) => csvDate(post.updatedAt, true) },
+  ],
 };
 
 function formatDate(value?: string | null) {
@@ -240,6 +262,7 @@ export default function AdminBlogPage() {
         searchPlaceholder="Search title, slug, category, tag…"
         filters={filters}
         emptyText="No posts yet."
+        csvExport={BLOG_CSV}
         onRowClick={setViewing}
         actions={(post) => (
           <>

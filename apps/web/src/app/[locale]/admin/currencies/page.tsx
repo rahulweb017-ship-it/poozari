@@ -8,7 +8,9 @@ import {
   Modal,
   Notice,
   StatusPill,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -29,6 +31,21 @@ const EMPTY = {
 
 /** A ₹5,100 package is the reference amount for the preview column. */
 const SAMPLE_INR = 5100;
+
+const CURRENCIES_CSV: CsvExportDef<Currency> = {
+  name: 'currencies',
+  columns: [
+    { header: 'Code', value: (rate) => rate.code },
+    { header: 'Name', value: (rate) => rate.label },
+    { header: 'Symbol', value: (rate) => rate.symbol },
+    { header: 'Units per 1 INR', value: (rate) => rate.ratePerInr },
+    { header: 'Locale', value: (rate) => rate.locale },
+    { header: 'Decimals', value: (rate) => rate.decimals },
+    { header: 'Order', value: (rate) => rate.sortOrder },
+    { header: 'Shown in switcher', value: (rate) => csvYesNo(rate.isActive) },
+    { header: `INR ${SAMPLE_INR} shows as`, value: (rate) => formatMoney(SAMPLE_INR, rate) },
+  ],
+};
 
 export default function AdminCurrenciesPage() {
   const [rates, setRates] = useState<Currency[]>([]);
@@ -265,6 +282,7 @@ export default function AdminCurrenciesPage() {
         searchPlaceholder="Search code, name, symbol, locale…"
         filters={filters}
         emptyText="No currencies yet."
+        csvExport={CURRENCIES_CSV}
         onRowClick={(rate) => setViewingCode(rate.code)}
         actions={(rate) => (
           <>

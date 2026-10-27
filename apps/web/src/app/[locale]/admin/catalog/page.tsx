@@ -9,6 +9,8 @@ import {
   Notice,
   Thumb,
   type Column,
+  type CsvColumn,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -294,6 +296,22 @@ function CrudSection({
     },
   ];
 
+  const csvExport: CsvExportDef<any> = {
+    name: config.key,
+    columns: [
+      { header: 'ID', value: (item) => item.id },
+      { header: 'Name', value: (item) => item.name },
+      { header: 'Slug', value: (item) => item.slug },
+      ...(config.hasCity ? [{ header: 'City', value: (item: any) => itemCity(item) } as CsvColumn<any>] : []),
+      ...(config.hasState ? [{ header: 'State', value: (item: any) => item.state } as CsvColumn<any>] : []),
+      ...(config.key === 'cities'
+        ? [{ header: 'Temples', value: (item: any) => item.templeCount } as CsvColumn<any>]
+        : []),
+      { header: 'Description', value: (item) => item.description },
+      { header: 'Image URL', value: (item) => item.imageUrl },
+    ],
+  };
+
   const states = useMemo(
     () => Array.from(new Set(items.map((i) => i.state).filter(Boolean) as string[])).sort(),
     [items],
@@ -359,6 +377,7 @@ function CrudSection({
         filters={filters}
         onRowClick={setViewing}
         emptyText={`No ${config.label.toLowerCase()} yet.`}
+        csvExport={csvExport}
         actions={(item) => (
           <>
             <ActionButton onClick={() => setViewing(item)}>View</ActionButton>

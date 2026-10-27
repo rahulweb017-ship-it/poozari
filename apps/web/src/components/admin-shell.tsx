@@ -117,7 +117,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main page content area */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile top navigation header */}
         <div className="flex items-center justify-between border-b bg-white px-5 py-3 md:hidden"
              style={{ borderColor: 'hsl(var(--border) / 0.5)' }}>

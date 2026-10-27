@@ -9,7 +9,10 @@ import {
   Notice,
   StatusPill,
   Thumb,
+  csvDate,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -29,6 +32,25 @@ const EMPTY_FORM = {
   priceInr: '',
   stockQuantity: '0',
   isActive: true,
+};
+
+const PRODUCTS_CSV: CsvExportDef<Product> = {
+  name: 'products',
+  columns: [
+    { header: 'ID', value: (p) => p.id },
+    { header: 'Name', value: (p) => p.name },
+    { header: 'Slug', value: (p) => p.slug },
+    { header: 'Category', value: (p) => p.category },
+    { header: 'Price (INR)', value: (p) => p.priceInr },
+    { header: 'Stock', value: (p) => p.stockQuantity },
+    { header: 'In stock', value: (p) => csvYesNo(p.stockQuantity > 0) },
+    { header: 'Visible', value: (p) => csvYesNo(p.isActive) },
+    { header: 'Image count', value: (p) => p.images?.length ?? 0 },
+    { header: 'Cover image URL', value: (p) => p.imageUrl ?? p.images?.[0] },
+    { header: 'Video URL', value: (p) => p.videoUrl },
+    { header: 'Description', value: (p) => p.description },
+    { header: 'Created', value: (p) => csvDate(p.createdAt) },
+  ],
 };
 
 function slugify(value: string) {
@@ -247,6 +269,7 @@ export default function AdminProductsPage() {
         filters={filters}
         onRowClick={setViewing}
         emptyText="No products added yet."
+        csvExport={PRODUCTS_CSV}
         actions={(p) => (
           <>
             <ActionButton onClick={() => setViewing(p)}>View</ActionButton>

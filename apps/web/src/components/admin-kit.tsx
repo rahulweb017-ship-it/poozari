@@ -1,6 +1,71 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { toCsv } from '@poozari/shared';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+
+/* --------------------------------------------------------------- CSV export */
+
+/** Trigger a browser download for generated CSV text. */
+export function downloadCsv(filename: string, csv: string) {
+  // The BOM makes Excel open UTF-8 (Devanagari, rupee signs) correctly.
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoking synchronously can cancel the download in some browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Stops spreadsheet apps from evaluating a cell as a formula. Use it on any
+ * value a visitor typed (CSV injection). The leading apostrophe is hidden by
+ * Excel and also keeps "+91…" phone numbers as text.
+ */
+export function spreadsheetSafe(value: string | null | undefined): string {
+  const text = value ?? '';
+  return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+}
+
+export type CsvCell = string | number | boolean | null | undefined;
+
+export interface CsvColumn<T> {
+  header: string;
+  value: (row: T) => CsvCell;
+}
+
+export interface CsvExportDef<T> {
+  /** File name stem; the date and ".csv" are appended, e.g. "pujas" → poozari-pujas-2026-10-27.csv. */
+  name: string;
+  columns: CsvColumn<T>[];
+}
+
+export function exportRowsAsCsv<T>(def: CsvExportDef<T>, rows: T[]) {
+  const header = def.columns.map((column) => column.header);
+  const body = rows.map((row) =>
+    def.columns.map((column) => {
+      const value = column.value(row);
+      return typeof value === 'string' ? spreadsheetSafe(value) : value;
+    }),
+  );
+  const today = new Date().toISOString().slice(0, 10);
+  downloadCsv(`poozari-${def.name}-${today}.csv`, toCsv([header, ...body]));
+}
+
+/** Date/time cell text for CSV exports; blank when missing. */
+export function csvDate(value: string | Date | null | undefined, withTime = false): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return withTime ? date.toLocaleString('en-IN') : date.toLocaleDateString('en-IN');
+}
+
+export function csvYesNo(value: boolean | null | undefined): string {
+  return value ? 'Yes' : 'No';
+}
 
 /* ------------------------------------------------------------------ Header */
 
@@ -215,6 +280,8 @@ export function DataTable<T>({
   loading,
   emptyText = 'No records found.',
   toolbar,
+  selectionActions,
+  csvExport,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -228,10 +295,17 @@ export function DataTable<T>({
   loading?: boolean;
   emptyText?: string;
   toolbar?: ReactNode;
+  /** Passing this adds row checkboxes; it renders the bar shown while rows are selected. */
+  selectionActions?: (selected: T[], clearSelection: () => void) => ReactNode;
+  /** Adds row checkboxes plus CSV downloads of the selection or of every matching row. */
+  csvExport?: CsvExportDef<T>;
 }) {
   const [query, setQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [visible, setVisible] = useState(pageSize);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const headerCheckbox = useRef<HTMLInputElement>(null);
+  const selectable = Boolean(selectionActions || csvExport);
 
   useEffect(() => {
     setVisible(pageSize);
@@ -250,6 +324,41 @@ export function DataTable<T>({
 
   const shown = filtered.slice(0, visible);
   const hasActiveFilters = Boolean(query) || Object.values(filterValues).some(Boolean);
+
+  // Derived from `rows` so ids of deleted or reloaded-away records drop out on their own.
+  // Kept in table order (not click order) so exports read like the screen.
+  const selectedRows = selectable ? rows.filter((row) => selectedIds.has(getRowId(row))) : [];
+  const filteredSelected = filtered.filter((row) => selectedIds.has(getRowId(row))).length;
+  const allFilteredSelected = filtered.length > 0 && filteredSelected === filtered.length;
+
+  useEffect(() => {
+    if (headerCheckbox.current) {
+      headerCheckbox.current.indeterminate = filteredSelected > 0 && !allFilteredSelected;
+    }
+  }, [filteredSelected, allFilteredSelected]);
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  function toggleRow(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  /** Selects every row matching the search and filters, including ones behind "Load more". */
+  function toggleAllFiltered() {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      for (const row of filtered) {
+        if (allFilteredSelected) next.delete(getRowId(row));
+        else next.add(getRowId(row));
+      }
+      return next;
+    });
+  }
 
   return (
     <div className="card overflow-hidden bg-white">
@@ -304,12 +413,77 @@ export function DataTable<T>({
         <span className="ml-auto text-3xs font-bold uppercase tracking-widest text-muted-foreground">
           {filtered.length} of {rows.length}
         </span>
+        {csvExport ? (
+          <button
+            type="button"
+            className="btn-outline py-2 text-2xs uppercase tracking-wider"
+            disabled={filtered.length === 0}
+            title={
+              hasActiveFilters
+                ? 'Download every row matching the search and filters'
+                : 'Download every row'
+            }
+            onClick={() => exportRowsAsCsv(csvExport, filtered)}
+          >
+            ⬇ Export CSV
+          </button>
+        ) : null}
       </div>
+
+      {selectable && selectedRows.length ? (
+        <div
+          className="flex flex-wrap items-center gap-3 border-b bg-accent-soft/50 px-4 py-2.5"
+          style={{ borderColor: 'hsl(var(--border) / 0.5)' }}
+        >
+          <span className="text-xs font-bold text-foreground">{selectedRows.length} selected</span>
+          {!allFilteredSelected && filtered.length > filteredSelected ? (
+            <button
+              type="button"
+              className="text-2xs font-bold uppercase tracking-wider text-accent hover:underline"
+              onClick={toggleAllFiltered}
+            >
+              Select all {filtered.length}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="text-2xs font-bold uppercase tracking-wider text-muted-foreground hover:underline"
+            onClick={clearSelection}
+          >
+            Clear selection
+          </button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            {selectionActions?.(selectedRows, clearSelection)}
+            {csvExport ? (
+              <button
+                type="button"
+                className="btn-primary py-2 text-2xs uppercase tracking-wider"
+                onClick={() => exportRowsAsCsv(csvExport, selectedRows)}
+              >
+                ⬇ Download CSV ({selectedRows.length})
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="bg-gray-50/70">
+              {selectable ? (
+                <th className="w-10 px-4 py-3">
+                  <input
+                    ref={headerCheckbox}
+                    type="checkbox"
+                    aria-label="Select all matching rows"
+                    className="h-4 w-4 cursor-pointer accent-[hsl(var(--accent))]"
+                    checked={allFilteredSelected}
+                    disabled={filtered.length === 0}
+                    onChange={toggleAllFiltered}
+                  />
+                </th>
+              ) : null}
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -333,6 +507,17 @@ export function DataTable<T>({
                 className={`border-t align-middle transition-colors ${onRowClick ? 'cursor-pointer hover:bg-accent-soft/40' : ''}`}
                 style={{ borderColor: 'hsl(var(--border) / 0.35)' }}
               >
+                {selectable ? (
+                  <td className="w-10 px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      aria-label="Select row"
+                      className="h-4 w-4 cursor-pointer accent-[hsl(var(--accent))]"
+                      checked={selectedIds.has(getRowId(row))}
+                      onChange={() => toggleRow(getRowId(row))}
+                    />
+                  </td>
+                ) : null}
                 {columns.map((column) => (
                   <td key={column.key} className={`px-4 py-3 ${column.className ?? ''}`}>
                     {column.render(row)}

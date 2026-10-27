@@ -8,7 +8,9 @@ import {
   Modal,
   Notice,
   Thumb,
+  csvDate,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -39,6 +41,27 @@ const STATUS_LABEL: Record<string, string> = {
   [LiveSessionStatus.LIVE]: 'Live',
   [LiveSessionStatus.SCHEDULED]: 'Scheduled',
   [LiveSessionStatus.ENDED]: 'Ended',
+};
+
+// Playback and recording URLs are left out: they are the paid-access stream links.
+const LIVE_CSV: CsvExportDef<LiveSession> = {
+  name: 'live-darshan',
+  columns: [
+    { header: 'ID', value: (s) => s.id },
+    { header: 'Title', value: (s) => s.title },
+    { header: 'Status', value: (s) => STATUS_LABEL[s.status] ?? s.status },
+    { header: 'Scheduled at', value: (s) => csvDate(s.scheduledAt, true) },
+    { header: 'Started at', value: (s) => csvDate(s.startedAt, true) },
+    { header: 'Ended at', value: (s) => csvDate(s.endedAt, true) },
+    { header: 'Join fee (INR)', value: (s) => s.joinPriceInr },
+    { header: 'Linked puja', value: (s) => s.puja?.title ?? '' },
+    { header: 'Pandit', value: (s) => s.pandit?.displayName ?? '' },
+    { header: 'Viewers', value: (s) => (typeof s.viewerCount === 'number' ? s.viewerCount : '') },
+    { header: 'Description', value: (s) => s.description },
+    { header: 'Page URL', value: (s) => `/live-darshan/${s.id}` },
+    { header: 'Thumbnail URL', value: (s) => s.thumbnailUrl ?? '' },
+    { header: 'Created', value: (s) => csvDate(s.createdAt, true) },
+  ],
 };
 
 // Convert a datetime-local value to an ISO string for the API.
@@ -276,6 +299,7 @@ export default function AdminLivePage() {
         searchPlaceholder="Search title, puja, pandit…"
         filters={filters}
         emptyText="No live sessions yet."
+        csvExport={LIVE_CSV}
         onRowClick={(s) => setViewingId(s.id)}
         actions={(s) => (
           <>

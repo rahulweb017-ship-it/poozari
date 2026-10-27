@@ -10,7 +10,9 @@ import {
   Notice,
   StatusPill,
   Thumb,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -69,6 +71,37 @@ const LOCATION_LABELS: Record<string, string> = {
   TEERTH: '🛕 Teerth',
   TEMPLE: '⛩️ Temple',
   DIGITAL: '📿 Digital',
+};
+
+const LOCATION_CSV_LABELS: Record<string, string> = {
+  HOME: 'Home',
+  TEERTH: 'Teerth',
+  TEMPLE: 'Temple',
+  DIGITAL: 'Digital',
+};
+
+const PUJAS_CSV: CsvExportDef<Puja> = {
+  name: 'pujas',
+  columns: [
+    { header: 'ID', value: (p) => p.id },
+    { header: 'Title', value: (p) => p.title },
+    { header: 'Hindi title', value: (p) => p.titleHi },
+    { header: 'Slug', value: (p) => p.slug },
+    { header: 'Type', value: (p) => LOCATION_CSV_LABELS[p.locationType] ?? p.locationType },
+    { header: 'Temple', value: (p) => p.temple?.name },
+    { header: 'City', value: (p) => p.city?.name },
+    { header: 'Deities', value: (p) => p.deities.map((d) => d.name).join('; ') },
+    { header: 'Festivals', value: (p) => p.festivals.map((f) => f.name).join('; ') },
+    { header: 'Benefits', value: (p) => p.benefits.map((x) => x.name).join('; ') },
+    { header: 'Package count', value: (p) => p.packages.length },
+    { header: 'Packages (INR)', value: (p) => p.packages.map((pk) => `${pk.name}: ${pk.priceInr}`).join('; ') },
+    { header: 'Starting price (INR)', value: (p) => p.startingPriceInr },
+    { header: 'Active', value: (p) => csvYesNo(p.isActive) },
+    { header: 'Rating', value: (p) => p.rating },
+    { header: 'Reviews', value: (p) => p.reviewCount },
+    { header: 'Summary', value: (p) => p.summary },
+    { header: 'Image URL', value: (p) => p.imageUrl },
+  ],
 };
 
 function slugify(v: string) {
@@ -391,6 +424,7 @@ export default function AdminPujasPage() {
         filters={filters}
         onRowClick={setViewing}
         emptyText="No listings yet."
+        csvExport={PUJAS_CSV}
         actions={(p) => (
           <>
             <ActionButton onClick={() => setViewing(p)}>View</ActionButton>

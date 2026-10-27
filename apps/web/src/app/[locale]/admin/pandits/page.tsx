@@ -10,7 +10,10 @@ import {
   Notice,
   StatusPill,
   Thumb,
+  csvDate,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -61,6 +64,32 @@ export default function AdminPanditsPage() {
   }, []);
 
   const cityName = useMemo(() => new Map(cities.map((c) => [c.id, c.name])), [cities]);
+
+  const panditsCsv = useMemo<CsvExportDef<any>>(
+    () => ({
+      name: 'pandits',
+      columns: [
+        { header: 'Pandit ID', value: (p) => p.id },
+        { header: 'Name', value: (p) => p.displayName },
+        { header: 'Login email', value: (p) => p.user?.email },
+        { header: 'Phone', value: (p) => p.phone },
+        { header: 'Experience (years)', value: (p) => p.experienceYears ?? 0 },
+        { header: 'Pujari share (%)', value: (p) => (p.commissionPercent == null ? 'Platform default' : p.commissionPercent) },
+        { header: 'Account', value: (p) => (p.isActive ? 'Active' : 'Deactivated') },
+        { header: 'Online', value: (p) => csvYesNo(Boolean(p.isActive && p.isAvailable)) },
+        { header: 'Rating', value: (p) => (p.rating ? Number(p.rating).toFixed(1) : '') },
+        {
+          header: 'Service cities',
+          value: (p) => (p.serviceCityIds ?? []).map((id: string) => cityName.get(id) ?? id).join('; '),
+        },
+        { header: 'Service pincodes', value: (p) => (p.servicePincodes ?? []).join('; ') },
+        { header: 'Specializations', value: (p) => (p.specializations ?? []).join('; ') },
+        { header: 'Bio', value: (p) => p.bio },
+        { header: 'Joined', value: (p) => csvDate(p.createdAt) },
+      ],
+    }),
+    [cityName],
+  );
 
   const closeForm = useCallback(() => {
     setFormOpen(false);
@@ -260,6 +289,7 @@ export default function AdminPanditsPage() {
         }
         searchPlaceholder="Search name, email, phone, pincode…"
         filters={filters}
+        csvExport={panditsCsv}
         onRowClick={openDashboard}
         actions={(p) => (
           <>

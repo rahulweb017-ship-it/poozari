@@ -7,7 +7,9 @@ import {
   DetailList,
   Modal,
   Notice,
+  csvDate,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -33,6 +35,47 @@ function isPaid(b: Booking) {
 function formatDate(value?: string | null) {
   return value ? new Date(value).toLocaleDateString('en-IN') : '';
 }
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  CREATED: 'Pending',
+  PAID: 'Paid',
+  FAILED: 'Failed',
+  REFUNDED: 'Refunded',
+};
+
+const BOOKINGS_CSV: CsvExportDef<Booking> = {
+  name: 'bookings',
+  columns: [
+    { header: 'Reference', value: (b) => b.reference },
+    { header: 'Booking ID', value: (b) => b.id },
+    { header: 'Booked on', value: (b) => csvDate(b.createdAt, true) },
+    { header: 'Status', value: (b) => BOOKING_STATUS_LABELS[b.status] ?? b.status },
+    { header: 'Puja', value: (b) => b.puja?.title },
+    { header: 'Package', value: (b) => b.package?.name },
+    { header: 'Package amount (INR)', value: (b) => b.packageAmountInr },
+    { header: 'Add-ons', value: (b) => (b.addons ?? []).map((a) => `${a.name} (${a.priceInr})`).join('; ') },
+    { header: 'Total amount (INR)', value: (b) => b.amountInr },
+    {
+      header: 'Payment status',
+      value: (b) => (b.payment ? PAYMENT_STATUS_LABELS[b.payment.status] ?? b.payment.status : 'No payment yet'),
+    },
+    { header: 'Razorpay payment ID', value: (b) => b.payment?.razorpayPaymentId },
+    { header: 'Devotee', value: (b) => b.devoteeName },
+    { header: 'Gotra', value: (b) => b.gotra },
+    { header: 'Phone', value: (b) => b.contactPhone },
+    { header: 'Email', value: (b) => b.contactEmail },
+    { header: 'Preferred date', value: (b) => csvDate(b.preferredDate) },
+    { header: 'Preferred time', value: (b) => b.preferredTime },
+    { header: 'Address', value: (b) => b.addressLine },
+    { header: 'City', value: (b) => b.city },
+    { header: 'Pincode', value: (b) => b.pincode },
+    { header: 'Pandit', value: (b) => b.assignment?.pandit?.displayName ?? 'Unassigned' },
+    { header: 'Assignment mode', value: (b) => b.assignment?.mode },
+    { header: 'Assignment status', value: (b) => b.assignment?.status },
+    { header: 'Notes', value: (b) => b.notes },
+    { header: 'Video URL', value: (b) => b.videoUrl },
+  ],
+};
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -267,6 +310,7 @@ export default function AdminBookingsPage() {
         searchPlaceholder="Search reference, puja, devotee, phone, city…"
         filters={filters}
         emptyText="No bookings yet."
+        csvExport={BOOKINGS_CSV}
         onRowClick={(b) => setViewingId(b.id)}
         actions={(b) => (
           <>

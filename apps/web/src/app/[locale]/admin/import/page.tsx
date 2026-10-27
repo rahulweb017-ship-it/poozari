@@ -1,5 +1,6 @@
 'use client';
 
+import { downloadCsv } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
 import { api } from '@/lib/client';
 import {
@@ -26,20 +27,6 @@ const ENTITY_TABS: { key: BulkImportEntity; label: string; icon: string; blurb: 
     blurb: 'One row per pandit. Each row creates a login plus their profile.',
   },
 ];
-
-/** Trigger a browser download for generated CSV text. */
-function downloadCsv(filename: string, csv: string) {
-  // The BOM makes Excel open UTF-8 (Devanagari, rupee signs) correctly.
-  const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
 
 export default function AdminImportPage() {
   const [entity, setEntity] = useState<BulkImportEntity>('pujas');

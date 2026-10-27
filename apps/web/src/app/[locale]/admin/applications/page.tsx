@@ -8,7 +8,10 @@ import {
   Modal,
   Notice,
   StatusPill,
+  csvDate,
+  csvYesNo,
   type Column,
+  type CsvExportDef,
   type FilterDef,
 } from '@/components/admin-kit';
 import { AdminShell } from '@/components/admin-shell';
@@ -55,6 +58,29 @@ function canDecide(item: PanditApplication) {
 function statusLabel(status: string) {
   return APPLICATION_STATUS_LABELS[status as keyof typeof APPLICATION_STATUS_LABELS] ?? status;
 }
+
+const APPLICATIONS_CSV: CsvExportDef<PanditApplication> = {
+  name: 'applications',
+  columns: [
+    { header: 'Applied', value: (a) => csvDate(a.createdAt, true) },
+    { header: 'Status', value: (a) => statusLabel(a.status) },
+    { header: 'Login created', value: (a) => csvYesNo(Boolean(a.panditUserId)) },
+    { header: 'Name', value: (a) => a.fullName },
+    { header: 'Email', value: (a) => a.email },
+    { header: 'Phone', value: (a) => a.phone },
+    { header: 'City', value: (a) => a.city },
+    { header: 'State', value: (a) => a.state },
+    { header: 'Pincode', value: (a) => a.pincode },
+    { header: 'Experience (years)', value: (a) => a.experienceYears },
+    { header: 'Specializations', value: (a) => a.specializations.join('; ') },
+    { header: 'Languages', value: (a) => a.languages.join('; ') },
+    { header: 'Trained', value: (a) => a.lineage },
+    { header: 'About', value: (a) => a.about },
+    { header: 'Document URL', value: (a) => (a.documentUrl && !a.documentUrl.startsWith('data:') ? a.documentUrl : '') },
+    { header: 'Verification notes', value: (a) => a.adminNotes },
+    { header: 'Application ID', value: (a) => a.id },
+  ],
+};
 
 export default function AdminApplicationsPage() {
   const [items, setItems] = useState<PanditApplication[]>([]);
@@ -265,6 +291,7 @@ export default function AdminApplicationsPage() {
         searchPlaceholder="Search name, email, phone, city, pincode…"
         filters={filters}
         emptyText="No applications yet."
+        csvExport={APPLICATIONS_CSV}
         onRowClick={(a) => setViewingId(a.id)}
         actions={(a) => (
           <>
